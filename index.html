@@ -1,56 +1,170 @@
-<!DOCTYPE html
-	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+---
+layout: default
+---
 
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>RotaSambandh</title>
-	<link href="tools/style.css" rel="stylesheet" type="text/css" media="screen" />
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-	<script type="text/javascript" src="tools/jquery.min.js"></script>
-	<script type="text/javascript"
-		src="https://cdnjs.cloudflare.com/ajax/libs/jquery-backstretch/2.0.4/jquery.backstretch.min.js"></script>
-	<link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:700|Roboto+Slab:700' rel='stylesheet'
-		type='text/css'>
-	<meta name="viewport" content="width=device-width, initial-scale = 1.0, user-scalable = no">
-</head>
+    <!-- ##### Hero Area Start ##### -->
+    <section class="hero-area bg-img bg-overlay-2by5" style="background-image: url(img/bg-img/bg1.jpg);">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center">
+                <div class="col-12">
+                    <!-- Hero Content -->
+                    <div class="hero-content text-center">
+                        <h2>Let's Start Navigating</h2>
+                        <a href="{{site.baseurl}}/classifications" class="btn clever-btn">Get Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Hero Area End ##### -->
 
-<body>
-	<div class="wrapper">
-		<div class="left-section"><img src="images/watch.png" /></div>
-		<div class="right-section">
-			<h1 id="logo">RotaSambandh</h1>
-			<div class="seprator"></div>
-			<div class="main-content">
-				<h2>We are building something awesome</h2>
-				<p>In the mean time...</p>
-				<h2><a href="https://docs.google.com/forms/d/e/1FAIpQLScnr0oqPtdWBO_1EYl-XytjwbinYM3FPc703ilgQdZsuNf2wQ/viewform?usp=sf_link">Register Here!!!</a></h2>
-			</div>
-			<ul class="social">
-				<li id="facebook"><a href="https://www.facebook.com/3190rbe/" target="_blank"><i class="fa fa-facebook"></i></a></li>
-				<li id="twitter"><a href="https://twitter.com/3190rbe" target="_blank"><i class="fa fa-twitter"></i></a></li>
-				<li id="instagram"><a href="https://www.instagram.com/3190rbe/" target="_blank"><i class="fa fa-instagram"></i></a></li>
-			</ul>
-			<ul class="info">
-				<li><i class="fa fa-phone-square"></i>85537 88515</li>
-				<!-- <li><i class="fa fa-map-marker"></i>301 Clematis. Suite 3000, West Palm Beach, FL 33401</li> -->
-				<li><i class="fa fa-envelope"></i><a href="mailto:info@3190rbe.org">info@3190rbe.org</a></li>
-			</ul>
+    <!-- ##### Cool Facts Area Start ##### -->
+    <section class="cool-facts-area section-padding-100-0">
+        <div class="container">
+            <div class="row">
+                <!-- Single Cool Facts Area -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="single-cool-facts-area text-center mb-100 wow fadeInUp" data-wow-delay="250ms">
+                        <div class="icon">
+                            <img src="img/core-img/docs.png" alt="">
+                        </div>
+                        <h2><span class="counter">{{site.data.sitedata.stats.matches}}</span></h2>
+                        <h5>Successful Matches</h5>
+                    </div>
+                </div>
 
-			<div class="social-links"> 
-				<ul class="social2">
-					<li id="facebook"><a href="https://www.facebook.com/rotaract3190" target="_blank"><i class="fa fa-facebook"></i></a>
-					</li>
-					<li id="twitter"><a href="https://twitter.com/Rotaract3190" target="_blank"><i class="fa fa-twitter"></i></a></li>
-					<li id="instagram"><a href="https://www.instagram.com/rotaract3190/" target="_blank"><i class="fa fa-instagram"></i></a>
-					</li>
-				</ul>
-			</div>
+                <!-- Single Cool Facts Area -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="single-cool-facts-area text-center mb-100 wow fadeInUp" data-wow-delay="500ms">
+                        <div class="icon">
+                            <img src="img/core-img/star.png" alt="">
+                        </div>
+                        <h2><span class="counter">{{site.data.sitedata.stats.mentors}}</span></h2>
+                        <h5>Mentors</h5>
+                    </div>
+                </div>
 
+                <!-- Single Cool Facts Area -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="single-cool-facts-area text-center mb-100 wow fadeInUp" data-wow-delay="750ms">
+                        <div class="icon">
+                            <img src="img/core-img/events.png" alt="">
+                        </div>
+                        <h2><span class="counter">{{site.data.sitedata.stats.beneficiaries}}</span></h2>
+                        <h5>Beneficiaries</h5>
+                    </div>
+                </div>
 
-		</div>
-		<div class="watch-section"><img src="images/watch.png" /></div>
-	</div>
-</body>
+                <!-- Single Cool Facts Area -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="single-cool-facts-area text-center mb-100 wow fadeInUp" data-wow-delay="1000ms">
+                        <div class="icon">
+                            <img src="img/core-img/earth.png" alt="">
+                        </div>
+                        <h2><span class="counter">{{site.data.sitedata.stats.sectors}}</span></h2>
+                        <h5>Sectors</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Cool Facts Area End ##### -->
 
-</html>
+    <!-- ##### Popular Classifications Start ##### -->
+    <section class="popular-courses-area section-padding-100-0" style="background-image: url(img/core-img/texture.png);">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-heading">
+                        <h3>Featured Classifications</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+  
+                {% assign sorted_classifications = site.classifications | sort: 'title' %}
+                {% for classification in sorted_classifications %}
+
+                {% if classification.featured == true %}
+                    {% include classification.html %}
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="load-more text-center wow fadeInUp" data-wow-delay="1000ms">
+                        <a href="{{site.baseurl}}/classifications" class="btn clever-btn btn-2 mb-50">View More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Popular Classifications End ##### -->
+
+    <script type="text/javascript">
+        var submission = false;
+      </script>
+      <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+      onload="if(submission)  {window.location='/thankyou';}"></iframe>
+
+    <!-- ##### Register Now Start ##### -->
+    <section class="register-now section-padding-100-0 d-flex justify-content-between align-items-center" style="background-image: url(img/core-img/texture.png);">
+        <!-- Register Contact Form -->
+        <div class="register-contact-form mb-100 wow fadeInUp" data-wow-delay="250ms">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="forms">
+                            <h4>Get Notified</h4>
+                            <form action="https://docs.google.com/forms/d/e/1FAIpQLScnr0oqPtdWBO_1EYl-XytjwbinYM3FPc703ilgQdZsuNf2wQ/formResponse" target="hidden_iframe" onsubmit="submission=true;" method="post">
+                                <div class="row">
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.729988271" id="name" placeholder="Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.1271416491" id="club" placeholder="Rotaract Club Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.1140443297" id="phone" placeholder="Phone Number" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="email" class="form-control" name="entry.737916335" id="email" placeholder="Email" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <!-- <textarea name="message" class="form-control" id="message" placeholder="Fi"></textarea> -->
+                                            <input type="text" class="form-control" name="entry.1589430484" id="field" placeholder="Field of Interest" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn clever-btn w-100">Send Message</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Now Countdown -->
+        <div class="register-now-countdown mb-100 wow fadeInUp" data-wow-delay="500ms">
+            <h3>Register Now</h3>
+            <p>We are launching on the count of a new year</p>
+            <!-- Register Countdown -->
+            <div class="register-countdown">
+                <div class="events-cd d-flex flex-wrap" data-countdown="2021/01/01"></div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Register Now End ##### -->

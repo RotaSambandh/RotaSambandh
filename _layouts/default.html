@@ -1,0 +1,23 @@
+---
+layout: compress
+---
+<!DOCTYPE html>
+<html lang="en">
+
+{% include head.html %}
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="spinner"></div>
+    </div>
+
+    {% include header.html %}
+
+    {{content}}
+    {% include partners.html %}
+
+    {% include footer.html %}
+    {% include footer_script.html %}
+    
+    </body>
+</html>

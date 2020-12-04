@@ -1,0 +1,26 @@
+---
+layout: default
+title: Classifications
+---
+
+    {% include breadcumbs.html %}
+    <!-- ##### Catagory ##### -->
+    <div class="clever-catagory bg-img d-flex align-items-center justify-content-center p-3" style="background-image: url({{site.baseurl}}/img/bg-img/bg2.jpg);">
+        <h3>Classifications</h3>
+    </div>
+
+    <!-- ##### Popular Course Area Start ##### -->
+    <section class="popular-courses-area section-padding-100-0">
+        <div class="container">
+            <div class="row justify-content-center">
+                
+                {% assign sorted_classifications = site.classifications | sort: 'title' %}
+                {% for classification in sorted_classifications %}
+                    {% include classification.html %}
+                {% endfor %}
+
+            </div>
+
+        </div>
+    </section>
+    <!-- ##### Popular Course Area End ##### -->

@@ -1,0 +1,30 @@
+<!-- Single Popular Course -->
+<div class="col-12 col-md-6 col-lg-4">
+    <div class="single-popular-course mb-100 wow fadeInUp" data-wow-delay="{{forloop.index | times:250}}ms">
+        <img src="{{site.baseurl}}{{classification.image}}" alt="">
+        <!-- Course Content -->
+        <div class="course-content">
+            <h4>{{classification.title}}</h4>
+            <div class="meta d-flex align-items-center">
+                <a href="#">Sarah Parker</a>
+                <span><i class="fa fa-circle" aria-hidden="true"></i></span>
+                <a href="#">Art &amp; Design</a>
+            </div>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce enim nulla, mollis eu metus in, sagittis</p>
+        </div>
+        <!-- Seat Rating Fee -->
+        <div class="seat-rating-fee d-flex justify-content-between">
+            <div class="seat-rating h-100 d-flex align-items-center">
+                <div class="seat">
+                    <i class="fa fa-user" aria-hidden="true"></i> 10
+                </div>
+                <div class="rating">
+                    <i class="fa fa-star" aria-hidden="true"></i> 4.5
+                </div>
+            </div>
+            <div class="course-fee h-100">
+                <a href="{{classification.url}}" class="free">Apply</a>
+            </div>
+        </div>
+    </div>
+</div>
