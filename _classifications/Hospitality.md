@@ -1,8 +1,8 @@
 ---
 layout: classification
 title: Hospitality
-image: /img/bg-img/c1.jpg
-bg_img: /img/bg-img/bg3.jpg
+image: /img/c1.jpg
+
 tags:
   - abc
   - cde
@@ -12,27 +12,27 @@ description:
 mentors:
   - name: XYD
     company: XYZ
-    img: /img/bg-img/t1.png
+    img: /img/t1.png
   - name: ABC
     company: XYZ
-    img: /img/bg-img/t2.png
+    img: /img/t2.png
   - name: ABC
     company: XYZ
-    img: /img/bg-img/t3.png
+    img: /img/t3.png
   - name: ABC
     company: XYZ
-    img: /img/bg-img/t4.png
+    img: /img/t4.png
   - name: ABC
     company: XYZ
-    img: /img/bg-img/t1.png
+    img: /img/t1.png
 classification_partners:
   - name: Mark of excellance
-    img: /img/bg-img/ritheme_rotary.png
+    img: /img/ritheme_rotary.png
   - name: Mark of excellance
-    img: /img/bg-img/rotary.png
+    img: /img/rotary.png
   - name: Mark of excellance
-    img: /img/bg-img/rotaract.png
+    img: /img/rotaract.png
   - name: Mark of excellance
-    img: /img/bg-img/rotaract3190.png
+    img: /img/rotaract3190.png
 featured: false
 ---

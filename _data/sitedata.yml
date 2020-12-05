@@ -1,9 +1,7 @@
 stats:
   matches: 1111
-  mentors: 111
   beneficiaries: 111
-  sectors: 11
-  
+
 partners:
   - type: Partners
     lg_int: 3
@@ -12,21 +10,21 @@ partners:
     list:
       - name: Mark of excellance
         link: https://zeospec.com
-        img: img/bg-img/markofexcellence_black.png
+        img: img/markofexcellence_black.png
       - link: https://zeospec.com
-        img: img/bg-img/markofexcellence_black.png
+        img: img/markofexcellence_black.png
       - link: https://zeospec.com
-        img: img/bg-img/pratibha_blue.png
+        img: img/pratibha_blue.png
       - link: https://zeospec.com
-        img: img/bg-img/ritheme.png
+        img: img/ritheme.png
       - link: https://zeospec.com
-        img: img/bg-img/ritheme_rotary.png
+        img: img/ritheme_rotary.png
       - link: https://zeospec.com
-        img: img/bg-img/rotary.png
+        img: img/rotary.png
       - link: https://zeospec.com
-        img: img/bg-img/rotaract.png
+        img: img/rotaract.png
       - link: https://zeospec.com
-        img: img/bg-img/rotaract3190.png
+        img: img/rotaract3190.png
 
   - type: Supporters
     lg_int: 2
@@ -34,18 +32,18 @@ partners:
     img_height: 80
     list:
       - link: https://zeospec.com
-        img: img/bg-img/markofexcellence_black.png
+        img: img/markofexcellence_black.png
       - link: https://zeospec.com
-        img: img/bg-img/markofexcellence_black.png
+        img: img/markofexcellence_black.png
       - link: https://zeospec.com
-        img: img/bg-img/pratibha_blue.png
+        img: img/pratibha_blue.png
       - link: https://zeospec.com
-        img: img/bg-img/ritheme.png
+        img: img/ritheme.png
       - link: https://zeospec.com
-        img: img/bg-img/ritheme_rotary.png
+        img: img/ritheme_rotary.png
       - link: https://zeospec.com
-        img: img/bg-img/rotary.png
+        img: img/rotary.png
       - link: https://zeospec.com
-        img: img/bg-img/rotaract.png
+        img: img/rotaract.png
       - link: https://zeospec.com
-        img: img/bg-img/rotaract3190.png
+        img: img/rotaract3190.png

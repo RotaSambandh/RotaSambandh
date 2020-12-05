@@ -3,7 +3,7 @@ layout: default
 ---
 
     <!-- ##### Hero Area Start ##### -->
-    <section class="hero-area bg-img bg-overlay-2by5" style="background-image: url(img/bg-img/bg1.jpg);">
+    <section class="hero-area bg-img bg-overlay-2by5" style="background-image: url(img/bg1.jpg);">
         <div class="container h-100">
             <div class="row h-100 align-items-center">
                 <div class="col-12">
@@ -39,7 +39,11 @@ layout: default
                         <div class="icon">
                             <img src="img/core-img/star.png" alt="">
                         </div>
-                        <h2><span class="counter">{{site.data.sitedata.stats.mentors}}</span></h2>
+                        {% assign mentor_count = 0 %}
+                        {% for classification in site.classifications %}
+                        {% assign mentor_count = mentor_count | plus: classification.mentors.size %}
+                        {% endfor %}
+                        <h2><span class="counter">{{mentor_count}}</span></h2>
                         <h5>Mentors</h5>
                     </div>
                 </div>
@@ -61,8 +65,8 @@ layout: default
                         <div class="icon">
                             <img src="img/core-img/earth.png" alt="">
                         </div>
-                        <h2><span class="counter">{{site.data.sitedata.stats.sectors}}</span></h2>
-                        <h5>Sectors</h5>
+                        <h2><span class="counter">{{site.classifications | size}}</span></h2>
+                        <h5>Classifications</h5>
                     </div>
                 </div>
             </div>
