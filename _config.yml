@@ -1,6 +1,6 @@
 # Site settings
-title: Rotasambadh
-# subtitle: "Unite. Rise. Empower"
+title: RotaSambadh
+subtitle: "A Navigator to your Destination"
 url: "" # the base hostname & protocol for your site
 # baseurl: "/the/subpath/of/your/site" # Set this value to "" if you want your site to be root
 baseurl: ""
@@ -8,7 +8,7 @@ timezone: Asia/Kolkata
 
 # icon: /assets/images/logo3.png
 
-# description: District 3190 comprises of 8 Revenue making Districts.
+description: District 3190 comprises of 8 Revenue making Districts.
 
 # Build settings
 markdown: kramdown

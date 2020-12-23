@@ -1,8 +1,8 @@
 ---
 layout: classification
-title: Hospitality
+title: Art
 image: /img/c1.jpg
-featured: true
+featured: false
 tags:
   - abc
   - cde

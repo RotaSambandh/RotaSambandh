@@ -1,49 +1,69 @@
+# Contact Details
+phone: +91 85537 88515
+email: info@rotasambandh.com
+
+showfacts: true
 stats:
-  matches: 1111
-  beneficiaries: 111
+  applications: 1111
+  connects: 1111
+
+team_members:
+  - name: Rtr. Arun Teja Godavarthi
+    role: Creator & Advisory Chair
+    img: /img/team/zeospec.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
+  - name: Rtr. Arun Teja Godavarthi
+    role: Creator & Advisor
+    img: /img/team/zeospec.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
+  - name: Rtr. Arun Teja Godavarthi
+    role: Creator & Advisor
+    img: /img/team/zeospec.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
+  - name: Rtr. Arun Teja Godavarthi
+    role: Creator & Advisor
+    img: /img/team/zeospec.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
+  - name: Rtr. Arun Teja Godavarthi
+    role: Creator & Advisor
+    img: /img/team/zeospec.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
 
 partners:
-  - type: Partners
-    lg_int: 3
-    img_width: 240
-    img_height: 120
+  - type: Owner & Partner
+    line_count: 2
     list:
-      - name: Mark of excellance
-        link: https://zeospec.com
-        img: img/markofexcellence_black.png
-      - link: https://zeospec.com
-        img: img/markofexcellence_black.png
-      - link: https://zeospec.com
-        img: img/pratibha_blue.png
-      - link: https://zeospec.com
-        img: img/ritheme.png
-      - link: https://zeospec.com
-        img: img/ritheme_rotary.png
-      - link: https://zeospec.com
-        img: img/rotary.png
-      - link: https://zeospec.com
-        img: img/rotaract.png
-      - link: https://zeospec.com
-        img: img/rotaract3190.png
-
-  - type: Supporters
-    lg_int: 2
-    img_width: 160
-    img_height: 80
+      - name: Rotaract Bangalore East
+        link: https://3190rbe.org
+        img: img/rbe.png
+  - type: Lead Partner
+    line_count: 3
     list:
-      - link: https://zeospec.com
-        img: img/markofexcellence_black.png
-      - link: https://zeospec.com
-        img: img/markofexcellence_black.png
-      - link: https://zeospec.com
-        img: img/pratibha_blue.png
-      - link: https://zeospec.com
-        img: img/ritheme.png
-      - link: https://zeospec.com
-        img: img/ritheme_rotary.png
-      - link: https://zeospec.com
-        img: img/rotary.png
-      - link: https://zeospec.com
-        img: img/rotaract.png
-      - link: https://zeospec.com
-        img: img/rotaract3190.png
+      - name: Rotaract Bangalore Wast
+        link: https://www.instagram.com/rotaract_bangalore_west/
+        img: img/rbw.png

@@ -1,6 +1,6 @@
 ---
 layout: classification
-title: Hospitality
+title: Digital Marketing
 image: /img/c1.jpg
 featured: true
 tags:

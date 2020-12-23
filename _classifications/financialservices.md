@@ -1,6 +1,6 @@
 ---
 layout: classification
-title: Hospitality
+title: Financial Services
 image: /img/c1.jpg
 featured: true
 tags:

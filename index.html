@@ -18,6 +18,7 @@ layout: default
     </section>
     <!-- ##### Hero Area End ##### -->
 
+    {% if site.data.sitedata.showfacts %}
     <!-- ##### Cool Facts Area Start ##### -->
     <section class="cool-facts-area section-padding-100-0">
         <div class="container">
@@ -28,8 +29,8 @@ layout: default
                         <div class="icon">
                             <img src="img/core-img/docs.png" alt="">
                         </div>
-                        <h2><span class="counter">{{site.data.sitedata.stats.matches}}</span></h2>
-                        <h5>Successful Matches</h5>
+                        <h2><span class="counter">{{site.data.sitedata.stats.applications}}</span></h2>
+                        <h5>Applications</h5>
                     </div>
                 </div>
 
@@ -54,8 +55,8 @@ layout: default
                         <div class="icon">
                             <img src="img/core-img/events.png" alt="">
                         </div>
-                        <h2><span class="counter">{{site.data.sitedata.stats.beneficiaries}}</span></h2>
-                        <h5>Beneficiaries</h5>
+                        <h2><span class="counter">{{site.data.sitedata.stats.connects}}</span></h2>
+                        <h5>Mentor Connects</h5>
                     </div>
                 </div>
 
@@ -73,6 +74,7 @@ layout: default
         </div>
     </section>
     <!-- ##### Cool Facts Area End ##### -->
+    {% endif %}
 
     <!-- ##### Popular Classifications Start ##### -->
     <section class="popular-courses-area section-padding-100-0" style="background-image: url(img/core-img/texture.png);">
@@ -112,9 +114,9 @@ layout: default
       </script>
       <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
       onload="if(submission)  {window.location='/thankyou';}"></iframe>
-
+      
     <!-- ##### Register Now Start ##### -->
-    <section class="register-now section-padding-100-0 d-flex justify-content-between align-items-center" style="background-image: url(img/core-img/texture.png);">
+    <section class="register-now section-padding-100-0 d-flex justify-content-around align-items-center" style="background-image: url(img/core-img/texture.png);">
         <!-- Register Contact Form -->
         <div class="register-contact-form mb-100 wow fadeInUp" data-wow-delay="250ms">
             <div class="container-fluid">

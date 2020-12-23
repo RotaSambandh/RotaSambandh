@@ -1,8 +1,8 @@
 ---
 layout: classification
-title: Hospitality
+title: Mechanical Engineering
 image: /img/c1.jpg
-featured: true
+featured: false
 tags:
   - abc
   - cde
