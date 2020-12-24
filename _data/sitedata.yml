@@ -17,42 +17,33 @@ team_members:
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
     introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
-  - name: Rtr. Arun Teja Godavarthi
-    role: Creator & Advisor
-    img: /img/team/zeospec.jpg
+  - name: Rtr. ABC
+    role: Role XYZ
+    img: 
     social:
       linkedin: https://www.linkedin.com/in/zeospec/
       twitter: https://twitter.com/ZeoSpec
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
-  - name: Rtr. Arun Teja Godavarthi
-    role: Creator & Advisor
-    img: /img/team/zeospec.jpg
+    introduction: Short bio about Rotaractor
+  - name: Rtr. ABC
+    role: Role XYZ
+    img: 
     social:
       linkedin: https://www.linkedin.com/in/zeospec/
       twitter: https://twitter.com/ZeoSpec
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
-  - name: Rtr. Arun Teja Godavarthi
-    role: Creator & Advisor
-    img: /img/team/zeospec.jpg
+    introduction: Short bio about Rotaractor
+  - name: Rtr. ABC
+    role: Role XYZ
+    img: 
     social:
       linkedin: https://www.linkedin.com/in/zeospec/
       twitter: https://twitter.com/ZeoSpec
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
-  - name: Rtr. Arun Teja Godavarthi
-    role: Creator & Advisor
-    img: /img/team/zeospec.jpg
-    social:
-      linkedin: https://www.linkedin.com/in/zeospec/
-      twitter: https://twitter.com/ZeoSpec
-      facebook: https://www.facebook.com/zeospec/
-      instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
+    introduction: Short bio about Rotaractor
 
 partners:
   - type: Owner & Partner
@@ -67,3 +58,9 @@ partners:
       - name: Rotaract Bangalore Wast
         link: https://www.instagram.com/rotaract_bangalore_west/
         img: img/rbw.png
+  - type: Supporters
+    line_count: 4
+    list:
+      - name: Rotaract 3190
+        link: https://rotaract3190.org
+        img: img/rotaract3190.png
