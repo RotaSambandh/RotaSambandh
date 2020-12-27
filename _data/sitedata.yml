@@ -7,7 +7,7 @@ stats:
   applications: 1111
   connects: 1111
 
-applications_master: true
+applications_master: false
 
 team_members:
   - name: Rtr. Arun Teja Godavarthi
