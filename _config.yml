@@ -1,14 +1,14 @@
 # Site settings
 title: RotaSambadh
 subtitle: "A Navigator to your Destination"
-url: "" # the base hostname & protocol for your site
+url: "https://rotasambandh.com" # the base hostname & protocol for your site
 # baseurl: "/the/subpath/of/your/site" # Set this value to "" if you want your site to be root
 baseurl: ""
 timezone: Asia/Kolkata
 
 # icon: /assets/images/logo3.png
 
-description: District 3190 comprises of 8 Revenue making Districts.
+description: RotaSambandh connects you with the Achievers and Established professionals ie.Mentors(Rotarians) from various classifications of your Choice and Passion. This Project is initiated by Rotaract Bangalore East under the leadership of Rtr. Rtr. Arun Teja Godavarthi (aka. ZeoSpec).
 
 # Build settings
 markdown: kramdown
@@ -21,14 +21,13 @@ markdown: kramdown
 # ga_tracking_id: "UA-122171689-6"
 # ga_tag_manage_id: "GTM-TTR59PS"
 
-# plugins:
-  # - jekyll-sitemap
-  # - jekyll-feed
+plugins:
+  - jekyll-sitemap
   
 collections:
   classifications:
     output: true
     permalink: /classifications/:path/
 
-# include:
-#   - _redirects
+include:
+  - _redirects
