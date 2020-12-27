@@ -2,10 +2,12 @@
 phone: +91 85537 88515
 email: info@rotasambandh.com
 
-showfacts: true
+showfacts: false
 stats:
   applications: 1111
   connects: 1111
+
+applications_master: true
 
 team_members:
   - name: Rtr. Arun Teja Godavarthi
@@ -46,7 +48,7 @@ team_members:
     introduction: Short bio about Rotaractor
 
 partners:
-  - type: Owner & Partner
+  - type: Owner & Lead Partner
     line_count: 2
     list:
       - name: Rotaract Bangalore East

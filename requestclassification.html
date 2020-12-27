@@ -1,0 +1,140 @@
+---
+layout: default
+title: Request Classification
+---
+
+{% include breadcumbs.html %}
+
+<!-- ##### Catagory ##### -->
+<div class="clever-catagory bg-img d-flex align-items-center justify-content-center p-3"
+    style="background-image: url({{site.baseurl}}/img/aboutbg.png);">
+    <h3>{{page.title}}</h3>
+</div>
+
+    <div class="blog-details-content section-padding-100-0">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8">
+                    <div class="blog-details-text">
+                        <p>RotaSambandh connects you with the Achievers and Established professionals ie.Mentors(Rotarians) from various classifications of your Choice and Passion.</p>
+                        <h5 class="text-center py-4">A Mentor is someone who allows you to see the hope inside yourself.<br>— oprah winfrey.</h5>
+                        <p class="text-center py-4">&#9830;	&#9830;	&#9830;</p>
+                        <h6 class="text-center">Stages of Application</h6>
+                        <p class="text-center">Navigate across Classifications<br>&#8595;<br>Apply<br>&#8595;<br>Review Process<br>&#8595;<br>Matching(RotaSambandh Team)<br>&#8595;<br>Rotaractor and Rotarian(Mentor) Connect</p>
+                        <p class="text-center py-4">&#9830;	&#9830;	&#9830;</p>
+
+
+                        <div class="forms">
+                            <h4>Apply for {{page.title}}</h4>
+                            <p>Enter accurate and elaborate information, to help our team understand your interests to make best matches.</p>
+                            <hr style="border-top: 1px dashed grey">
+
+                            <script type="text/javascript">
+                                var submission = false;
+                              </script>
+                              <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+                              onload="if(submission)  {window.location='/thankyou';}"></iframe>
+
+                            <form action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSeYsiAuVIDJWnP888JD5HH6fPQBNh2zZisgyH6tue7a0BPB8g/formResponse" target="hidden_iframe" onsubmit="submission=true;" method="post">
+                                <p>Personal Information</p>
+                                <div class="row">
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.127418695" id="name" placeholder="Name *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="email" class="form-control" name="emailAddress" id="email" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Email *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="tel" class="form-control" name="entry.1546781607" id="phone" oninvalid="setCustomValidity('Enter 10-Digit Mobile Number')" oninput="setCustomValidity('')" pattern="[6-9]{1}[0-9]{9}" placeholder="Phone *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.1153858429" id="clubname" placeholder="Rotaract Club Name *" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <hr style="border-top: 1px dashed grey">
+                                        <p>Profile Links (To promote best practice Linkedin URL is made madatory)</p>
+                                        <div class="form-group">
+                                            <input type="url" class="form-control" name="entry.1169010257" id="linkedinphone" placeholder="Enter your Linkedin Profile Link *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="url" class="form-control" name="entry.1365665796" id="profilelink" placeholder="Share Portfolio or any other Profile links">
+                                        </div>
+                                    </div>
+                                    <input type="hidden" class="form-control" name="entry.408706569" id="classification" value="{{page.title}}">
+                                    
+                                    <div class="col-12 col-lg-12">
+                                        <hr style="border-top: 1px dashed grey">
+                                        <p>Mentor Preference (if any)</p>
+                                        <div class="form-group">
+                                            <select type="list" class="custom-select" name="entry.1303368986" id="mentorp1">
+                                                <option value="" disabled="" selected="" hidden="">Select your Preferred Mentor (if any)</option>
+                                                {% for mentor in page.mentors %}
+                                                <option value="{{mentor.name}}">{{mentor.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <select type="list" class="custom-select" name="entry.1484137641" id="mentorp2">
+                                                <option value="" disabled="" selected="" hidden="">Select Next Preferred Mentor (if any)</option>
+                                                {% for mentor in page.mentors %}
+                                                <option value="{{mentor.name}}">{{mentor.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <textarea name="whyPreference" rows="3" class="form-control" name="entry.1198186978" id="whyPreferrence" placeholder="Why are do you prefer to connect with the mentors selected above? (Ignore if not selected)"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <hr style="border-top: 1px dashed grey">
+                                        <p>RotaSambandh Format</p>
+                                        <div class="form-group">
+                                            <select type="list" class="custom-select" name="entry.48399050" id="group" required>
+                                                <option value="" disabled="" selected="" hidden="">Select the RotaSambandh Format *</option>
+                                                <option value="Connect with the Mentor">Connect with the Mentor</option>
+                                                <option value="Shadow the Mentor">Shadow the Mentor</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <textarea name="message" rows="5" class="form-control" name="entry.914810392" id="expectations" placeholder="What are you expecting to accomplish from the session with the Mentors from the classification of '{{page.title}}'? *"></textarea>
+                                            <!-- <input type="text" class="form-control" id="message" placeholder="message"> -->
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn clever-btn w-100">Submit</button>
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            
+                            <hr style="border-top: 1px dashed grey">
+                            
+                        </div>  
+                    </div>
+
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>
