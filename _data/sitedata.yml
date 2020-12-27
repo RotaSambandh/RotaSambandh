@@ -1,0 +1,70 @@
+og_img: /img/core-img/logo_round.png
+
+# Contact Details
+phone: +91 85537 88515
+email: info@rotasambandh.com
+
+showfacts: false
+stats:
+  applications: 1111
+  connects: 1111
+
+applications_master: false
+
+team_members:
+  - name: Rtr. Arun Teja Godavarthi
+    role: Creator & Advisory Chair
+    img: /img/team/zeospec.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
+  - name: Rtr. ABC
+    role: Role XYZ
+    img: 
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Short bio about Rotaractor
+  - name: Rtr. ABC
+    role: Role XYZ
+    img: 
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Short bio about Rotaractor
+  - name: Rtr. ABC
+    role: Role XYZ
+    img: 
+    social:
+      linkedin: https://www.linkedin.com/in/zeospec/
+      twitter: https://twitter.com/ZeoSpec
+      facebook: https://www.facebook.com/zeospec/
+      instagram: https://www.instagram.com/ZeoSpec/
+    introduction: Short bio about Rotaractor
+
+partners:
+  - type: Owner & Lead Partner
+    line_count: 2
+    list:
+      - name: Rotaract Bangalore East
+        link: https://3190rbe.org
+        img: img/rbe.png
+  - type: Lead Partner
+    line_count: 3
+    list:
+      - name: Rotaract Bangalore Wast
+        link: https://www.instagram.com/rotaract_bangalore_west/
+        img: img/rbw.png
+  - type: Supporters
+    line_count: 4
+    list:
+      - name: Rotaract 3190
+        link: https://rotaract3190.org
+        img: img/rotaract3190.png

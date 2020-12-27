@@ -1,0 +1,112 @@
+---
+layout: default
+title: Recommend Mentor
+---
+
+{% include breadcumbs.html %}
+
+<!-- ##### Catagory ##### -->
+<div class="clever-catagory bg-img d-flex align-items-center justify-content-center p-3"
+    style="background-image: url({{site.baseurl}}/img/aboutbg.png);">
+    <h3>{{page.title}}</h3>
+</div>
+
+    <div class="blog-details-content section-padding-100-0">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8">
+                    <div class="blog-details-text">
+                        <div class="forms">
+                            <p>We are appreciate your initiative to support RotaSambandh by recommending your favourite MENTOR.<br>Share accurate information to help us contact you and the Recommended Mentor.</p>
+                            <hr style="border-top: 1px dashed grey">
+                            <script type="text/javascript">
+                                var submission = false;
+                              </script>
+                              <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+                              onload="if(submission)  {window.location='/thankyou';}"></iframe>
+                            <form action="https://docs.google.com/forms/d/e/1FAIpQLSc90USbNdGcVxZEVTUEatOi7S4TEBGPPNb8KWsC-0VCw7tWzA/formResponse" target="hidden_iframe" onsubmit="submission=true;" method="post">
+                                <p>Your Information</p>
+                                <div class="row">
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.1904715333" id="name" placeholder="Name *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="email" class="form-control" name="entry.828525658" id="email" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Email *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="tel" class="form-control" name="entry.720312883" id="phone" oninvalid="setCustomValidity('Enter 10-Digit Mobile Number')" oninput="setCustomValidity('')" pattern="[6-9]{1}[0-9]{9}" placeholder="Phone *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.908903168" id="clubname" placeholder="Rotaract Club Name *" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <hr style="border-top: 1px dashed grey">
+                                        <p>Mentor Information</p>
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.1520114153" id="mName" placeholder="Mentor Name *" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="email" class="form-control" name="entry.704217746" id="mEmail" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Mentor Email">
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="form-group">
+                                            <input type="tel" class="form-control" name="entry.1651190101" id="mPhone" oninvalid="setCustomValidity('Enter 10-Digit Mobile Number')" oninput="setCustomValidity('')" pattern="[6-9]{1}[0-9]{9}" placeholder="Mentor Phone">
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" name="entry.1945428510" id="mCompany" placeholder="Mentor Company *" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <select type="list" class="custom-select" name="entry.80940420" id="mClassification">
+                                                <option value="" disabled="" selected="" hidden="">Select Mentor's Classification *</option>
+                                                {% for classification in site.classifications %}
+                                                <option value="{{classification.title}}">{{classification.title}}</option>
+                                                {% endfor %}
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <input type="url" class="form-control" name="entry.2118059174" id="mProfile" placeholder="Mentor Profile Link">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-12">
+                                        <div class="form-group">
+                                            <textarea rows="5" class="form-control" name="entry.1128222379" id="whythismentor" placeholder="Share your views on the Mentor you are Recommending? *"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn clever-btn w-100" type="submit">Submit</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <hr style="border-top: 1px dashed grey">
+                        </div>  
+                    </div>
+
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>

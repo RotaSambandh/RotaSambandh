@@ -1,0 +1,24 @@
+<section class="section-padding-100-0">
+    <div class="container">
+        {% for type in site.data.sitedata.partners %}
+        <div class="row">
+            <div class="col-12">
+                <div class="section-heading">
+                    <h3>{{type.type}}</h3>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="row justify-content-center">
+            {% for partner in type.list %}    
+            <div class="col-12 col-md-6 col-lg-{{12 | divided_by:type.line_count}} mb-4 mb-md-5 text-center wow fadeInUp" data-wow-delay="250ms">
+                <a href="{{partner.link}}" target="_blank">
+                    <img style="max-width: {{960 | divided_by:type.line_count}}px;max-height: {{480 | divided_by:type.line_count}}px;" src="{{partner.img | absolute_url}}" alt="{{partner.name}}">
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</section>

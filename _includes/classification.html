@@ -1,0 +1,34 @@
+<!-- Single Popular Course -->
+<div class="col-12 col-md-6 col-lg-4">
+    <div class="single-popular-course mb-100 wow fadeInUp" data-wow-delay="{{forloop.index | times:250}}ms">
+        <img src="{{site.baseurl}}{{classification.image}}" alt="">
+        <!-- Course Content -->
+        <div class="course-content">
+            <h4>{{classification.title}}</h4>
+            <div class="meta d-flex align-items-center">
+                {% for tag in classification.tags %}
+                <a>{{tag}}</a>
+                {% if forloop.last %}
+                {% else %}
+                <span><i class="fa fa-circle" aria-hidden="true"></i></span>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <p>{{classification.description | truncate: 100}}</p>
+        </div>
+        <!-- Seat Rating Fee -->
+        <div class="seat-rating-fee d-flex justify-content-between">
+            <div class="seat-rating h-100 d-flex align-items-center">
+                <div class="seat">
+                    <i class="fa fa-user" aria-hidden="true"></i> {{classification.mentors | size}}
+                </div>
+                <div class="rating">
+                    <i class="fa fa-tag" aria-hidden="true"></i> {{classification.tags | size}}
+                </div>
+            </div>
+            <div class="course-fee h-100">
+                <a href="{{classification.url}}" class="free">Apply</a>
+            </div>
+        </div>
+    </div>
+</div>

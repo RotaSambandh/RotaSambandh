@@ -1,0 +1,61 @@
+---
+layout: default
+title: Classifications
+---
+
+{% include breadcumbs.html %}
+<!-- ##### Catagory ##### -->
+<div class="clever-catagory bg-img d-flex align-items-center justify-content-center p-3"
+    style="background-image: url({{site.baseurl}}/img/aboutbg.png);">
+    <h3>{{page.title}}</h3>
+</div>
+
+<section class="section-padding-100-0">
+    <div class="container">
+        <div class="row justify-content-center">
+
+            <div class="col-12 col-lg-8 md-form mb-3">
+                <input type="text" id="search-input" class="form-control form-control-lg" placeholder="search ...">
+                <label for="search-input" class="text-muted"><i>Search through Classifications, Mentors and their Companies ...</i></label>
+            </div>
+
+            <div class="col-12 col-lg-8 text-center" id="search-container">
+                <ul id="results-container">
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<script src="{{site.baserul}}/search.js" type="text/javascript"></script>
+ 
+<!-- Configuration -->
+<script>
+    SimpleJekyllSearch({
+        searchInput: document.getElementById('search-input'),
+        resultsContainer: document.getElementById('results-container'),
+        searchResultTemplate: '<li><a href="{url}"><p><strong>{title}</strong> <i>{tags}</i></p></a></li><hr style="border-top: 1px dashed grey">',
+        noResultsText: "<li><p>No results found!</p></li>",
+        json: '/search.json'
+    })
+</script>
+
+
+<!-- ##### Popular Course Area Start ##### -->
+<section class="popular-courses-area section-padding-100-0">
+    <div class="container">
+        <div class="row justify-content-center">
+
+            {% assign sorted_classifications = site.classifications | sort: 'title' %}
+            {% for classification in sorted_classifications %}
+            {% include classification.html %}
+            {% endfor %}
+
+        </div>
+
+    </div>
+</section>
+<!-- ##### Popular Course Area End ##### -->
