@@ -4,7 +4,7 @@ title: Contact
 ---
 
 {% include breadcumbs.html %}
-<!-- ##### Google Maps ##### -->
+    <!-- ##### Google Maps ##### -->
     <div class="map-area">
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248849.55224637807!2d77.49085349891229!3d12.954294596849206!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1607107583090!5m2!1sen!2sin" id="googleMap" frameborder="0" style="border:0;" allowfullscreen="" aria-hidden="true" tabindex="0"></iframe>
     </div>
@@ -35,37 +35,43 @@ title: Contact
                     <div class="contact-form">
                         <h4>Get In Touch</h4>
                         
-                        <form action="#" method="post">
+                        <script type="text/javascript">
+                            var submission = false;
+                          </script>
+                          <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+                          onload="if(submission)  {window.location='/thankyou';}"></iframe>
+
+                        <form action="https://docs.google.com/forms/d/e/1FAIpQLSeLMU9gKSd8s2nuXEuPTeGWnFGlr7d8QLkFi1lF-gg5Ok_jHA/formResponse" target="hidden_iframe" onsubmit="submission=true;" method="post">
                             <div class="row">
                                 <div class="col-12 col-lg-6">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="text" placeholder="Name *" required>
+                                        <input type="text" class="form-control" name="entry.1562269415" id="text" placeholder="Name *" required>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <div class="form-group">
-                                        <input type="tel" class="form-control" id="phone" pattern="[6-9]{1}[0-9]{9}" oninvalid="setCustomValidity('Enter Valid 10-Digit Phone Number')" oninput="setCustomValidity('')" placeholder="Phone">
+                                        <input type="tel" class="form-control" name="entry.1725220458" id="phone" pattern="[6-9]{1}[0-9]{9}" oninvalid="setCustomValidity('Enter Valid 10-Digit Phone Number')" oninput="setCustomValidity('')" placeholder="Phone">
                                     </div>
                                 </div>
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <input type="email" class="form-control" id="email" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Email *" required>
+                                        <input type="email" class="form-control" name="entry.109039171" id="email" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Email *" required>
                                     </div>
                                 </div>
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <textarea name="message" class="form-control" id="message" cols="30" rows="10" placeholder="Message *" required></textarea>
+                                        <textarea class="form-control" name="entry.1271767457" id="message" cols="30" rows="10" placeholder="Message *" required></textarea>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <hr>
                                     <div class="form-group">
                                         <p>What is the Sum of 1+1?</p>
-                                        <input type="text" class="form-control" id="text" pattern="2" oninvalid="setCustomValidity('Enter Correct Answer')" oninput="setCustomValidity('')" placeholder="Enter the Answer *" required>
+                                        <input type="text" class="form-control" id="honeypot" pattern="2" oninvalid="setCustomValidity('Enter Correct Answer')" oninput="setCustomValidity('')" placeholder="Enter the Answer *" required>
                                     </div>
                                 </div>
                                 <div class="col-12">
-                                    <button class="btn clever-btn w-100">Send the Message</button>
+                                    <button class="btn clever-btn w-100" type="submit">Send the Message</button>
                                 </div>
                             </div>
                         </form>

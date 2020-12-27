@@ -257,6 +257,7 @@ layout: default
                                                         <p>Enter accurate and elaborate information, to help our team understand your interests to make best matches.</p>
                                                         <hr style="border-top: 1px dashed grey">
                                                         {% if page.applications and site.data.sitedata.applications_master %}
+
                                                         <script type="text/javascript">
                                                             var submission = false;
                                                           </script>
@@ -273,7 +274,7 @@ layout: default
                                                                 </div>
                                                                 <div class="col-12 col-lg-6">
                                                                     <div class="form-group">
-                                                                        <input type="email" class="form-control" name="entry.287021469" id="email" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Email *" required>
+                                                                        <input type="email" class="form-control" name="entry.1239547188" id="email" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Email *" required>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-12 col-lg-12">
@@ -291,7 +292,7 @@ layout: default
                                                                     <hr style="border-top: 1px dashed grey">
                                                                     <p>Profile Links (To promote best practice Linkedin URL is made madatory)</p>
                                                                     <div class="form-group">
-                                                                        <input type="url" class="form-control" name="entry.1169010257" id="linkedinphone" placeholder="Enter your Linkedin Profile Link *" required>
+                                                                        <input type="url" class="form-control" name="entry.1169010257" id="linkedinProfile" placeholder="Enter your Linkedin Profile Link *" required>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-12 col-lg-12">
@@ -325,7 +326,7 @@ layout: default
                                                                 </div>
                                                                 <div class="col-12 col-lg-12">
                                                                     <div class="form-group">
-                                                                        <textarea name="whyPreference" rows="3" class="form-control" name="entry.1198186978" id="whyPreferrence" placeholder="Why are do you prefer to connect with the mentors selected above? (Ignore if not selected)"></textarea>
+                                                                        <textarea rows="3" class="form-control" name="entry.1198186978" id="whyPreferrence" placeholder="Why are do you prefer to connect with the mentors selected above? (Ignore if not selected)"></textarea>
                                                                     </div>
                                                                 </div>
 
@@ -333,7 +334,7 @@ layout: default
                                                                     <hr style="border-top: 1px dashed grey">
                                                                     <p>RotaSambandh Format</p>
                                                                     <div class="form-group">
-                                                                        <select type="list" class="custom-select" name="entry.48399050" id="group" required>
+                                                                        <select type="list" class="custom-select" name="entry.48399050" id="format" required>
                                                                             <option value="" disabled="" selected="" hidden="">Select the RotaSambandh Format *</option>
                                                                             <option value="Connect with the Mentor">Connect with the Mentor</option>
                                                                             <option value="Shadow the Mentor">Shadow the Mentor</option>
@@ -343,7 +344,7 @@ layout: default
 
                                                                 <div class="col-12 col-lg-12">
                                                                     <div class="form-group">
-                                                                        <textarea name="message" rows="5" class="form-control" name="entry.914810392" id="expectations" placeholder="What are you expecting to accomplish from the session with the Mentors from the classification of '{{page.title}}'? *"></textarea>
+                                                                        <textarea rows="5" class="form-control" name="entry.914810392" id="expectations" placeholder="What are you expecting to accomplish from the session with the Mentors from the classification of '{{page.title}}'? *"></textarea>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-12">
@@ -356,6 +357,7 @@ layout: default
                                                         {% endif %}
                                                         <hr style="border-top: 1px dashed grey">
                                                     </div>  
+
                                                 </div>
                                             </div>
                                             
