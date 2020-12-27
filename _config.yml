@@ -6,13 +6,11 @@ url: "https://rotasambandh.com" # the base hostname & protocol for your site
 baseurl: ""
 timezone: Asia/Kolkata
 
-# icon: /assets/images/logo3.png
-
 description: RotaSambandh connects you with the Achievers and Established professionals ie.Mentors(Rotarians) from various classifications of your Choice and Passion. This Project is initiated by Rotaract Bangalore East under the leadership of Rtr. Rtr. Arun Teja Godavarthi (aka. ZeoSpec).
 
 # Build settings
 markdown: kramdown
-# highlighter: rouge
+highlighter: rouge
 # permalink: blog/:year/:month/:day/:title/
 # paginate: 4
 # paginate_path: blog/page-:num/

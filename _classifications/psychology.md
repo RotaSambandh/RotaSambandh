@@ -5,11 +5,9 @@ image: /img/previewimg.png
 featured: false
 applications: false
 tags:
-  - abc
-  - cde
-  - xyz
-  - cde
-  - xyz
+#  - abc
+#  - cde
+#  - xyz
 classification_partners:
   - type: Classification Supporter
     list:
@@ -26,7 +24,8 @@ classification_partners:
       - name: Mark of excellance
         img: /img/ritheme_rotary.png
 description:
-  Sed elementum lacus a risus luctus suscipit. Aenean sollicitudin sapien neque, in fermentum lorem dignissim a. Nullam eu mattis quam. Donec porttitor nunc a diam molestie blandit. Maecenas quis ultrices ex. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam eget vehicula lorem, vitae porta nisi. Ut vel quam erat. Ut vitae erat tincidunt, tristique mi ac, pharetra dolor. In et suscipit ex. Pellentesque aliquet velit tortor, eget placerat mi scelerisque a. Aliquam eu dui efficitur purus posuere viverra. Proin ut elit mollis, euismod diam et, fermentum enim.
+  Psychology is the science of mind and behavior. Psychology includes the study of conscious and unconscious phenomena, as well as feeling and thought. It is an academic discipline of immense scope. Psychologists seek an understanding of the emergent properties of brains, and all the variety of phenomena linked to those emergent properties, joining this way the broader neuro-scientific group of researchers. As a social science, it aims to understand individuals and groups by establishing general principles and researching specific cases.
+
 # mentors:
 #   - name: Testing Name
 #     company: Company

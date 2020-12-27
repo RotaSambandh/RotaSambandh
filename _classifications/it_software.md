@@ -5,11 +5,9 @@ image: /img/previewimg.png
 featured: true
 applications: false
 tags:
-  - abc
-  - cde
-  - xyz
-  - cde
-  - xyz
+#  - abc
+#  - cde
+#  - xyz
 classification_partners:
   - type: Classification Supporter
     list:
@@ -26,7 +24,14 @@ classification_partners:
       - name: Mark of excellance
         img: /img/ritheme_rotary.png
 description:
-  Sed elementum lacus a risus luctus suscipit. Aenean sollicitudin sapien neque, in fermentum lorem dignissim a. Nullam eu mattis quam. Donec porttitor nunc a diam molestie blandit. Maecenas quis ultrices ex. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam eget vehicula lorem, vitae porta nisi. Ut vel quam erat. Ut vitae erat tincidunt, tristique mi ac, pharetra dolor. In et suscipit ex. Pellentesque aliquet velit tortor, eget placerat mi scelerisque a. Aliquam eu dui efficitur purus posuere viverra. Proin ut elit mollis, euismod diam et, fermentum enim.
+  Software Engineering
+  Software engineering is a computing discipline involving the systematic application of engineering approaches to the development of software.
+  Software engineers need to apply the best of their knowledge and skills to solve complex real world problems and make things easier for the rest of the world.
+
+  Information Technology
+  Information technology (IT) is the use of computers to store, retrieve, transmit, and manipulate data[1] or information. 
+  IT is typically used within the context of business operations as opposed to personal or entertainment technologies.
+  IT professionals learn to manage and assess data in quickest and easiest ways possible.
 mentors:
   - name: Rtr.Rtn. Arun Teja Godavarthi
     company: Founder, MrProfessor

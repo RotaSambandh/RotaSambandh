@@ -5,11 +5,9 @@ image: /img/previewimg.png
 featured: false
 applications: false
 tags:
-  - abc
-  - cde
-  - xyz
-  - cde
-  - xyz
+#  - abc
+#  - cde
+#  - xyz
 classification_partners:
   - type: Classification Supporter
     list:
@@ -26,7 +24,8 @@ classification_partners:
       - name: Mark of excellance
         img: /img/ritheme_rotary.png
 description:
-  Sed elementum lacus a risus luctus suscipit. Aenean sollicitudin sapien neque, in fermentum lorem dignissim a. Nullam eu mattis quam. Donec porttitor nunc a diam molestie blandit. Maecenas quis ultrices ex. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam eget vehicula lorem, vitae porta nisi. Ut vel quam erat. Ut vitae erat tincidunt, tristique mi ac, pharetra dolor. In et suscipit ex. Pellentesque aliquet velit tortor, eget placerat mi scelerisque a. Aliquam eu dui efficitur purus posuere viverra. Proin ut elit mollis, euismod diam et, fermentum enim.
+  Tourism is travel for pleasure or business; also the theory and practice of touring, the business of attracting, accommodating, and entertaining tourists, and the business of operating tours.[2] The World Tourism Organization defines tourism more generally, in terms which go "beyond the common perception of tourism as being limited to holiday activity only", as people "traveling to and staying in places outside their usual environment for not more than one consecutive year for leisure and not less than 24 hours, business and other purposes".
+
 # mentors:
 #   - name: Testing Name
 #     company: Company

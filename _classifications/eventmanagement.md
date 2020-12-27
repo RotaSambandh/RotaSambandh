@@ -5,11 +5,9 @@ image: /img/previewimg.png
 featured: true
 applications: true
 tags:
-  - abc
-  - cde
-  - xyz
-  - cde
-  - xyz
+#  - abc
+#  - cde
+#  - xyz
 classification_partners:
   - type: Classification Supporter
     list:
@@ -26,7 +24,7 @@ classification_partners:
       - name: Mark of excellance
         img: /img/ritheme_rotary.png
 description:
-  Sed elementum lacus a risus luctus suscipit. Aenean sollicitudin sapien neque, in fermentum lorem dignissim a. Nullam eu mattis quam. Donec porttitor nunc a diam molestie blandit. Maecenas quis ultrices ex. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam eget vehicula lorem, vitae porta nisi. Ut vel quam erat. Ut vitae erat tincidunt, tristique mi ac, pharetra dolor. In et suscipit ex. Pellentesque aliquet velit tortor, eget placerat mi scelerisque a. Aliquam eu dui efficitur purus posuere viverra. Proin ut elit mollis, euismod diam et, fermentum enim.
+  Event management is the application of project management to the creation and development of small and/or large-scale personal or corporate events such as festivals, conferences, ceremonies, weddings, formal parties, concerts, or conventions. It involves studying the brand, identifying its target audience, devising the event concept, and coordinating the technical aspects before actually launching the event. The events industry now includes events of all sizes from the Olympics down to business breakfast meetings. Event planning includes budgeting, scheduling, site selection, acquiring necessary permits, coordinating transportation and parking, arranging for speakers or entertainers, arranging decor, event security, catering, coordinating with third party vendors, and emergency plans. The event manager is the person who plans and executes the event, taking responsibility for the creative, technical, and logistical elements. Apply for an opportunity to get trained under few of the best Event Managers in business.
 mentors:
   - name: Rtn. Krishna B Mariyanka
     company: Ajira Global
@@ -45,5 +43,6 @@ mentors:
       twitter: https://twitter.com/ZeoSpec
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
+      link: https://zeospec.com
     introduction: Arun is a passionate Community Builder, Rotaractor, Entrepreneur, Open Source Advocate, Trainer, and loves exploring the uncharted paths.
 ---
