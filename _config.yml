@@ -1,8 +1,8 @@
 # Site settings
 title: RotaSambadh
 subtitle: "A Navigator to your Destination"
-url: "https://rotasambandh.com" # the base hostname & protocol for your site
-# baseurl: "/the/subpath/of/your/site" # Set this value to "" if you want your site to be root
+url: "https://rotasambandh.com/"
+# url: ""
 baseurl: ""
 timezone: Asia/Kolkata
 

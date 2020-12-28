@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   Financial services are the economic services which includes a broad range of businesses that manage money, including credit unions, banks, credit-card companies, insurance companies, accountancy companies, consumer-finance companies, stock brokerages, investment funds, individual managers and some government-sponsored enterprises. Apply to observe and get on field experience in the industry.
 

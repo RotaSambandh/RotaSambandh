@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   Event management is the application of project management to the creation and development of small and/or large-scale personal or corporate events such as festivals, conferences, ceremonies, weddings, formal parties, concerts, or conventions. It involves studying the brand, identifying its target audience, devising the event concept, and coordinating the technical aspects before actually launching the event. The events industry now includes events of all sizes from the Olympics down to business breakfast meetings. Event planning includes budgeting, scheduling, site selection, acquiring necessary permits, coordinating transportation and parking, arranging for speakers or entertainers, arranging decor, event security, catering, coordinating with third party vendors, and emergency plans. The event manager is the person who plans and executes the event, taking responsibility for the creative, technical, and logistical elements. Apply for an opportunity to get trained under few of the best Event Managers in business.
 mentors:

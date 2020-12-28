@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   Create Visual Artifact artworks which express your imagination, conceeptual ideas or technical skills. Become a Master of Painting , Sculpturing or Architecture. Performing arts such as Music, Theatre, Film and Dance are also included under this classification.
 # mentors:

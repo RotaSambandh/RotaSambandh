@@ -3,7 +3,7 @@ layout: classification
 title: Digital Marketing
 image: /img/previewimg.png
 featured: true
-applications: false
+applications: true
 tags:
 #  - abc
 #  - cde
@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   Digital marketing is the component of marketing that utilizes internet and online based digital technologies such as desktop computers, mobile phones and other digital media and platforms to promote products and services. Digital platforms have become increasingly incorporated into marketing plans and everyday life. Sub-categories include search engine optimization (SEO), search engine marketing (SEM), content marketing, influencer marketing, content automation, campaign marketing, data-driven marketing, e-commerce marketing, social media marketing, social media optimization, e-mail direct marketing, display advertising, e–books, and optical disks and games. Digital marketing also extends to television, mobile phones (SMS and MMS), callback, and on-hold mobile ring tones.
 mentors:

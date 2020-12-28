@@ -9,8 +9,20 @@ stats:
   applications: 1111
   connects: 1111
 
-applications_master: false
+applications_master: true
 
+faqs:
+  - question: What is RotaSambandh?
+    answer: Navigator to your Destination.
+  - question: What is RotaSambandh?
+    answer: Navigator to your Destination.
+  - question: What is RotaSambandh?
+    answer: Navigator to your Destination.
+  - question: What is RotaSambandh?
+    answer: Navigator to your Destination.
+  - question: What is RotaSambandh?
+    answer: Navigator to your Destination.
+    
 team_members:
   - name: Rtr. Arun Teja Godavarthi
     role: Creator & Advisory Chair

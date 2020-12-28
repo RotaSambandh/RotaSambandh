@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   Psychology is the science of mind and behavior. Psychology includes the study of conscious and unconscious phenomena, as well as feeling and thought. It is an academic discipline of immense scope. Psychologists seek an understanding of the emergent properties of brains, and all the variety of phenomena linked to those emergent properties, joining this way the broader neuro-scientific group of researchers. As a social science, it aims to understand individuals and groups by establishing general principles and researching specific cases.
 

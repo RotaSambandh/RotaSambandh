@@ -132,55 +132,19 @@ layout: default
 
                                             <div class="accordions" id="accordion" role="tablist" aria-multiselectable="true">
 
+                                                {% for faq in site.data.sitedata.faqs %}
                                                 <!-- Single Accordian Area -->
                                                 <div class="panel single-accordion">
-                                                    <h6><a role="button" class="" aria-expanded="true" aria-controls="collapseOne" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">consectetur adipiscing elit. Etiam vulputate id justo quis facilisis?
+                                                    <h6><a role="button" class="{% if forloop.first %}{% else %}collapsed{% endif %}" aria-expanded="true" aria-controls="collapse{{forloop.index}}" data-toggle="collapse" data-parent="#accordion" href="#collapse{{forloop.index}}">{{faq.question}}
                                                     <span class="accor-open"><i class="fa fa-plus"></i></span>
                                                     <span class="accor-close"><i class="fa fa-minus"></i></span>
                                                     </a></h6>
-                                                    <div id="collapseOne" class="accordion-content collapse show">
-                                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce enim nulla, mollis eu metus in, sagittis fringilla tortor.</p>
+                                                    <div id="collapse{{forloop.index}}" class="accordion-content collapse {% if forloop.first %}show{% endif %}">
+                                                        <p>{{faq.answer}}</p>
                                                     </div>
                                                 </div>
+                                                {% endfor %}
 
-                                                <!-- Single Accordian Area -->
-                                                <div class="panel single-accordion">
-                                                    <h6>
-                                                        <a role="button" class="collapsed" aria-expanded="true" aria-controls="collapseTwo" data-parent="#accordion" data-toggle="collapse" href="#collapseTwo">consectetur adipiscing elit. Etiam vulputate id justo quis facilisis?
-                                                        <span class="accor-open"><i class="fa fa-plus"></i></span>
-                                                        <span class="accor-close"><i class="fa fa-minus"></i></span>
-                                                        </a>
-                                                    </h6>
-                                                    <div id="collapseTwo" class="accordion-content collapse">
-                                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel lectus eu felis semper finibus ac eget ipsum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vulputate id justo quis facilisis.</p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Single Accordian Area -->
-                                                <div class="panel single-accordion">
-                                                    <h6>
-                                                        <a role="button" aria-expanded="true" aria-controls="collapseThree" class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseThree">consectetur adipiscing elit. Etiam vulputate id justo quis facilisis?
-                                                        <span class="accor-open"><i class="fa fa-plus"></i></span>
-                                                        <span class="accor-close"><i class="fa fa-minus"></i></span>
-                                                        </a>
-                                                    </h6>
-                                                    <div id="collapseThree" class="accordion-content collapse">
-                                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel lectus eu felis semper finibus ac eget ipsum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vulputate id justo quis facilisis.</p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Single Accordian Area -->
-                                                <div class="panel single-accordion">
-                                                    <h6>
-                                                        <a role="button" aria-expanded="true" aria-controls="collapseFour" class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseFour">consectetur adipiscing elit. Etiam vulputate id justo quis facilisis?
-                                                        <span class="accor-open"><i class="fa fa-plus"></i></span>
-                                                        <span class="accor-close"><i class="fa fa-minus"></i></span>
-                                                        </a>
-                                                    </h6>
-                                                    <div id="collapseFour" class="accordion-content collapse">
-                                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel lectus eu felis semper finibus ac eget ipsum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vulputate id justo quis facilisis.</p>
-                                                    </div>
-                                                </div>
                                             </div>
 
                                         </div>

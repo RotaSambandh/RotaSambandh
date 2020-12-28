@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   The Food and Beverage (F&B) industry includes companies involved in producing, processing, packaging, transporting, and distributing edible goods - from the farm (or factory) to the fork. The F&B industry is one of the world's largest industries with regards to both revenue and employment. Included in this classification is the business of Restaurants and Fast food joints. Apply to work under the best Chefs and Restaurant Managers in town.
 

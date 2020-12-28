@@ -3,7 +3,7 @@ layout: classification
 title: IT & Software
 image: /img/previewimg.png
 featured: true
-applications: false
+applications: true
 tags:
 #  - abc
 #  - cde
@@ -11,18 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
-      - name: Mark of excellance
+      - name: Rotary
         img: /img/rotary.png
-      - name: Mark of excellance
+      - name: Rotaract
         img: /img/rotaract.png
-      - name: Mark of excellance
-        img: /img/rotaract3190.png
-  - type: Classification Partner
-    list:
-      - name: Mark of excellance
-        img: /img/ritheme_rotary.png
 description:
   Software Engineering
   Software engineering is a computing discipline involving the systematic application of engineering approaches to the development of software.

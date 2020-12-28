@@ -27,7 +27,11 @@
                 </div> -->
             </div>
             <div class="course-fee h-100">
+                {% if classification.applications and site.data.sitedata.applications_master %} 
                 <a href="{{classification.url}}" class="free">Apply</a>
+                {% else %}
+                <a href="{{classification.url}}">T.B.O</a>
+                {% endif %}
             </div>
         </div>
     </div>
