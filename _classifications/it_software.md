@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: IT & Software
-image: /img/previewimg.png
+image: /img/classifications/it_software.png
 featured: true
 applications: false
 tags:

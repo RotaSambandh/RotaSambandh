@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Human Resource Development
-image: /img/previewimg.png
+image: /img/classifications/hrd.png
 featured: true
 applications: false
 tags:

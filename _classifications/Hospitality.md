@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Hospitality
-image: /img/previewimg.png
+image: /img/classifications/hospitality.png
 featured: true
 applications: false
 tags:

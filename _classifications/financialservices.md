@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Financial Services
-image: /img/previewimg.png
+image: /img/classifications/financialservices.png
 featured: true
 applications: false
 tags:

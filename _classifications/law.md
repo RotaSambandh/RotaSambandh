@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Law
-image: /img/previewimg.png
+image: /img/classifications/law.png
 featured: true
 applications: false
 tags:

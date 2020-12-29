@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Digital Marketing
-image: /img/previewimg.png
+image: /img/classifications/digitalmarketing.png
 featured: true
 applications: false
 tags:
