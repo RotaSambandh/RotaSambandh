@@ -6,114 +6,114 @@ permalink: about
 
 {% include breadcumbs.html %}
 
-    <!-- ##### Catagory Area Start ##### -->
-    <div class="clever-catagory blog-details bg-img d-flex align-items-center justify-content-center p-3 height-400" style="background-image: url(img/aboutbg.png);">
-        <div class="blog-details-headline">
-            <h3>{{page.title}}</h3>
-        </div>
+<!-- ##### Catagory Area Start ##### -->
+<div class="clever-catagory blog-details bg-img d-flex align-items-center justify-content-center p-3 height-400"
+    style="background-image: url(img/aboutbg.png);">
+    <div class="blog-details-headline">
+        <h3>{{page.title}}</h3>
     </div>
-    <!-- ##### Catagory Area End ##### -->
+</div>
+<!-- ##### Catagory Area End ##### -->
 
-    <div class="blog-details-content section-padding-100-0">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-12 col-lg-8">
-                    <div class="blog-details-text">
-                        <p>RotaSambandh connects you with the Achievers and Established professionals ie.Mentors(Rotarians) from various classifications of your Choice and Passion.</p>
-                        <h5 class="text-center py-4">A Mentor is someone who allows you to see the hope inside yourself.<br>— oprah winfrey.</h5>
-                        <p class="text-center py-4">&#9830;	&#9830;	&#9830;</p>
-                        <h6 class="text-center">Stages of Application</h6>
-                        <p class="text-center">Navigate across Classifications<br>&#8595;<br>Apply<br>&#8595;<br>Review Process<br>&#8595;<br>Matching(RotaSambandh Team)<br>&#8595;<br>Rotaractor and Rotarian(Mentor) Connect</p>
-                        <p class="text-center py-4">&#9830;	&#9830;	&#9830;</p>
-                    </div>
+<div class="blog-details-content section-padding-100-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="blog-details-text">
+                    <p>RotaSambandh connects you with the Achievers and Established professionals ie.Mentors(Rotarians)
+                        from various classifications of your Choice and Passion.</p>
+                    <h5 class="text-center py-4">A Mentor is someone who allows you to see the hope inside
+                        yourself.<br>— oprah winfrey.</h5>
+                    <p class="text-center py-4">&#9830; &#9830; &#9830;</p>
+                    <h6 class="text-center">Stages of Application</h6>
+                    <p class="text-center">Navigate across Classifications<br>&#8595;<br>Apply<br>&#8595;<br>Review
+                        Process<br>&#8595;<br>Matching(RotaSambandh Team)<br>&#8595;<br>Rotaractor and Rotarian(Mentor)
+                        Connect</p>
+                    <p class="text-center py-4">&#9830; &#9830; &#9830;</p>
                 </div>
             </div>
         </div>
-
-        <div class="related-posts section-padding-100-0">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="section-heading">
-                            <h3>Formats</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-
-                    <!-- Single Format Area -->
-                    <div class="col-12 col-lg-6">
-                        <div class="single-blog-area mb-100">
-                            <img src="img/aboutbg.png" alt="">
-                            <!-- Content -->
-                            <div class="blog-content">
-                                <a href="#" class="blog-headline">
-                                    <h4>Connect with the Mentor</h4>
-                                </a>
-                                <p>Great to interact with the Mentor from the Classification you are passionate, to advance your thoughts towards success.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Single Format Area -->
-                    <div class="col-12 col-lg-6">
-                        <div class="single-blog-area mb-100">
-                            <img src="img/aboutbg.png" alt="">
-                            <!-- Content -->
-                            <div class="blog-content">
-                                <a href="#" class="blog-headline">
-                                    <h4>Shadow the Mentor</h4>
-                                </a>
-                                <p>Spend a day in the life of the Mentor in the Classification of you choice. Gain insights on the realworld industry experience.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- ##### People Behid RotaSambandh Start ##### -->
-    <section class="best-tutors-area section-padding-100">
-        <div class="container">
+    <div class="related-posts section-padding-100-0">
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
                     <div class="section-heading">
-                        <h3>People behind RotaSambandh</h3>
+                        <h3>Formats</h3>
                     </div>
                 </div>
             </div>
-
             <div class="row">
-                <div class="col-12">
-                    <div class="tutors-slide owl-carousel">
-                        {% for member in site.data.sitedata.team_members %}
-                        <!-- Single Team Member Slide -->
-                        <div class="single-tutors-slides">
-                            <!-- Member Thumbnail -->
-                            <div class="tutor-thumbnail">
-                                <img src="{{site.baseurl}}{{member.img}}" alt="{{member.name}}">
-                            </div>
-                            <!-- Member Information -->
-                            <div class="tutor-information text-center">
-                                <h5>{{member.name}}</h5>
-                                <span>{{member.role}}</span>
-                                <p>{{member.introduction | truncate: 125}}</p>
-                                <div class="social-info">
-                                    {% for social in member.social %}
-                                    {% if social[1] %}
-                                    <a href="{{ social[1] }}" target="_blank"><i class="fa fa-{{ social[0] }}" aria-hidden="true"></i></a>
-                                    {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
+
+                <!-- Single Format Area -->
+                <div class="col-12 col-lg-6">
+                    <div class="single-blog-area mb-100">
+                        <img src="img/aboutbg.png" alt="">
+                        <!-- Content -->
+                        <div class="blog-content">
+                            <a href="#" class="blog-headline">
+                                <h4>Connect with the Mentor</h4>
+                            </a>
+                            <p>Great to interact with the Mentor from the Classification you are passionate, to advance
+                                your thoughts towards success.</p>
                         </div>
-                        {% endfor %}
                     </div>
+                </div>
+
+                <!-- Single Format Area -->
+                <div class="col-12 col-lg-6">
+                    <div class="single-blog-area mb-100">
+                        <img src="img/aboutbg.png" alt="">
+                        <!-- Content -->
+                        <div class="blog-content">
+                            <a href="#" class="blog-headline">
+                                <h4>Shadow the Mentor</h4>
+                            </a>
+                            <p>Spend a day in the life of the Mentor in the Classification of you choice. Gain insights
+                                on the realworld industry experience.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<section class="section-padding-100" style="background-image: url(img/core-img/texture.png);">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="section-heading">
+                    <h3>People behind RotaSambandh</h3>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- ##### People Behid RotaSambandh End ##### -->
+    <div class="row justify-content-center">
+        {% for member in site.data.sitedata.team_members %}
+        <div class="col-md-6 col-lg-4 mb-30">
+            <div class="team-item">
+                <div class="mb-30 position-relative d-flex align-items-center">
+                        <span class="socials d-inline-block">
+                            {% for social in member.social %}
+                            {% if social[1] %}
+                            <a href="{{ social[1] }}" target="_blank" class="fa fa-{{ social[0] }}" aria-hidden="true"></a>
+                            {% endif %}
+                            {% endfor %}
+                        </span>
+                    <span class="img-holder d-inline-block">
+                            <img src="{{site.baseurl}}{{member.img}}" alt="{{member.name}}">
+                        </span>
+                </div>
+                <div class="team-content">
+                    <h5 class="mb-2">{{member.name}}</h5>
+                    <p class="text-uppercase mb-0">{{member.role}}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</section>

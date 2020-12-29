@@ -32,34 +32,14 @@ team_members:
       twitter: https://twitter.com/ZeoSpec
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Currently Serving as DRS Operations & Training for RID 3190, he hails from Rotaract Bangalore East.
-  - name: Rtr. ABC
-    role: Role XYZ
-    img: 
+  - name: TBA
+    role: TBA
+    img: /img/team/avatar.jpg
     social:
-      linkedin: https://www.linkedin.com/in/zeospec/
-      twitter: https://twitter.com/ZeoSpec
-      facebook: https://www.facebook.com/zeospec/
-      instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Short bio about Rotaractor
-  - name: Rtr. ABC
-    role: Role XYZ
-    img: 
-    social:
-      linkedin: https://www.linkedin.com/in/zeospec/
-      twitter: https://twitter.com/ZeoSpec
-      facebook: https://www.facebook.com/zeospec/
-      instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Short bio about Rotaractor
-  - name: Rtr. ABC
-    role: Role XYZ
-    img: 
-    social:
-      linkedin: https://www.linkedin.com/in/zeospec/
-      twitter: https://twitter.com/ZeoSpec
-      facebook: https://www.facebook.com/zeospec/
-      instagram: https://www.instagram.com/ZeoSpec/
-    introduction: Short bio about Rotaractor
+      linkedin:
+      twitter: https://twitter.com/3190rbe
+      facebook: https://www.facebook.com/3190rbe
+      instagram: https://www.instagram.com/3190rbe
 
 partners:
   - type: Owner & Lead Partner
