@@ -2,7 +2,7 @@
 layout: classification
 title: Adventure Sports
 image: /img/previewimg.png
-featured: true
+featured: false
 applications: false
 tags:
   - Extreme Sports
@@ -10,10 +10,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Action sports, adventure sports or extreme sports are activities perceived as involving a high degree of risk. These activities often involve speed, height, a high level of physical exertion and highly specialized gear.
 # mentors:

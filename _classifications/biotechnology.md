@@ -5,16 +5,14 @@ image: /img/previewimg.png
 featured: false
 applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+ - Research
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Biotechnology is a broad area of biology, involving the use of living systems and organisms to develop or make products. This classification also sets the basics for genomics, recombinant gene techniques, applied immunology, and development of pharmaceutical therapies and diagnostic tests. 
 

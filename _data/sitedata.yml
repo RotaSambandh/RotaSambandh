@@ -9,7 +9,7 @@ stats:
   applications: 1111
   connects: 1111
 
-applications_master: true
+applications_master: false
 
 faqs:
   - question: What is RotaSambandh?
@@ -32,6 +32,23 @@ team_members:
       twitter: https://twitter.com/ZeoSpec
       facebook: https://www.facebook.com/zeospec/
       instagram: https://www.instagram.com/ZeoSpec/
+  - name: Rtr. Sachin T V
+    role: Chair, Execution
+    img: /img/team/sachin.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/sachiinvish
+      twitter: 
+      facebook: https://facebook.com/sachiinvish
+      instagram: https://instagram.com/sachiinvish
+      snapchat: https://www.snapchat.com/add/sachiinvish
+  - name: Rtr. Raj Vamshi K B
+    role: Lead, Rotary Outreach
+    img: /img/team/raj.jpg
+    social:
+      linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
+      twitter: 
+      facebook: https://m.facebook.com/kbrajvamshi
+      instagram: https://instagram.com/raj_vamshi
   - name: TBA
     role: TBA
     img: /img/team/avatar.jpg
@@ -42,21 +59,21 @@ team_members:
       instagram: https://www.instagram.com/3190rbe
 
 partners:
-  - type: Owner & Lead Partner
+  - type: Creators & Lead Partners
     line_count: 2
     list:
       - name: Rotaract Bangalore East
         link: https://3190rbe.org
-        img: img/rbe.png
-  - type: Lead Partner
+        img: /img/partners/rbe.png
+  - type: Lead Partners
     line_count: 3
     list:
       - name: Rotaract Bangalore Wast
         link: https://www.instagram.com/rotaract_bangalore_west/
-        img: img/rbw.png
+        img: /img/partners/rbw.png
   - type: Supporters
     line_count: 4
     list:
       - name: Rotaract 3190
         link: https://rotaract3190.org
-        img: img/rotaract3190.png
+        img: /img/partners/2021_3190.png

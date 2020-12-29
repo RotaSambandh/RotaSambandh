@@ -1,22 +1,21 @@
 ---
 layout: classification
-title: Psychology
+title: Tourism
 image: /img/previewimg.png
 featured: false
 applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+  - Domestic Tours
+  - International Tours
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
-  Psychology is the science of mind and behavior. Psychology includes the study of conscious and unconscious phenomena, as well as feeling and thought. It is an academic discipline of immense scope. Psychologists seek an understanding of the emergent properties of brains, and all the variety of phenomena linked to those emergent properties, joining this way the broader neuro-scientific group of researchers. As a social science, it aims to understand individuals and groups by establishing general principles and researching specific cases.
+  Tourism is travel for pleasure or business; also the theory and practice of touring, the business of attracting, accommodating, and entertaining tourists, and the business of operating tours.[2] The World Tourism Organization defines tourism more generally, in terms which go "beyond the common perception of tourism as being limited to holiday activity only", as people "traveling to and staying in places outside their usual environment for not more than one consecutive year for leisure and not less than 24 hours, business and other purposes".
 
 # mentors:
 #   - name: Testing Name

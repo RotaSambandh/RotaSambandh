@@ -10,10 +10,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Aerospace engineering is the primary field of engineering concerned with the development of aircraft and spacecraft. It has two major and overlapping branches - aeronautical engineering and astronautical engineering. Avionics engineering is similar, but deals with the electronics side of aerospace engineering.
 # mentors:

@@ -3,18 +3,18 @@ layout: classification
 title: Event Management
 image: /img/previewimg.png
 featured: true
-applications: true
+applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+ - Planning
+ - Communications
+ - Sponsorships
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Event management is the application of project management to the creation and development of small and/or large-scale personal or corporate events such as festivals, conferences, ceremonies, weddings, formal parties, concerts, or conventions. It involves studying the brand, identifying its target audience, devising the event concept, and coordinating the technical aspects before actually launching the event. The events industry now includes events of all sizes from the Olympics down to business breakfast meetings. Event planning includes budgeting, scheduling, site selection, acquiring necessary permits, coordinating transportation and parking, arranging for speakers or entertainers, arranging decor, event security, catering, coordinating with third party vendors, and emergency plans. The event manager is the person who plans and executes the event, taking responsibility for the creative, technical, and logistical elements. Apply for an opportunity to get trained under few of the best Event Managers in business.
 mentors:

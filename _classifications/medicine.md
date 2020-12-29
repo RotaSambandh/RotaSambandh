@@ -2,19 +2,20 @@
 layout: classification
 title: Medicine
 image: /img/previewimg.png
-featured: true
+featured: false
 applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+  - Medical Equipment
+  - Healthcare
+  - Drugs
+  - Medicare
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Medicine is the science and practice of establishing the diagnosis, prognosis, treatment, and prevention of disease. All Medical and Paramedical students apply under this classification to get opportunities to work in the most 
 

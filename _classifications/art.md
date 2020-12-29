@@ -11,10 +11,10 @@ tags:
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Create Visual Artifact artworks which express your imagination, conceeptual ideas or technical skills. Become a Master of Painting , Sculpturing or Architecture. Performing arts such as Music, Theatre, Film and Dance are also included under this classification.
 # mentors:

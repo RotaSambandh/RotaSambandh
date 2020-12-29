@@ -5,16 +5,15 @@ image: /img/previewimg.png
 featured: true
 applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+ - Hotels
+ - Luxury Services
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Hospitality is the relationship between a guest and a host, where in the host receives the guest with goodwill, including the reception and entertainment of guests, visitors, or strangers. Apply to get a first hand experience of the best practices in the industry.
 

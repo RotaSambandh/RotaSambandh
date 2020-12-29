@@ -5,16 +5,19 @@ image: /img/previewimg.png
 featured: true
 applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+ - Banking
+ - Accounting
+ - Insurance
+ - Stocks
+ - Insurance
+ - Stocks
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Financial services are the economic services which includes a broad range of businesses that manage money, including credit unions, banks, credit-card companies, insurance companies, accountancy companies, consumer-finance companies, stock brokerages, investment funds, individual managers and some government-sponsored enterprises. Apply to observe and get on field experience in the industry.
 

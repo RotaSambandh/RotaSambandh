@@ -7,7 +7,7 @@ layout: default
         <!-- Content -->
         <div class="single-course-intro-content text-center">
             <h3>{{page.title}}</h3>
-            <div class="meta d-flex align-items-center justify-content-center">
+            <div class="meta align-items-center justify-content-center">
                 {% for tag in page.tags %}
                 <a>{{tag}}</a>
                 {% if forloop.last %}
@@ -57,7 +57,7 @@ layout: default
                                             <!-- About Format -->
                                             <div class="about-curriculum mb-30">
                                                 <h4>Formats</h4>
-                                                <p>We have two formats namely "Connect with the Mentor" and "Shadow the Mentor", to connect the Rotarators with the Mentors(Rotarians) from various classifications of your Choice and Passion.</p>
+                                                <p>We have two formats namely "Connect with the Mentor" and "Shadow the Mentor", to connect the Rotaractors with the Mentors(Rotarians) from various classifications of your Choice and Passion.</p>
                                             </div>
     
                                             <!-- Format Level -->
@@ -348,7 +348,7 @@ layout: default
                                 </li>
                                 <li>
                                     <h6><i class="fa fa-user"></i> Mentors</h6>
-                                    <h6>{{page.mentors | size}}</h6>
+                                    <h6>{% if page.mentors.size > 0 %}{{page.mentors | size}}{% else %}TBA{% endif %}</h6>
                                 </li>
                             </ul>
                         </div>

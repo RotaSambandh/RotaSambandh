@@ -3,18 +3,18 @@ layout: classification
 title: IT & Software
 image: /img/previewimg.png
 featured: true
-applications: true
+applications: false
 tags:
-#  - abc
-#  - cde
-#  - xyz
+  - Development
+  - Testing
+  - Consulting
 classification_partners:
   - type: Classification Supporter
     list:
-      - name: Rotary
-        img: /img/rotary.png
-      - name: Rotaract
-        img: /img/rotaract.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
+      - name: Rotaract Bangalore East
+        img: /img/partners/rbe.png
 description:
   Software Engineering
   Software engineering is a computing discipline involving the systematic application of engineering approaches to the development of software.
