@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Event Management
-image: /img/classifications/eventmanagement.png
+image: /img/classifications/eventmanagement.jpeg
 featured: true
 applications: false
 tags:
