@@ -3,17 +3,17 @@ layout: classification
 title: Entertainment
 image: /img/classifications/entertainment.jpeg
 featured: false
-applications: true
+applications: false
 tags:
  - Movies
  - TV Shows
-classification_partners:
-  - type: Classification Supporter
-    list:
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
+# classification_partners:
+#   - type: Classification Supporter
+#     list:
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
 description:
   Entertainment has always been one of the most important industries in history. Storytelling, music, drama, dance, and different kinds of performance exist in all cultures and have developed into sophisticated forms. Engaging the audience is the most important aspect of any form of entertainment. Learn how to become a better entertainer and how to raise to the top in your field.
 # mentors:

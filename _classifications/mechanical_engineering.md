@@ -3,17 +3,17 @@ layout: classification
 title: Mechanical Engineering
 image: /img/classifications/mechanical_engineering.jpeg
 featured: false
-applications: true
+applications: false
 tags:
   - Manufacturing
   - Mechanical Design
-classification_partners:
-  - type: Classification Supporter
-    list:
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
+# classification_partners:
+#   - type: Classification Supporter
+#     list:
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
 description:
   Mechanical engineering is an engineering branch that combines engineering physics and mathematics principles with materials science to design, analyze, manufacture, and maintain mechanical systems. The mechanical engineering field requires an understanding of core areas including mechanics, dynamics, thermodynamics, materials science, structural analysis, and electricity. Mechanical Engineers physically manifest objects into the world.
 

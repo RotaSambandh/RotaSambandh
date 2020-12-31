@@ -3,18 +3,18 @@ layout: classification
 title: Art
 image: /img/classifications/art.jpeg
 featured: false
-applications: true
+applications: false
 tags:
   - Visual Artifact
   - Painting
   - Sculpturing
-classification_partners:
-  - type: Classification Supporter
-    list:
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
+# classification_partners:
+#   - type: Classification Supporter
+#     list:
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
 description:
   Create Visual Artifact artworks which express your imagination, conceeptual ideas or technical skills. Become a Master of Painting , Sculpturing or Architecture. Performing arts such as Music, Theatre, Film and Dance are also included under this classification.
 # mentors:

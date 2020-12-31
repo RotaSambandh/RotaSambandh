@@ -3,18 +3,18 @@ layout: classification
 title: Food & Beverages
 image: /img/classifications/food_beverages.jpeg
 featured: false
-applications: true
+applications: false
 tags:
  - Catering
  - Restaurents
  - Manufacturing
-classification_partners:
-  - type: Classification Supporter
-    list:
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
-      - name: Rotaract Bangalore East
-        img: /img/partners/rbe.png
+# classification_partners:
+#   - type: Classification Supporter
+#     list:
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
+#       - name: Rotaract Bangalore East
+#         img: /img/partners/rbe.png
 description:
   The Food and Beverage (F&B) industry includes companies involved in producing, processing, packaging, transporting, and distributing edible goods - from the farm (or factory) to the fork. The F&B industry is one of the world's largest industries with regards to both revenue and employment. Included in this classification is the business of Restaurants and Fast food joints. Apply to work under the best Chefs and Restaurant Managers in town.
 
