@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Medicine
-image: /img/previewimg.png
+image: /img/classifications/medicine.jpeg
 featured: false
 applications: true
 tags:

@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Tourism
-image: /img/previewimg.png
+image: /img/classifications/tourism.jpeg
 featured: false
 applications: true
 tags:

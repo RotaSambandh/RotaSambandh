@@ -9,7 +9,7 @@ stats:
   applications: 1111
   connects: 1111
 
-applications_master: true
+applications_master: false
 
 faqs:
   - question: What is RotaSambandh?

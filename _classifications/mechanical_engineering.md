@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Mechanical Engineering
-image: /img/previewimg.png
+image: /img/classifications/mechanical_engineering.jpeg
 featured: false
 applications: true
 tags:
