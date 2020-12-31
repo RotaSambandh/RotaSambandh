@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Entertainment
-image: /img/previewimg.png
+image: /img/classifications/entertainment.jpeg
 featured: false
 applications: false
 tags:

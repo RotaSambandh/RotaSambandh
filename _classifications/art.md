@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Art
-image: /img/previewimg.png
+image: /img/classifications/art.jpeg
 featured: false
 applications: false
 tags:

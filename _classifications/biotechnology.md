@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Biotechnology
-image: /img/previewimg.png
+image: /img/classifications/biotechnology.jpeg
 featured: false
 applications: false
 tags:

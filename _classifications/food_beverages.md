@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Food & Beverages
-image: /img/previewimg.png
+image: /img/classifications/food_beverages.jpeg
 featured: false
 applications: false
 tags:

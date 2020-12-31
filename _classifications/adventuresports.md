@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Adventure Sports
-image: /img/previewimg.png
+image: /img/classifications/adventuresports.jpeg
 featured: false
 applications: false
 tags:

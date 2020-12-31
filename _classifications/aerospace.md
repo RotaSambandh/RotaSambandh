@@ -1,7 +1,7 @@
 ---
 layout: classification
 title: Aerospace
-image: /img/previewimg.png
+image: /img/classifications/aerospace.jpeg
 featured: false
 applications: false
 tags:
