@@ -3,7 +3,7 @@ layout: classification
 title: Biotechnology
 image: /img/classifications/biotechnology.jpeg
 featured: false
-applications: false
+applications: true
 tags:
  - Research
 classification_partners:

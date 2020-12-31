@@ -3,7 +3,7 @@ layout: classification
 title: Digital Marketing
 image: /img/classifications/digitalmarketing.jpeg
 featured: true
-applications: false
+applications: true
 tags:
  - Graphic Design
  - Marketing

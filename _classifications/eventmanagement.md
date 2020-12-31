@@ -3,7 +3,7 @@ layout: classification
 title: Event Management
 image: /img/classifications/eventmanagement.jpeg
 featured: true
-applications: false
+applications: true
 tags:
  - Planning
  - Communications

@@ -3,7 +3,7 @@ layout: classification
 title: Financial Services
 image: /img/classifications/financialservices.jpeg
 featured: true
-applications: false
+applications: true
 tags:
  - Banking
  - Accounting

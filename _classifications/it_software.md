@@ -3,7 +3,7 @@ layout: classification
 title: IT & Software
 image: /img/classifications/it_software.jpeg
 featured: true
-applications: false
+applications: true
 tags:
   - Development
   - Testing

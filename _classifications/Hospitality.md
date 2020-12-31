@@ -3,7 +3,7 @@ layout: classification
 title: Hospitality
 image: /img/classifications/hospitality.jpeg
 featured: true
-applications: false
+applications: true
 tags:
  - Hotels
  - Luxury Services

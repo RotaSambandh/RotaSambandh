@@ -3,7 +3,7 @@ layout: classification
 title: Entertainment
 image: /img/classifications/entertainment.jpeg
 featured: false
-applications: false
+applications: true
 tags:
  - Movies
  - TV Shows

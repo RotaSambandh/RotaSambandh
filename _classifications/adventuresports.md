@@ -3,7 +3,7 @@ layout: classification
 title: Adventure Sports
 image: /img/classifications/adventuresports.jpeg
 featured: false
-applications: false
+applications: true
 tags:
   - Extreme Sports
   - Action Sports

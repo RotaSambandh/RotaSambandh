@@ -3,7 +3,7 @@ layout: classification
 title: Law
 image: /img/classifications/law.jpeg
 featured: true
-applications: false
+applications: true
 tags:
   - Domestic Law
   - International Law

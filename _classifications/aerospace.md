@@ -3,7 +3,7 @@ layout: classification
 title: Aerospace
 image: /img/classifications/aerospace.jpeg
 featured: false
-applications: false
+applications: true
 tags:
   - Aeronautics
   - Avionics

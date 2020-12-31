@@ -3,7 +3,7 @@ layout: classification
 title: Medicine
 image: /img/previewimg.png
 featured: false
-applications: false
+applications: true
 tags:
   - Medical Equipment
   - Healthcare

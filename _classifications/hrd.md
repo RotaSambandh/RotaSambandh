@@ -3,7 +3,7 @@ layout: classification
 title: Human Resource Development
 image: /img/classifications/hrd.jpeg
 featured: true
-applications: false
+applications: true
 tags:
  - Recruiting
  - Training

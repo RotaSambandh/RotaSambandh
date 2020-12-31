@@ -3,7 +3,7 @@ layout: classification
 title: Art
 image: /img/classifications/art.jpeg
 featured: false
-applications: false
+applications: true
 tags:
   - Visual Artifact
   - Painting
