@@ -83,37 +83,40 @@ permalink: about
 </div>
 
 <section class="section-padding-100" style="background-image: url(img/core-img/texture.png);">
-    <div class="container">
-        <div class="row">
+   
+     <div class="container">
+        {% for group in site.data.sitedata.team %}
+        <div class="row {% if forloop.first %}{% else %}mt-5{% endif %}">
             <div class="col-12">
                 <div class="section-heading">
-                    <h3>People behind RotaSambandh</h3>
+                    <h3>{{group.title}}</h3>
                 </div>
             </div>
         </div>
-    <div class="row justify-content-center">
-        {% for member in site.data.sitedata.team_members %}
-        <div class="col-md-6 col-lg-4 mb-30">
-            <div class="team-item">
-                <div class="mb-30 position-relative d-flex align-items-center">
-                        <span class="socials d-inline-block">
-                            {% for social in member.social %}
-                            {% if social[1] %}
-                            <a href="{{ social[1] }}" target="_blank" class="fa fa-{{ social[0] }}" aria-hidden="true"></a>
-                            {% endif %}
-                            {% endfor %}
-                        </span>
-                    <span class="img-holder d-inline-block">
-                            <img src="{{site.baseurl}}{{member.img}}" alt="{{member.name}}">
-                        </span>
-                </div>
-                <div class="team-content">
-                    <h5 class="mb-2">{{member.name}}</h5>
-                    <p class="text-uppercase mb-0">{{member.role}}</p>
+        <div class="row justify-content-center">
+            {% for member in group.members %}
+            <div class="col-md-6 col-lg-4 mb-30">
+                <div class="team-item">
+                    <div class="mb-30 position-relative d-flex align-items-center">
+                            <span class="socials d-inline-block">
+                                {% for social in member.social %}
+                                {% if social[1] %}
+                                <a href="{{ social[1] }}" target="_blank" class="fa fa-{{ social[0] }}" aria-hidden="true"></a>
+                                {% endif %}
+                                {% endfor %}
+                            </span>
+                        <span class="img-holder d-inline-block">
+                                <img src="{{site.baseurl}}{{member.img}}" alt="{{member.name}}">
+                            </span>
+                    </div>
+                    <div class="team-content">
+                        <h5 class="mb-2">{{member.name}}</h5>
+                        <p class="text-uppercase mb-0">{{member.role}}</p>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
         {% endfor %}
-    </div>
 </div>
 </section>

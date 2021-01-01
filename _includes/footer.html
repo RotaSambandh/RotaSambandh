@@ -28,9 +28,11 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
             <!-- Follow Us -->
             <div class="follow-us">
                 <span>Follow us</span>
-                <a href="https://www.facebook.com/3190rbe/" target="_blank"><i class="fa fa-facebook" aria-hidden="true"></i></a>
-                <a href="https://www.instagram.com/3190rbe/" target="_blank"><i class="fa fa-instagram" aria-hidden="true"></i></a>
-                <a href="https://twitter.com/3190rbe" target="_blank"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                {% for social in site.data.sitedata.site_social %}
+                {% if social[1] %}
+                <a href="{{ social[1] }}" target="_blank"><i class="fa fa-{{ social[0] }}" aria-hidden="true"></i></a>
+                {% endif %}
+                {% endfor %}
             </div>
         </div>
     </footer>
