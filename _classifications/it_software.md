@@ -16,14 +16,7 @@ tags:
 #       - name: Rotaract Bangalore East
 #         img: /img/partners/rbe.png
 description:
-  Software Engineering
-  Software engineering is a computing discipline involving the systematic application of engineering approaches to the development of software.
-  Software engineers need to apply the best of their knowledge and skills to solve complex real world problems and make things easier for the rest of the world.
-
-  Information Technology
-  Information technology (IT) is the use of computers to store, retrieve, transmit, and manipulate data[1] or information. 
-  IT is typically used within the context of business operations as opposed to personal or entertainment technologies.
-  IT professionals learn to manage and assess data in quickest and easiest ways possible.
+  The industry includes a broad range of companies, offering a wide range of products and services, spanning personal computer operating systems and office productivity suites to network security applications to payroll processing services to information technology consulting and outsourcing services.
 mentors:
   - name: Rtr.Rtn. Arun Teja Godavarthi
     company: Founder, MrProfessor

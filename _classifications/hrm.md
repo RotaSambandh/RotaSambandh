@@ -1,13 +1,13 @@
 ---
 layout: classification
-title: Art
-image: /img/classifications/art.jpeg
-featured: false
+title: Human Resource Management
+image: /img/classifications/hrd.jpeg
+featured: true
 applications: true
 tags:
-  - Visual Artifact
-  - Painting
-  - Sculpturing
+ - Recruiting
+ - Training
+ - Performance Monitoring
 # classification_partners:
 #   - type: Classification Supporter
 #     list:
@@ -16,7 +16,7 @@ tags:
 #       - name: Rotaract Bangalore East
 #         img: /img/partners/rbe.png
 description:
-  Create Visual Artifact artworks which express your imagination, conceptual ideas or technical skills. Become a Master of Painting , Sculpturing or Architecture. Performing arts such as Music, Theatre, Film and Dance are also included under this classification.
+    Human Resource Management (HRM) is a collective term for all the formal systems created to help in managing employees and other stakeholders within a company. Human resource management is tasked with three main functions, namely, the recruitment and compensation of employees, and designating work. Ideally, the role of HRM is to find the best way to increase the productivity of an organization through its employees. Despite the ever-increasing rate of change in the corporate world, the HRM role is not likely to change in a significant way.
 # mentors:
 #   - name: Testing Name
 #     company: Company

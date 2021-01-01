@@ -1330,7 +1330,7 @@ textarea:focus {
       border: 1px solid #ebebeb;
       height: 40px;
       padding: 0 20px;
-      color: rgba(0, 0, 0, 0.25);
+      color: rgba(0, 0, 0, 0.50);
       font-size: 12px;
       font-weight: 600;
       margin-bottom: 20px;
@@ -1839,7 +1839,7 @@ textarea:focus {
       border: 1px solid #ebebeb;
       height: 40px;
       padding: 15px 20px;
-      color: rgba(0, 0, 0, 0.25);
+      color: rgba(0, 0, 0, 0.50);
       font-size: 12px;
       font-weight: 600;
       margin-bottom: 20px;

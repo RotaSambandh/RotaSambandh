@@ -17,7 +17,7 @@ tags:
 #       - name: Rotaract Bangalore East
 #         img: /img/partners/rbe.png
 description:
-  Digital marketing is the component of marketing that utilizes internet and online based digital technologies such as desktop computers, mobile phones and other digital media and platforms to promote products and services. Digital platforms have become increasingly incorporated into marketing plans and everyday life. Sub-categories include search engine optimization (SEO), search engine marketing (SEM), content marketing, influencer marketing, content automation, campaign marketing, data-driven marketing, e-commerce marketing, social media marketing, social media optimization, e-mail direct marketing, display advertising, e–books, and optical disks and games. Digital marketing also extends to television, mobile phones (SMS and MMS), callback, and on-hold mobile ring tones.
+  Digital marketing is the promotion of products or brands via one or more forms of electronic media. Digital marketing is often referred to as online marketing, internet marketing or web marketing.
 mentors:
   - name: Rtn. Krishna B Mariyanka
     company: Ajira Global

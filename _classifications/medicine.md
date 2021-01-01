@@ -17,8 +17,7 @@ tags:
 #       - name: Rotaract Bangalore East
 #         img: /img/partners/rbe.png
 description:
-  Medicine is the science and practice of establishing the diagnosis, prognosis, treatment, and prevention of disease. All Medical and Paramedical students apply under this classification to get opportunities to work in the most 
-
+  Medicine is the science and practice of establishing the diagnosis, prognosis, treatment, and prevention of disease. All Medical and Paramedical students apply under this classification to get opportunities to work in the most
 # mentors:
 #   - name: Testing Name
 #     company: Company
