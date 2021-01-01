@@ -3,7 +3,7 @@ layout: classification
 title: Tourism
 image: /img/classifications/tourism.jpeg
 featured: false
-applications: false
+applications: true
 tags:
   - Domestic Tours
   - International Tours

@@ -3,7 +3,7 @@ layout: classification
 title: Food & Beverages
 image: /img/classifications/food_beverages.jpeg
 featured: false
-applications: false
+applications: true
 tags:
  - Catering
  - Restaurents

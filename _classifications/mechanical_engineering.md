@@ -3,7 +3,7 @@ layout: classification
 title: Mechanical Engineering
 image: /img/classifications/mechanical_engineering.jpeg
 featured: false
-applications: false
+applications: true
 tags:
   - Manufacturing
   - Mechanical Design
