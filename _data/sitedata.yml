@@ -14,14 +14,14 @@ applications_master: true
 faqs:
   - question: What is RotaSambandh?
     answer: Navigator to your Destination.
-  - question: What is RotaSambandh?
-    answer: Navigator to your Destination.
-  - question: What is RotaSambandh?
-    answer: Navigator to your Destination.
-  - question: What is RotaSambandh?
-    answer: Navigator to your Destination.
-  - question: What is RotaSambandh?
-    answer: Navigator to your Destination.
+  # - question: What is RotaSambandh?
+  #   answer: Navigator to your Destination.
+  # - question: What is RotaSambandh?
+  #   answer: Navigator to your Destination.
+  # - question: What is RotaSambandh?
+  #   answer: Navigator to your Destination.
+  # - question: What is RotaSambandh?
+  #   answer: Navigator to your Destination.
     
 team_members:
   - name: Rtr. Arun Teja Godavarthi
@@ -43,12 +43,20 @@ team_members:
       snapchat: https://www.snapchat.com/add/sachiinvish
   - name: Rtr. Raj Vamshi K B
     role: Lead, Rotary Outreach
-    img: /img/team/raj.jpg
+    img: /img/team/raj.jpgrushil.jpg
     social:
       linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
       twitter: 
-      facebook: https://m.facebook.com/kbrajvamshi
+      facebook: https://m.facebook.com/kbrajvamshi 
       instagram: https://instagram.com/raj_vamshi
+  - name: Rtr. Rushil Ram
+    role: Co-Chair, Execution
+    img: /img/team/rushil.jpg
+    social:
+      linkedin: https://www.linkedin.com/in/g-a-rushil-ram-2879371b5
+      twitter: https://twitter.com/rushil_ram
+      facebook: https://www.facebook.com/rushil.ram.37
+      instagram: https://www.instagram.com/rushilram
   - name: TBA
     role: TBA
     img: /img/team/avatar.jpg
