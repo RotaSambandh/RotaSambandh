@@ -48,15 +48,38 @@ permalink: classifications
 <!-- ##### Popular Course Area Start ##### -->
 <section class="popular-courses-area section-padding-100-0">
     <div class="container">
+        {% if site.data.sitedata.applications_master %}
         <div class="row justify-content-center">
-
+            {% assign sorted_classifications = site.classifications | sort: 'title' %}
+            {% for classification in sorted_classifications %}
+                {% if classification.applications %}
+                    {% include classification.html %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% assign tbo = site.classifications | sort: 'title' | where: 'applications', 'false' %}
+        {% if tbo.size > 0 %}
+        <div class="row">
+            <div class="col-12">
+                <div class="section-heading">
+                    <h3>Opening Soon</h3>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            {% for classification in tbo %}
+            {% include classification.html %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="row justify-content-center">
             {% assign sorted_classifications = site.classifications | sort: 'title' %}
             {% for classification in sorted_classifications %}
             {% include classification.html %}
             {% endfor %}
-
         </div>
-
+        {% endif %}
     </div>
 </section>
 <!-- ##### Popular Course Area End ##### -->

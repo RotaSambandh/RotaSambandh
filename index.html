@@ -40,11 +40,7 @@ layout: default
                         <div class="icon">
                             <img src="img/core-img/star.png" alt="">
                         </div>
-                        {% assign mentor_count = 0 %}
-                        {% for classification in site.classifications %}
-                        {% assign mentor_count = mentor_count | plus: classification.mentors.size %}
-                        {% endfor %}
-                        <h2><span class="counter">{{mentor_count}}</span></h2>
+                        <h2><span class="counter">{{site.data.mentors.size}}</span></h2>
                         <h5>Mentors</h5>
                     </div>
                 </div>
