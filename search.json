@@ -6,8 +6,8 @@
       "title"    : "{{ classification.title | escape }}",
       "url"      : "{{ site.baseurl }}{{ classification.url }}",
       "tags"     : "{{ classification.tags | join: ', ' }}",
-      "mentors"  : "{% for mentor in classification.mentors %}{{ mentor.name}}{% if forloop.last %}{% else %}, {% endif %}{% endfor %}",
-      "companies"  : "{% for mentor in classification.mentors %}{{ mentor.company}}{% if forloop.last %}{% else %}, {% endif %}{% endfor %}",
+      "mentors"  : "{% for mentor in classification.mentors %}{% assign mentorData = site.data.mentors[mentor] %}{{ mentorData.name}}{% if forloop.last %}{% else %}, {% endif %}{% endfor %}",
+      "companies"  : "{% for mentor in classification.mentors %}{% assign mentorData = site.data.mentors[mentor] %}{{ mentorData.company}}{% if forloop.last %}{% else %}, {% endif %}{% endfor %}",
       "discription" : "{{classification.description | strip_html | strip_newlines | escape }}"
     } {% unless forloop.last %},{% endunless %}
   {% endfor %}

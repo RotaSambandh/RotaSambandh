@@ -3,7 +3,7 @@ layout: default
 ---
 {% include breadcumbs.html %}
     <!-- ##### Single Course Intro Start ##### -->
-    <div class="single-course-intro d-flex align-items-center justify-content-center" style="background-image: url({{site.baseurl}}/img/classifications/previewimg.png);">
+    <div class="single-course-intro d-flex align-items-center justify-content-center" style="background-image: url({{site.baseurl}}/img/watertexture.jpg);">
         <!-- Content -->
         <div class="single-course-intro-content text-center">
             <h3>{{page.title}}</h3>
@@ -162,27 +162,69 @@ layout: default
                                             <p>RotaSambandh team supported by our partners have hand picked the Mentors, who will guide the Rotaractors to see the hope inside them.</p>
                                         </div>
                                         
-                                        <!-- All Members -->
+                                        {% if page.opensubmisson %}
+                                        <!-- All Mentor -->
                                         <div class="all-instructors mb-30">
                                             <div class="row">
-                                                {% if page.mentors.size > 0 %}
-                                                {% for mentor in page.mentors %}
-                                                <!-- Single Members -->
+
+                                                {% assign mentors = site.data.mentors | sort %}
+                                                {% for mentor in mentors %}
+                                                <!-- Single Mentor -->
                                                 <div class="col-lg-6">
                                                     <div class="single-instructor d-flex align-items-center mb-30">
                                                         <div class="instructor-thumb">
-                                                            <img src="{{site.baseurl}}{{mentor.img}}" alt="{{mentor.name}}">
+                                                            <img src="{{site.baseurl}}{{mentor[1].img}}" alt="{{mentor[1].name}}">
                                                         </div>
                                                         <div class="instructor-info"> 
-                                                            <h5>{{mentor.name}}</h5>
-                                                            <span>{{mentor.company}}</span>
+                                                            <h5>{{mentor[1].name}}</h5>
+                                                            <span>{{mentor[1].company}}</span>
                                                             <aside>
                                                                 <details>
                                                                 <summary>About (<i class="fa fa-info" aria-hidden="true"></i>)</summary>
-                                                                <p>{{mentor.introduction}}</p>
+                                                                <p>{{mentor[1].introduction}}</p>
                                                                 <div class="social-info">
                                                                     Follow:
-                                                                    {% for social in mentor.social %}
+                                                                    {% for social in mentor[1].social %}
+                                                                    {% if social[1] %}
+                                                                    <a href="{{ social[1] }}" target="_blank"><i class="fa fa-{{ social[0] }}" aria-hidden="true"></i></a>
+                                                                    {% endif %}
+                                                                    {% endfor %}
+                                                                </div>
+                                                                </details>
+                                                            </aside>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <!-- All Mentor -->
+                                        <div class="all-instructors mb-30">
+                                            <div class="row">
+                                                {% if page.mentors.size > 0 %}
+                                               
+                                                {% assign mentors = page.mentors | sort %}
+                                                {% for mentor in mentors %}
+                                                {% assign mentorData = site.data.mentors[mentor] %}
+                                                <!-- Single Mentor -->
+                                                <div class="col-lg-6">
+                                                    <div class="single-instructor d-flex align-items-center mb-30">
+                                                        <div class="instructor-thumb">
+                                                            <img src="{{site.baseurl}}{{mentorData.img}}" alt="{{mentorData.name}}">
+                                                        </div>
+                                                        <div class="instructor-info"> 
+                                                            <h5>{{mentorData.name}}</h5>
+                                                            <span>{{mentorData.company}}</span>
+                                                            <aside>
+                                                                <details>
+                                                                <summary>About (<i class="fa fa-info" aria-hidden="true"></i>)</summary>
+                                                                <p>{{mentorData.introduction}}</p>
+                                                                <div class="social-info">
+                                                                    Follow:
+                                                                    {% for social in mentorData.social %}
                                                                     {% if social[1] %}
                                                                     <a href="{{ social[1] }}" target="_blank"><i class="fa fa-{{ social[0] }}" aria-hidden="true"></i></a>
                                                                     {% endif %}
@@ -204,7 +246,7 @@ layout: default
                                                 {% endif %}
                                             </div>
                                         </div>
-
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -274,16 +316,21 @@ layout: default
                                                                         <input type="url" class="form-control" name="entry.1365665796" id="profilelink" placeholder="Share Portfolio or any other Profile links">
                                                                     </div>
                                                                 </div>
-                                                                <input type="hidden" class="form-control" name="entry.408706569" id="classification" value="{{page.title}}">
-                                                                
+                                                               
+                                                                {% if page.opensubmisson %}
+                                                                <div class="col-12 col-lg-12">
+                                                                    <hr style="border-top: 1px dashed grey">
+                                                                    <p>Classification</p>
+                                                                    <input type="text" class="form-control" name="entry.408706569" id="classification" placeholder="Enter the Classification Name *" required>
+                                                                </div>
                                                                 <div class="col-12 col-lg-12">
                                                                     <hr style="border-top: 1px dashed grey">
                                                                     <p>Mentor Preference (if any)</p>
                                                                     <div class="form-group">
                                                                         <select type="list" class="custom-select" name="entry.1303368986" id="mentorp1">
                                                                             <option value="" disabled="" selected="" hidden="">Select your Preferred Mentor (if any)</option>
-                                                                            {% for mentor in page.mentors %}
-                                                                            <option value="{{mentor.name}}">{{mentor.name}}</option>
+                                                                            {% for mentor in mentors %}
+                                                                            <option value="{{mentor[1].name}}">{{mentor[1].name}}</option>
                                                                             {% endfor %}
                                                                         </select>
                                                                     </div>
@@ -292,18 +339,44 @@ layout: default
                                                                     <div class="form-group">
                                                                         <select type="list" class="custom-select" name="entry.1484137641" id="mentorp2">
                                                                             <option value="" disabled="" selected="" hidden="">Select Next Preferred Mentor (if any)</option>
-                                                                            {% for mentor in page.mentors %}
-                                                                            <option value="{{mentor.name}}">{{mentor.name}}</option>
+                                                                            {% for mentor in mentors %}
+                                                                            <option value="{{mentor[1].name}}">{{mentor[1].name}}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                {% else %}
+                                                                <input type="hidden" class="form-control" name="entry.408706569" id="classification" value="{{page.title}}">
+                                                                <div class="col-12 col-lg-12">
+                                                                    <hr style="border-top: 1px dashed grey">
+                                                                    <p>Mentor Preference (if any)</p>
+                                                                    <div class="form-group">
+                                                                        <select type="list" class="custom-select" name="entry.1303368986" id="mentorp1">
+                                                                            <option value="" disabled="" selected="" hidden="">Select your Preferred Mentor (if any)</option>
+                                                                            {% for mentor in mentors %}
+                                                                            {% assign mentorData = site.data.mentors[mentor] %}
+                                                                            <option value="{{mentorData.name}}">{{mentorData.name}}</option>
                                                                             {% endfor %}
                                                                         </select>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-12 col-lg-12">
                                                                     <div class="form-group">
+                                                                        <select type="list" class="custom-select" name="entry.1484137641" id="mentorp2">
+                                                                            <option value="" disabled="" selected="" hidden="">Select Next Preferred Mentor (if any)</option>
+                                                                            {% for mentor in mentors %}
+                                                                            {% assign mentorData = site.data.mentors[mentor] %}
+                                                                            <option value="{{mentorData.name}}">{{mentorData.name}}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                                <div class="col-12 col-lg-12">
+                                                                    <div class="form-group">
                                                                         <textarea rows="3" class="form-control" name="entry.1198186978" id="whyPreferrence" placeholder="Why are do you prefer to connect with the mentors selected above? (Ignore if not selected)"></textarea>
                                                                     </div>
                                                                 </div>
-
                                                                 <div class="col-12 col-lg-12">
                                                                     <hr style="border-top: 1px dashed grey">
                                                                     <p>RotaSambandh Format</p>
@@ -358,7 +431,7 @@ layout: default
                                 </li>
                                 <li>
                                     <h6><i class="fa fa-user"></i> Mentors</h6>
-                                    <h6>{% if page.mentors.size > 0 %}{{page.mentors | size}}{% else %}TBA{% endif %}</h6>
+                                    <h6>{% if page.opensubmisson %}{{site.data.mentors | size}}{% elsif page.mentors.size > 0 %}{{page.mentors | size}}{% else %}TBA{% endif %}</h6>
                                 </li>
                             </ul>
                         </div>
@@ -369,7 +442,10 @@ layout: default
                         <div class="sidebar-widget">
                             <h4>{{type.type}}</h4>
                             {% for partner in type.list %}
-                            <img src="{{site.baseurl}}{{partner.img}}" alt="{{partner.name}}">
+                            {% assign partnerData = site.data.partners[partner] %}
+                                <a href="{{partnerData.link}}" target="_blank">
+                                    <img src="{{partnerData.img | relative_url}}" alt="{{partnerData.name}}">
+                                </a>
                             {% endfor %}
                         </div>
                         {% endfor %}
