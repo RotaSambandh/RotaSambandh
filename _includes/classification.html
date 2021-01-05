@@ -20,7 +20,7 @@
         <div class="seat-rating-fee d-flex justify-content-between">
             <div class="seat-rating h-100 d-flex align-items-center">
                 <div class="seat">
-                    {% if classification.opensubmisson %}{{site.data.mentors | size}} <i class="fa fa-fire" aria-hidden="true"></i> Mentors{% elsif classification.mentors.size > 0 %}{{classification.mentors | size}} <i class="fa fa-fire" aria-hidden="true"></i> Mentors{% else %}Mentors <i class="fa fa-fire" aria-hidden="true"></i> TBA{% endif %}
+                    Mentors – {% if classification.opensubmisson %}{{site.data.mentors | size}}{% elsif classification.mentors.size > 0 %}{{classification.mentors | size}}{% else %}TBA{% endif %}
                 </div>
                 <!-- <div class="rating">
                     <i class="fa fa-tag" aria-hidden="true"></i> {{classification.tags | size}}
