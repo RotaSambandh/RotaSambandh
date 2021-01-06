@@ -73,13 +73,27 @@ permalink: mentors
                                 <details>
                                 <summary>About (<i class="fa fa-info" aria-hidden="true"></i>)</summary>
                                 <p>{{mentor[1].introduction}}</p>
-                                <div class="social-info">
+                                <div class="mentor-social-info">
                                     Follow:
                                     {% for social in mentor[1].social %}
                                     {% if social[1] %}
                                     <a href="{{ social[1] }}" target="_blank"><i class="fa fa-{{ social[0] }}" aria-hidden="true"></i></a>
                                     {% endif %}
                                     {% endfor %}
+                                </div>
+                                <div class="mentor-assignments">
+                                    <hr style="border-top: 1px dashed grey; margin-right: 10px;">
+                                    <p>Assigned Classifications <i class="fa fa-suitcase" aria-hidden="true"></i></p>
+                                    <ul>
+                                        {% assign sorted_classifications = site.classifications | sort: 'title' %}
+                                        {% for classification in sorted_classifications %}
+                                            {% for Cmentor in classification.mentors %}
+                                            {% if Cmentor == mentor[0] %}
+                                                <li><a href="{{classification.url}}">{{classification.title}}</a></li>
+                                            {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
                                 </div>
                                 </details>
                             </aside>

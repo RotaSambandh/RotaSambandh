@@ -2100,3 +2100,53 @@ textarea:focus {
 }
 
 /* Team Style End */
+
+/* Mentor Tags */
+.mentor-assignments {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.mentor-assignments p {
+  margin-bottom: 5px;
+}
+
+.mentor-assignments ul li a {
+  display: inline-block;
+  padding: 0 15px;
+  margin: 3px;
+  border: 1px solid #ebebeb;
+  line-height: 23px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  background-color: #ffffff;
+  border-radius: 6px;
+  margin-right: 10px;
+}
+
+.mentor-assignments ul li a:hover,
+.mentor-assignments ul li a:focus {
+  border: 1px solid #3762f0;
+  background-color: #3762f0;
+  color: #ffffff;
+}
+
+@media only screen and (max-width: 767px) {
+  .mentor-assignments ul li a {
+    padding: 0 5px;
+  }
+}
+
+/* Mentor Social */
+.mentor-social-info {
+  margin-bottom: 5px;
+}
+
+.mentor-social-info a {
+  display: inline-block;
+  padding: 0 5px; 
+}
+.mentor-social-info a:hover, .mentor-social-info a:focus {
+  color: #2c56df; 
+}
