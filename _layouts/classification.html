@@ -181,7 +181,7 @@ layout: default
                                                             <aside>
                                                                 <details>
                                                                 <summary>About (<i class="fa fa-info" aria-hidden="true"></i>)</summary>
-                                                                <p>{{mentor[1].introduction}}</p>
+                                                                <p>{{mentor[1].introduction | markdownify}}</p>
                                                                 <div class="mentor-social-info">
                                                                     Follow:
                                                                     {% for social in mentor[1].social %}
@@ -221,7 +221,7 @@ layout: default
                                                             <aside>
                                                                 <details>
                                                                 <summary>About (<i class="fa fa-info" aria-hidden="true"></i>)</summary>
-                                                                <p>{{mentorData.introduction}}</p>
+                                                                <p>{{mentorData.introduction | markdownify}}</p>
                                                                 <div class="mentor-social-info">
                                                                     Follow:
                                                                     {% for social in mentorData.social %}

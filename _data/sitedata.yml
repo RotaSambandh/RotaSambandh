@@ -26,6 +26,10 @@ partners:
     line_count: 3
     list:
       - rbw
+  # - type: Knowledge Partners
+  #   line_count: 3
+  #   list:
+  #     - rmbf
   - type: Supporters
     line_count: 4
     list:
@@ -34,15 +38,15 @@ partners:
 faqs:
   - question: What is RotaSambandh?
     answer: Navigator to your Destination.
-  # - question: What is RotaSambandh?
-  #   answer: Navigator to your Destination.
-  # - question: What is RotaSambandh?
-  #   answer: Navigator to your Destination.
-  # - question: What is RotaSambandh?
-  #   answer: Navigator to your Destination.
-  # - question: What is RotaSambandh?
-  #   answer: Navigator to your Destination.
-
+  - question: Who can apply for RotaSambandh?
+    answer: Anyone who is a bonafide member of a Rotaract Club can apply for RotaSambandh.
+  - question: How do I choose my mentor? 
+    answer: Navigate to classification of your choice and select the mentor of your preferrence in the application form.
+  - question: What is the duration of the mentorship? 
+    answer: Currently, we are woking with two formats ie. "Connect with the Mentor" and "Shadow the Mentor", more details can be found in the overview. Post matching the Mentor(Rotarian) and Mentee(Rotaractor) are recommended to continue the Mentor-Mentee relationship.
+  - question: Can I connect with my mentor after the mentorship?
+    answer: Yes, we highly encourage and recommend the Rotaractor(Mentee) to stay connected to the Rotarian(Mentor) to receive much needed and valuable guidance.
+    
 team:
   - title: People behind RotaSambandh
     members:
@@ -63,14 +67,6 @@ team:
           facebook: https://facebook.com/sachiinvish
           instagram: https://instagram.com/sachiinvish
           snapchat: https://www.snapchat.com/add/sachiinvish
-      - name: Rtr. Raj Vamshi K B
-        role: Lead, Rotary Outreach
-        img: /img/team/raj.jpg
-        social:
-          linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
-          twitter: 
-          facebook: https://m.facebook.com/kbrajvamshi 
-          instagram: https://instagram.com/raj_vamshi
       - name: Rtr. Rushil Ram
         role: Co-Chair, Execution
         img: /img/team/rushil.jpg
@@ -79,6 +75,14 @@ team:
           twitter: https://twitter.com/rushil_ram
           facebook: https://www.facebook.com/rushil.ram.37
           instagram: https://www.instagram.com/rushilram
+      - name: Rtr. Raj Vamshi K B
+        role: Lead, Rotary Outreach
+        img: /img/team/raj.jpg
+        social:
+          linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
+          twitter: 
+          facebook: https://m.facebook.com/kbrajvamshi 
+          instagram: https://instagram.com/raj_vamshi
       - name: TBA
         role: TBA
         img: /img/team/avatar.jpg
@@ -87,3 +91,38 @@ team:
           twitter: https://twitter.com/3190rbe
           facebook: https://www.facebook.com/3190rbe
           instagram: https://www.instagram.com/3190rbe
+
+  - title: Club Representatives
+    members:
+      - name: Rtr. Rakshith Purushothaman
+        role: President, Rotaract Bangalore East
+        img: /img/team/avatar.jpg
+        social:
+          linkedin: 
+          twitter: 
+          facebook: 
+          instagram: 
+      - name: Rtr. Chethan Krishna G R
+        role: President, Rotaract Bangalore West
+        img: /img/team/avatar.jpg
+        social:
+          linkedin: 
+          twitter: 
+          facebook: 
+          instagram: 
+      - name: Rtr. Muhsin M P
+        role: Secretary, Rotaract Bangalore East
+        img: /img/team/avatar.jpg
+        social:
+          linkedin: 
+          twitter: 
+          facebook: 
+          instagram: 
+      - name: Rtr. Diya S Bangera
+        role: Secretary, Rotaract Bangalore West
+        img: /img/team/diya.jpg
+        social:
+          linkedin: http://www.linkedin.com/in/diya-s-bangera
+          twitter: 
+          facebook: https://www.facebook.com/profile.php?id=100011792533052
+          instagram: https://www.instagram.com/diyaa_sadashiv
