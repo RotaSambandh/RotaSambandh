@@ -3,7 +3,7 @@ layout: classification
 title: General Application
 image: /img/classifications/general.png
 featured: false
-applications: false
+applications: true
 opensubmisson: true
 tags:
   - Unlisted Classifications
