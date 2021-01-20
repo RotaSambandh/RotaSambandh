@@ -76,7 +76,7 @@ team:
           facebook: https://www.facebook.com/rushil.ram.37
           instagram: https://www.instagram.com/rushilram
       - name: Rtr. Raj Vamshi K B
-        role: Lead, Rotary Outreach
+        role: Rotary Outreach
         img: /img/team/raj.jpg
         social:
           linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
@@ -92,16 +92,16 @@ team:
           facebook: https://www.facebook.com/3190rbe
           instagram: https://www.instagram.com/3190rbe
 
-  - title: Club Representatives
+  - title: Partner Representatives
     members:
       - name: Rtr. Rakshith Purushothaman
         role: President, Rotaract Bangalore East
-        img: /img/team/avatar.jpg
+        img: /img/team/rakshit.jpeg
         social:
-          linkedin: 
-          twitter: 
-          facebook: 
-          instagram: 
+          linkedin:
+          twitter: https://twitter.com/goodguyraks
+          instagram: https://www.instagram.com/goodguyraks
+          snapchat: https://www.snapchat.com/add/goodguyraks
       - name: Rtr. Chethan Krishna G R
         role: President, Rotaract Bangalore West
         img: /img/team/avatar.jpg
