@@ -1,8 +1,8 @@
 ---
 layout: default
-title: Recommend Mentor
-permalink: recommendmentor
-description: Recommend the Rotarians you belive can be great mentors to guide Rotaractors through RotaSambandh. RotaSambandh consists of two formats CONNECT WITH MENTOR and SHADOW THE MENTOR. RotaSambandh is a project created by Rtr. Rtn. Arun Teja Godavarthi aka. ZeoSpec of Rotaract Bangalore East.
+title: Be A Mentor
+permalink: beamentor
+description: Singnup to showcase your interest towards being a Mentor on RotaSambandh, to Navigate Rotaractors towards their destination. RotaSambandh consists of two formats CONNECT WITH MENTOR and SHADOW THE MENTOR. RotaSambandh is a project created by Rtr. Rtn. Arun Teja Godavarthi aka. ZeoSpec of Rotaract Bangalore East.
 ---
 
 {% include breadcumbs.html %}
@@ -19,14 +19,14 @@ description: Recommend the Rotarians you belive can be great mentors to guide Ro
                 <div class="col-12 col-lg-8">
                     <div class="blog-details-text">
                         <div class="forms">
-                            <p>We appreciate your initiative to support RotaSambandh by recommending your favourite MENTOR.<br>Share accurate information to help us contact you and the Recommended Mentor.</p>
+                            <p>Are you here to get connected with the Rotaracotrs and guide them as an able MENTOR, Navigating them towards their Destination?<br>Share details about you to help us contact you for onbaoarding onto RotaSambandh.</p>
                             <hr style="border-top: 1px dashed grey">
                             <script type="text/javascript">
                                 var submission = false;
                               </script>
                               <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
                               onload="if(submission)  {window.location='/thankyou';}"></iframe>
-                            <form action="https://docs.google.com/forms/d/e/1FAIpQLSc90USbNdGcVxZEVTUEatOi7S4TEBGPPNb8KWsC-0VCw7tWzA/formResponse" target="hidden_iframe" onsubmit="submission=true;" method="post">
+                            <form action="https://docs.google.com/forms/d/e/1FAIpQLScvvo4-AGt8huzVNR2W6g6UU6vElY2MfCmkypqbTAAl-eHOsQ/formResponse" target="hidden_iframe" onsubmit="submission=true;" method="post">
                                 <p>Your Information</p>
                                 <div class="row">
                                     <div class="col-12 col-lg-6">
@@ -46,54 +46,32 @@ description: Recommend the Rotarians you belive can be great mentors to guide Ro
                                     </div>
                                     <div class="col-12 col-lg-12">
                                         <div class="form-group">
-                                            <input type="text" class="form-control" name="entry.908903168" id="clubname" placeholder="Rotaract Club Name *" required>
+                                            <input type="text" class="form-control" name="entry.908903168" id="clubname" placeholder="Rotary Club Name *" required>
                                         </div>
                                     </div>
 
                                     <div class="col-12 col-lg-12">
                                         <hr style="border-top: 1px dashed grey">
-                                        <p>Mentor Information</p>
+                                        <p>Classifcation Information</p>
                                         <div class="form-group">
-                                            <input type="text" class="form-control" name="entry.1520114153" id="mName" placeholder="Mentor Name *" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-lg-6">
-                                        <div class="form-group">
-                                            <input type="email" class="form-control" name="entry.704217746" id="mEmail" oninvalid="setCustomValidity('Enter Valid Email ID')" oninput="setCustomValidity('')" placeholder="Mentor Email">
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-lg-6">
-                                        <div class="form-group">
-                                            <input type="tel" class="form-control" name="entry.1651190101" id="mPhone" oninvalid="setCustomValidity('Enter 10-Digit Mobile Number')" oninput="setCustomValidity('')" pattern="[6-9]{1}[0-9]{9}" placeholder="Mentor Phone">
+                                            <input type="text" class="form-control" name="entry.1945428510" id="company" placeholder="Company Name *" required>
                                         </div>
                                     </div>
                                     <div class="col-12 col-lg-12">
                                         <div class="form-group">
-                                            <input type="text" class="form-control" name="entry.1945428510" id="mCompany" placeholder="Mentor Company *" required>
+                                            <input type="text" class="form-control" name="entry.80940420" id="classification" placeholder="Your Classification *" required>
                                         </div>
                                     </div>
 
                                     <div class="col-12 col-lg-12">
                                         <div class="form-group">
-                                            <select type="list" class="custom-select" name="entry.80940420" id="mClassification">
-                                                <option value="" disabled="" selected="" hidden="">Select Mentor's Classification *</option>
-                                                {% for classification in site.classifications %}
-                                                <option value="{{classification.title}}">{{classification.title}}</option>
-                                                {% endfor %}
-                                                <option value="Other">Other</option>
-                                            </select>
+                                            <input type="url" class="form-control" name="entry.2118059174" id="profileURL" placeholder="Your Profile Link (Linkedin, Facebook, Twitter etc.)">
                                         </div>
                                     </div>
 
                                     <div class="col-12 col-lg-12">
                                         <div class="form-group">
-                                            <input type="url" class="form-control" name="entry.2118059174" id="mProfile" placeholder="Mentor Profile Link">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 col-lg-12">
-                                        <div class="form-group">
-                                            <textarea rows="5" class="form-control" name="entry.1128222379" id="whythismentor" placeholder="Share your views on the Mentor you are Recommending? *" required></textarea>
+                                            <textarea rows="5" class="form-control" name="entry.1128222379" id="mentorbio" placeholder="Your brief bio. *" required></textarea>
                                         </div>
                                     </div>
                                     <div class="col-12">
