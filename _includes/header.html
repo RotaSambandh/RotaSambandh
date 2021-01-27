@@ -46,18 +46,30 @@
                             <ul>
                                 <li><a href="{{site.baseurl}}/">Home</a></li>
                                 <li><a href="{{site.baseurl}}/about">About</a></li>
-                                <li><a href="{{site.baseurl}}/classifications">Classifications</a></li>
-                                <li><a href="{{site.baseurl}}/mentors">Mentors</a></li>
-                                <li><a href="{{site.baseurl}}/requestclassification">Request Classification</a></li>
-                                <!-- <li><a href="#">Job Board</a>
+                                <li><a href="#">Classifications</a>
                                     <ul class="dropdown">
-                                        <li><a href="#">Apply</a></li>
-                                        <li><a href="#">Post a Job</a></li>
+                                        <li><a href="{{site.baseurl}}/classifications">All Classifications</a></li>
+                                        <li><a href="{{site.baseurl}}/requestclassification">Request Classification</a></li>
                                     </ul>
-                                </li> -->
+                                </li>
+                                <li><a href="#">Mentors</a>
+                                    <ul class="dropdown">
+                                        <li><a href="{{site.baseurl}}/mentors">All Mentors</a></li>
+                                        <li><a href="{{site.baseurl}}/recommendmentor">Recommend Mentor</a></li>
+                                        <li><a href="{{site.baseurl}}/beamentor"></a></li>
+                                    </ul>
+                                </li>
                                 <li><a href="{{site.baseurl}}/contact">Contact</a></li>
                             </ul>
                             
+                            <!-- Search Button -->
+                            <div class="search-area">
+                                <form action="{{ site.baseurl }}/search" method="get">
+                                    <input type="search" name="q" placeholder="Search" required>
+                                    <button type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>
+                                </form>
+                            </div>
+
                             <!-- Recommendations -->
                             <div class="register-login-area">
                                 <a href="{{site.baseurl}}/recommendmentor" class="btn">Recommend Mentor</a>
