@@ -9,7 +9,7 @@ stats:
   applications: 1111
   connects: 1111
 
-applications_master: false
+applications_master: true
 
 site_social:
   linkedin: https://www.linkedin.com/company/rotasambandh
