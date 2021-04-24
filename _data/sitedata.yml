@@ -50,14 +50,6 @@ faqs:
 team:
   - title: People behind RotaSambandh
     members:
-      - name: Rtr. Arun Teja Godavarthi
-        role: Creator & Advisory Chair
-        img: /img/team/zeospec.jpg
-        social:
-          linkedin: https://www.linkedin.com/in/zeospec/
-          twitter: https://twitter.com/ZeoSpec
-          facebook: https://www.facebook.com/zeospec/
-          instagram: https://www.instagram.com/ZeoSpec/
       - name: Rtr. Sachin T V (sachiinvish)
         role: Chair, Execution
         img: /img/team/sachin.jpg
@@ -75,14 +67,14 @@ team:
           twitter: https://twitter.com/rushil_ram
           facebook: https://www.facebook.com/rushil.ram.37
           instagram: https://www.instagram.com/rushilram
-      - name: Rtr. Raj Vamshi K B
-        role: Rotary Outreach
-        img: /img/team/raj.jpg
+      - name: Rtr. Arun Teja Godavarthi
+        role: Creator & Advisory Chair
+        img: /img/team/zeospec.jpg
         social:
-          linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
-          twitter: 
-          facebook: https://m.facebook.com/kbrajvamshi 
-          instagram: https://instagram.com/raj_vamshi
+          linkedin: https://www.linkedin.com/in/zeospec/
+          twitter: https://twitter.com/ZeoSpec
+          facebook: https://www.facebook.com/zeospec/
+          instagram: https://www.instagram.com/ZeoSpec/
       - name: TBA
         role: TBA
         img: /img/team/avatar.jpg
@@ -94,6 +86,14 @@ team:
 
   - title: Partner Representatives
     members:
+      - name: Rtr. Raj Vamshi K B
+        role: District Rotaract Representative
+        img: /img/team/raj.jpg
+        social:
+          linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
+          twitter: 
+          facebook: https://m.facebook.com/kbrajvamshi 
+          instagram: https://instagram.com/raj_vamshi
       - name: Rtr. Rakshith Purushothaman
         role: President, Rotaract Bangalore East
         img: /img/team/rakshit.jpeg
