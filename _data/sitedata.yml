@@ -22,18 +22,18 @@ partners:
     line_count: 2
     list:
       - rbe
-  - type: Partners
-    line_count: 3
-    list:
-      - rbw
+  # - type: Partners
+  #   line_count: 3
+  #   list:
+  #     - rbw
   # - type: Knowledge Partners
   #   line_count: 3
   #   list:
   #     - rmbf
-  - type: Supporters
-    line_count: 4
-    list:
-      - rotaract3190
+  # - type: Supporters
+  #   line_count: 4
+  #   list:
+  #     - rotaract3190
 
 faqs:
   - question: What is RotaSambandh?
@@ -50,31 +50,14 @@ faqs:
 team:
   - title: People behind RotaSambandh
     members:
-      - name: Rtr. Sachin T V (sachiinvish)
-        role: Chair, Execution
-        img: /img/team/sachin.jpg
-        social:
-          linkedin: https://www.linkedin.com/in/sachiinvish
-          twitter: 
-          facebook: https://facebook.com/sachiinvish
-          instagram: https://instagram.com/sachiinvish
-          snapchat: https://www.snapchat.com/add/sachiinvish
-      - name: Rtr. Rushil Ram
-        role: Co-Chair, Execution
-        img: /img/team/rushil.jpg
-        social:
-          linkedin: https://www.linkedin.com/in/g-a-rushil-ram-2879371b5
-          twitter: https://twitter.com/rushil_ram
-          facebook: https://www.facebook.com/rushil.ram.37
-          instagram: https://www.instagram.com/rushilram
-      - name: Rtr. Arun Teja Godavarthi
-        role: Creator & Advisory Chair
-        img: /img/team/zeospec.jpg
-        social:
-          linkedin: https://www.linkedin.com/in/zeospec/
-          twitter: https://twitter.com/ZeoSpec
-          facebook: https://www.facebook.com/zeospec/
-          instagram: https://www.instagram.com/ZeoSpec/
+      # - name: Rtr. Arun Teja Godavarthi
+      #   role: Creator & Advisory Chair
+      #   img: /img/team/zeospec.jpg
+      #   social:
+      #     linkedin: https://www.linkedin.com/in/zeospec/
+      #     twitter: https://twitter.com/ZeoSpec
+      #     facebook: https://www.facebook.com/zeospec/
+      #     instagram: https://www.instagram.com/ZeoSpec/
       - name: TBA
         role: TBA
         img: /img/team/avatar.jpg
@@ -83,46 +66,3 @@ team:
           twitter: https://twitter.com/3190rbe
           facebook: https://www.facebook.com/3190rbe
           instagram: https://www.instagram.com/3190rbe
-
-  - title: Partner Representatives
-    members:
-      - name: Rtr. Raj Vamshi K B
-        role: District Rotaract Representative
-        img: /img/team/raj.jpg
-        social:
-          linkedin: https://www.linkedin.com/mwlite/in/rajvamshi
-          twitter: 
-          facebook: https://m.facebook.com/kbrajvamshi 
-          instagram: https://instagram.com/raj_vamshi
-      - name: Rtr. Rakshith Purushothaman
-        role: President, Rotaract Bangalore East
-        img: /img/team/rakshit.jpeg
-        social:
-          linkedin:
-          twitter: https://twitter.com/goodguyraks
-          instagram: https://www.instagram.com/goodguyraks
-          snapchat: https://www.snapchat.com/add/goodguyraks
-      - name: Rtr. Chethan Krishna G R
-        role: President, Rotaract Bangalore West
-        img: /img/team/avatar.jpg
-        social:
-          linkedin: 
-          twitter: 
-          facebook: 
-          instagram: 
-      - name: Rtr. Muhsin M P
-        role: Secretary, Rotaract Bangalore East
-        img: /img/team/avatar.jpg
-        social:
-          linkedin: 
-          twitter: 
-          facebook: 
-          instagram: 
-      - name: Rtr. Diya S Bangera
-        role: Secretary, Rotaract Bangalore West
-        img: /img/team/diya.jpg
-        social:
-          linkedin: http://www.linkedin.com/in/diya-s-bangera
-          twitter: 
-          facebook: https://www.facebook.com/profile.php?id=100011792533052
-          instagram: https://www.instagram.com/diyaa_sadashiv
