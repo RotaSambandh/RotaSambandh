@@ -18,23 +18,12 @@ site_social:
   instagram: https://www.instagram.com/rotasambandh/
 
 partners:
-  - type: Creators
-    line_count: 2
+  - type: Partners
+    line_count: 3
     list:
       - rbe
-  # - type: Partners
-  #   line_count: 3
-  #   list:
-  #     - rbw
-  # - type: Knowledge Partners
-  #   line_count: 3
-  #   list:
-  #     - rmbf
-  # - type: Supporters
-  #   line_count: 4
-  #   list:
-  #     - rotaract3190
-
+      - rmbf
+  
 faqs:
   - question: What is RotaSambandh?
     answer: Navigator to your Destination.
