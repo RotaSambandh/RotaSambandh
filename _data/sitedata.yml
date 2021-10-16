@@ -19,7 +19,7 @@ site_social:
 
 partners:
   - type: Partners
-    line_count: 3
+    line_count: 2
     list:
       - rbe
       - rmbf
