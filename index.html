@@ -184,7 +184,7 @@ layout: default
 
             <div class="row justify-content-around">
                 
-                {% assign events = site.data.events.events | sort: 'start' %}
+                {% assign events = site.data.events.events | sort: 'start' | reverse %}
                 {% assign event_count = 0 %}
                 {% for event in events %}
                 {% if event_count < 3 %} 
