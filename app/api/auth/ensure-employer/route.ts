@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { getAdminAuth, getAdminFirestore, getAdminRtdb } from "@/lib/firebase/admin";
+import { getAdminAuth, getAdminFirestore } from "@/lib/firebase/admin";
 import type { BusinessMember, UserRole } from "@/shared/types";
 
 /** Grant employer role and claim any pending company invites for this Google email. */
@@ -54,7 +54,6 @@ export async function POST(request: Request) {
         .limit(20)
         .get();
 
-      const rtdb = getAdminRtdb();
       for (const doc of invites.docs) {
         const invite = doc.data() as BusinessMember;
         if (invite.status !== "invited") continue;
@@ -72,7 +71,7 @@ export async function POST(request: Request) {
         if (doc.id !== memberId) {
           await doc.ref.delete();
         }
-        await rtdb.ref(`employerMembers/${invite.businessId}/${uid}`).set(true);
+        // RTDB mirrors via onBusinessMemberWritten
       }
     }
 

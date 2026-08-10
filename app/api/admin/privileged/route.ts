@@ -58,16 +58,7 @@ export async function POST(request: Request) {
       }
       await ref.set({ roles, updatedAt: Date.now() }, { merge: true });
       await getAdminAuth().setCustomUserClaims(targetUserId, { roles });
-      const isStaff =
-        roles.includes("super_admin") ||
-        roles.includes("admin") ||
-        roles.includes("coordinator");
-      const rtdb = getAdminRtdb();
-      if (isStaff) {
-        await rtdb.ref(`admins/${targetUserId}`).set(true);
-      } else {
-        await rtdb.ref(`admins/${targetUserId}`).remove();
-      }
+      // RTDB admins/{uid} mirrored by onUserWritten
       return NextResponse.json({ ok: true, roles });
     }
 
@@ -148,10 +139,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true, recipients: n, cappedAt: 2000 });
       }
       case "sync_employer_member": {
-        const rtdb = getAdminRtdb();
-        await rtdb
-          .ref(`employerMembers/${body.payload.businessId}/${body.payload.userId}`)
-          .set(true);
+        // No-op: onBusinessMemberWritten owns employerMembers / userEmployerMemberships.
         break;
       }
       default:

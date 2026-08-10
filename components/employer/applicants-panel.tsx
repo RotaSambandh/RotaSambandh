@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { DocumentSnapshot } from "firebase/firestore";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useActiveBusiness } from "@/components/employer/active-business-provider";
 import {
-  listApplicationAnswers,
-  listJobApplicationsPage,
-  updateApplicationStatus,
-} from "@/lib/dal/applications";
-import { getCandidateProfile, getUser } from "@/lib/dal/users";
-import { isFirebaseConfigured } from "@/lib/firebase/client";
+  listApplicationAnswersRtdb,
+  listEmployerApplicationsRtdb,
+  toApplication,
+} from "@/lib/dal/applications-rtdb";
+import { updateApplicationStatus } from "@/lib/dal/applications";
 import type { Application, ApplicationAnswer, ApplicationStatus } from "@/shared/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,8 +50,6 @@ function statusLabel(status: ApplicationStatus): string {
 
 interface CandidateInfo {
   displayName: string;
-  headline?: string;
-  club?: string;
   phone?: string;
   email?: string;
 }
@@ -68,76 +65,46 @@ function formatAnswerValue(value: ApplicationAnswer["value"]): string {
   return String(value);
 }
 
-async function loadCandidate(app: Application): Promise<CandidateInfo> {
-  if (app.candidateName || app.candidateEmail || app.candidatePhone) {
-    return {
-      displayName: app.candidateName ?? app.candidateId,
-      phone: app.candidatePhone,
-      email: app.candidateEmail,
-    };
-  }
-  // Legacy applications without snapshots — best-effort (may be denied by rules).
-  if (isFirebaseConfigured()) {
-    const [userDoc, profile] = await Promise.all([
-      getUser(app.candidateId),
-      getCandidateProfile(app.candidateId),
-    ]);
-    return {
-      displayName: userDoc?.displayName ?? app.candidateId,
-      headline: profile?.headline,
-      club: profile?.rotaractClub,
-      phone: userDoc?.phone,
-      email: userDoc?.email,
-    };
-  }
-  return {
-    displayName: app.candidateId,
-  };
-}
-
 export function ApplicantsPanel({ jobId }: { jobId: string }) {
   const { user } = useAuth();
+  const { business } = useActiveBusiness();
   const [items, setItems] = useState<EnrichedApplication[]>([]);
-  const [cursor, setCursor] = useState<DocumentSnapshot | null>(null);
-  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
 
-  const enrichApplications = useCallback(async (apps: Application[]): Promise<EnrichedApplication[]> => {
-    return Promise.all(
-      apps.map(async (app) => {
-        const [candidate, answers] = await Promise.all([
-          loadCandidate(app),
-          listApplicationAnswers(app.id),
-        ]);
-        return { ...app, candidate, answers };
+  const load = useCallback(async () => {
+    if (!business) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const apps = await listEmployerApplicationsRtdb(business.id, jobId);
+    const enriched = await Promise.all(
+      apps.map(async (model) => {
+        const app = toApplication(model);
+        const answers = await listApplicationAnswersRtdb(
+          business.id,
+          model.id,
+        );
+        return {
+          ...app,
+          candidate: {
+            displayName: model.candidateName || model.candidateId,
+            phone: model.candidatePhone || undefined,
+            email: model.candidateEmail || undefined,
+          },
+          answers,
+        };
       }),
     );
-  }, []);
+    setItems(enriched);
+    setLoading(false);
+  }, [business, jobId]);
 
   useEffect(() => {
-    void (async () => {
-      setLoading(true);
-      const page = await listJobApplicationsPage({ jobId });
-      const apps = page.items;
-      setItems(await enrichApplications(apps));
-      setCursor(page.nextCursor);
-      setHasMore(Boolean(page.nextCursor));
-      setLoading(false);
-    })();
-  }, [jobId, enrichApplications]);
-
-  async function loadMore() {
-    if (!cursor || loadingMore) return;
-    setLoadingMore(true);
-    const page = await listJobApplicationsPage({ jobId, cursor });
-    const enriched = await enrichApplications(page.items);
-    setItems((prev) => [...prev, ...enriched]);
-    setCursor(page.nextCursor);
-    setHasMore(Boolean(page.nextCursor));
-    setLoadingMore(false);
-  }
+    void load();
+  }, [load]);
 
   async function move(app: Application, toStatus: ApplicationStatus) {
     if (!user) return;
@@ -150,7 +117,9 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
     });
     setItems((prev) =>
       prev.map((a) =>
-        a.id === app.id ? { ...a, status: toStatus, statusUpdatedAt: Date.now() } : a,
+        a.id === app.id
+          ? { ...a, status: toStatus, statusUpdatedAt: Date.now() }
+          : a,
       ),
     );
   }
@@ -183,7 +152,7 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
   return (
     <Panel title="Applicants">
       <p className="mb-4 text-sm text-[var(--color-muted)]">
-        Manage this opportunity&apos;s pipeline. Shown 20 at a time.
+        Manage this opportunity&apos;s pipeline.
       </p>
 
       {items.length === 0 ? (
@@ -200,28 +169,27 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">{app.candidate.displayName}</p>
-                    {app.candidate.headline && (
-                      <p className="text-sm text-[var(--color-muted)]">{app.candidate.headline}</p>
-                    )}
-                    {app.candidate.club && (
-                      <p className="text-xs text-[var(--color-muted)]">{app.candidate.club}</p>
-                    )}
                     {(app.candidate.phone || app.candidate.email) && (
                       <p className="text-xs text-[var(--color-muted)]">
-                        {[app.candidate.email, app.candidate.phone].filter(Boolean).join(" · ")}
+                        {[app.candidate.email, app.candidate.phone]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     )}
                     <p className="mt-1 text-sm text-[var(--color-muted)]">
-                      Applied {new Date(app.submittedAt).toLocaleDateString()} · {app.resumeFileName}
+                      Applied {new Date(app.submittedAt).toLocaleDateString()} ·{" "}
+                      {app.resumeFileName}
                     </p>
                   </div>
                   <Badge
                     variant={
                       app.status === "selected"
                         ? "success"
-                        : app.status === "rejected" || app.status === "withdrawn"
+                        : app.status === "rejected" ||
+                            app.status === "withdrawn"
                           ? "danger"
-                          : app.status === "applied" || app.status === "under_review"
+                          : app.status === "applied" ||
+                              app.status === "under_review"
                             ? "warning"
                             : "default"
                     }
@@ -234,8 +202,12 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
                   <dl className="mt-3 space-y-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">
                     {app.answers.map((answer) => (
                       <div key={answer.id}>
-                        <dt className="font-medium text-[var(--color-ink)]">{answer.promptSnapshot}</dt>
-                        <dd className="text-[var(--color-muted)]">{formatAnswerValue(answer.value)}</dd>
+                        <dt className="font-medium text-[var(--color-ink)]">
+                          {answer.promptSnapshot}
+                        </dt>
+                        <dd className="text-[var(--color-muted)]">
+                          {formatAnswerValue(answer.value)}
+                        </dd>
                       </div>
                     ))}
                   </dl>
@@ -248,42 +220,51 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
                   <Textarea
                     id={`note-${app.id}`}
                     rows={2}
-                    className="mt-1 max-w-lg text-sm"
-                    placeholder="Add context for this status change…"
                     value={notes[app.id] ?? ""}
                     onChange={(e) =>
-                      setNotes((prev) => ({ ...prev, [app.id]: e.target.value }))
+                      setNotes((prev) => ({
+                        ...prev,
+                        [app.id]: e.target.value,
+                      }))
                     }
                   />
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button type="button" variant="secondary" onClick={() => void openResume(app)}>
-                    View resume
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void openResume(app)}
+                  >
+                    Resume
                   </Button>
-                  {next && (
-                    <Button type="button" onClick={() => void move(app, next)}>
+                  {next ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => void move(app, next)}
+                    >
                       Move to {statusLabel(next)}
                     </Button>
-                  )}
-                  {app.status !== "rejected" && app.status !== "selected" && (
-                    <Button type="button" variant="danger" onClick={() => void move(app, "rejected")}>
+                  ) : null}
+                  {app.status !== "rejected" &&
+                  app.status !== "withdrawn" &&
+                  app.status !== "selected" ? (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      onClick={() => void move(app, "rejected")}
+                    >
                       Reject
                     </Button>
-                  )}
+                  ) : null}
                 </div>
               </li>
             );
           })}
         </ul>
-      )}
-
-      {hasMore && (
-        <div className="mt-4">
-          <Button type="button" variant="secondary" disabled={loadingMore} onClick={() => void loadMore()}>
-            {loadingMore ? "Loading…" : "Load more"}
-          </Button>
-        </div>
       )}
     </Panel>
   );

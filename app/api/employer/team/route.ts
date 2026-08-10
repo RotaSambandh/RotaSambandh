@@ -92,8 +92,7 @@ export async function POST(request: Request) {
         .collection("businessMembers")
         .doc(`${businessId}_${userId}`)
         .set({ status: "revoked", updatedAt: ts }, { merge: true });
-      // Clear RTDB mirror immediately (function also handles this on write).
-      await getAdminRtdb().ref(`employerMembers/${businessId}/${userId}`).remove();
+      // RTDB mirrors via onBusinessMemberWritten
       return NextResponse.json({ ok: true });
     }
 

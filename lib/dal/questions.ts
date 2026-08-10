@@ -1,17 +1,13 @@
-import {
-  collection,
-  doc,
-  documentId,
-  getDoc,
-  getDocs,
-  query,
-  setDoc,
-  where,
-  orderBy,
-} from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 import type { JobQuestion, Question, QuestionScope, QuestionType } from "@/shared/types";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  getClientFirestore,
+  getClientRtdb,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 import { now, omitUndefined } from "@/lib/utils";
+import { getQuestionRtdb, listQuestionsRtdb } from "@/lib/dal/admin-rtdb";
+import { get, ref } from "firebase/database";
 
 const platformDefaults: Question[] = [
   {
@@ -54,14 +50,9 @@ const platformDefaults: Question[] = [
 
 export async function listPlatformQuestions(): Promise<Question[]> {
   if (!isFirebaseConfigured()) return platformDefaults;
-  const q = query(
-    collection(getClientFirestore(), "questions"),
-    where("scope", "==", "platform"),
-    where("active", "==", true),
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return platformDefaults;
-  return snap.docs.map((d) => d.data() as Question);
+  const all = await listQuestionsRtdb();
+  const platform = all.filter((q) => q.scope === "platform" && q.active);
+  return platform.length ? platform : platformDefaults;
 }
 
 export async function createQuestion(input: {
@@ -113,11 +104,7 @@ export async function updatePlatformQuestion(
   const ts = now();
   const defaultsById = new Map(platformDefaults.map((q) => [q.id, q]));
 
-  let existing: Question | undefined;
-  if (isFirebaseConfigured()) {
-    const snap = await getDoc(doc(getClientFirestore(), "questions", id));
-    if (snap.exists()) existing = snap.data() as Question;
-  }
+  let existing = (await getQuestionRtdb(id)) ?? undefined;
   existing ??= defaultsById.get(id);
 
   if (!existing) {
@@ -171,25 +158,46 @@ export async function attachQuestionsToJob(
   );
 }
 
-export async function listJobQuestions(jobId: string): Promise<Question[]> {
+export async function listJobQuestions(
+  jobId: string,
+  businessId?: string,
+): Promise<Question[]> {
   if (!isFirebaseConfigured()) return [];
-  const jq = await getDocs(
-    query(
-      collection(getClientFirestore(), "jobQuestions"),
-      where("jobId", "==", jobId),
-      orderBy("order"),
-    ),
-  );
-  if (jq.empty) return platformDefaults.slice(0, 3);
-  const links = jq.docs.map((d) => d.data() as JobQuestion);
-  const ids = links.map((l) => l.questionId);
-  const byId = new Map<string, Question>();
-  for (let i = 0; i < ids.length; i += 10) {
-    const chunk = ids.slice(i, i + 10);
-    const snap = await getDocs(
-      query(collection(getClientFirestore(), "questions"), where(documentId(), "in", chunk)),
-    );
-    snap.docs.forEach((d) => byId.set(d.id, d.data() as Question));
+  try {
+    const paths = [
+      businessId
+        ? `employer/${businessId}/jobs/${jobId}/questionLinks`
+        : null,
+      `jobs/${jobId}/questionLinks`,
+    ].filter(Boolean) as string[];
+
+    let links: Array<{
+      questionId: string;
+      sortOrder?: number;
+      required?: boolean;
+    }> = [];
+
+    for (const path of paths) {
+      const snap = await get(ref(getClientRtdb(), path));
+      if (!snap.exists()) continue;
+      links = Object.values(
+        snap.val() as Record<
+          string,
+          { questionId: string; sortOrder?: number; required?: boolean }
+        >,
+      );
+      if (links.length) break;
+    }
+
+    if (!links.length) return platformDefaults.slice(0, 3);
+    links.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const questions: Question[] = [];
+    for (const link of links) {
+      const q = await getQuestionRtdb(link.questionId);
+      if (q) questions.push({ ...q, required: link.required ?? q.required });
+    }
+    return questions.length ? questions : platformDefaults.slice(0, 3);
+  } catch {
+    return platformDefaults.slice(0, 3);
   }
-  return links.map((l) => byId.get(l.questionId)).filter(Boolean) as Question[];
 }

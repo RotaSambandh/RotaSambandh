@@ -3,29 +3,25 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { listCandidateApplications } from "@/lib/dal/applications";
-import { getJobById } from "@/lib/dal/employer";
+import { listCandidateApplicationsRtdb } from "@/lib/dal/applications-rtdb";
 import {
   applicationStatusLabel,
   applicationStatusVariant,
 } from "@/lib/admin/status-badges";
 import { Badge } from "@/components/ui/badge";
 import { Banner, EmptyState, LoadingBlock, PageHeader } from "@/components/ui";
-import { getDoc, doc } from "firebase/firestore";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
-import type { Application, Business } from "@/shared/types";
+import type { ApplicationStatus } from "@/shared/types";
 
-type ApplicationRow = Application & {
+type ApplicationRow = {
+  id: string;
+  jobId: string;
+  status: ApplicationStatus;
+  submittedAt: number;
   title: string;
   companyLabel: string;
   deletionPending?: boolean;
+  companyRemoved?: boolean;
 };
-
-async function loadBusiness(businessId: string): Promise<Business | null> {
-  if (!isFirebaseConfigured()) return null;
-  const snap = await getDoc(doc(getClientFirestore(), "businesses", businessId));
-  return snap.exists() ? (snap.data() as Business) : null;
-}
 
 export default function ApplicationsPage() {
   const { user } = useAuth();
@@ -33,31 +29,27 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const uid = user?.uid ?? "demo_candidate";
+    const uid = user?.uid;
+    if (!uid) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
     void (async () => {
-      const list = await listCandidateApplications(uid);
-      const rows = await Promise.all(
-        list.map(async (app) => {
-          if (app.companyRemoved) {
-            return {
-              ...app,
-              title: app.jobTitleSnapshot ?? "Role",
-              companyLabel: app.companyNameSnapshot ?? "Company removed",
-            };
-          }
-          const [job, business] = await Promise.all([
-            getJobById(app.jobId),
-            loadBusiness(app.businessId),
-          ]);
-          return {
-            ...app,
-            title: job?.title ?? app.jobTitleSnapshot ?? "Opportunity",
-            companyLabel: business?.name ?? app.companyNameSnapshot ?? "Company",
-            deletionPending: business?.status === "deletion_pending",
-          };
-        }),
+      const list = await listCandidateApplicationsRtdb(uid);
+      setItems(
+        list.map((app) => ({
+          id: app.id,
+          jobId: app.jobId,
+          status: app.status,
+          submittedAt: app.submittedAt,
+          title: app.jobTitle,
+          companyLabel: app.companyRemoved
+            ? `${app.companyName} (removed)`
+            : app.companyName,
+          companyRemoved: app.companyRemoved,
+        })),
       );
-      setItems(rows);
       setLoading(false);
     })();
   }, [user]);
@@ -78,49 +70,48 @@ export default function ApplicationsPage() {
           action={
             <Link
               href="/jobs"
-              className="text-sm font-semibold text-[var(--color-accent-strong)] hover:underline"
+              className="text-sm font-medium text-[var(--color-accent-strong)]"
             >
               Browse opportunities
             </Link>
           }
         />
       ) : (
-        <ul className="divide-y divide-[var(--color-border)] border border-[var(--color-border)] bg-white">
-          {items.map((app) => (
-            <li key={app.id} className="space-y-3 px-4 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+        <ul className="mt-6 space-y-3">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="border border-[var(--color-border)] bg-white px-4 py-4"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  {app.companyRemoved ? (
-                    <p className="font-semibold text-[var(--color-ink)]">{app.title}</p>
-                  ) : (
-                    <Link
-                      href={`/jobs/${app.jobId}`}
-                      className="font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent-strong)]"
-                    >
-                      {app.title}
-                    </Link>
-                  )}
+                  <p className="font-semibold">{item.title}</p>
                   <p className="text-sm text-[var(--color-muted)]">
-                    {app.companyLabel} · Submitted{" "}
-                    {new Date(app.submittedAt).toLocaleDateString()}
+                    {item.companyLabel}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--color-muted)]">
+                    Submitted {new Date(item.submittedAt).toLocaleString()}
                   </p>
                 </div>
-                <Badge variant={applicationStatusVariant(app.status)}>
-                  {applicationStatusLabel(app.status)}
+                <Badge variant={applicationStatusVariant(item.status)}>
+                  {applicationStatusLabel(item.status)}
                 </Badge>
               </div>
-              {app.companyRemoved ? (
-                <Banner tone="info" title="Company removed">
-                  This employer is no longer on RotaSambandh. Your application record is kept for
-                  your history.
+              {item.companyRemoved ? (
+                <Banner
+                  className="mt-3"
+                  tone="warning"
+                  title="Company left the network"
+                >
+                  Your application history is preserved.
                 </Banner>
               ) : null}
-              {app.deletionPending && !app.companyRemoved ? (
-                <Banner tone="warning" title="Company requested removal">
-                  This employer asked to leave the network. Your application is still on file until
-                  an admin restores or permanently removes the company.
-                </Banner>
-              ) : null}
+              <Link
+                href={`/jobs/${item.jobId}`}
+                className="mt-3 inline-block text-sm font-medium text-[var(--color-accent-strong)]"
+              >
+                View role
+              </Link>
             </li>
           ))}
         </ul>

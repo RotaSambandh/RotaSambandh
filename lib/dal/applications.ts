@@ -1,18 +1,10 @@
 import {
   collection,
   doc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  startAfter,
-  where,
   writeBatch,
-  type DocumentSnapshot,
   getDoc,
   updateDoc,
 } from "firebase/firestore";
-import { APPLICANTS_PAGE_SIZE } from "@/shared/constants";
 import type {
   Application,
   ApplicationAnswer,
@@ -25,6 +17,12 @@ import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client"
 import { now } from "@/lib/utils";
 import { isJobOpenForApplications } from "@/lib/dal/job-meta";
 import { assertBusinessAcceptsMutations } from "@/lib/dal/business-guards";
+import {
+  listApplicationAnswersRtdb,
+  listCandidateApplicationsRtdb,
+  listEmployerApplicationsRtdb,
+  toApplication,
+} from "@/lib/dal/applications-rtdb";
 
 export interface SubmitApplicationInput {
   jobId: string;
@@ -93,6 +91,8 @@ export async function submitApplication(input: SubmitApplicationInput): Promise<
     candidateName: input.candidateName.trim(),
     candidateEmail: input.candidateEmail.trim(),
     candidatePhone: phone,
+    jobTitleSnapshot: job.title,
+    companyNameSnapshot: (bizSnap.data() as Business).name,
     submittedAt: ts,
     statusUpdatedAt: ts,
     createdAt: ts,
@@ -126,42 +126,20 @@ export async function submitApplication(input: SubmitApplicationInput): Promise<
 }
 
 export async function listCandidateApplications(candidateId: string): Promise<Application[]> {
-  if (!isFirebaseConfigured()) return [];
-
-  const db = getClientFirestore();
-  const q = query(
-    collection(db, "applications"),
-    where("candidateId", "==", candidateId),
-    orderBy("submittedAt", "desc"),
-    limit(50),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Application);
+  const rows = await listCandidateApplicationsRtdb(candidateId);
+  return rows.map(toApplication);
 }
 
+/** @deprecated Prefer listEmployerApplicationsRtdb — kept for callers that still use pagination shape. */
 export async function listJobApplicationsPage(input: {
   jobId: string;
-  cursor?: DocumentSnapshot;
-}): Promise<{ items: Application[]; nextCursor: DocumentSnapshot | null }> {
-  if (!isFirebaseConfigured()) {
+  businessId?: string;
+}): Promise<{ items: Application[]; nextCursor: null }> {
+  if (!input.businessId) {
     return { items: [], nextCursor: null };
   }
-
-  const db = getClientFirestore();
-  const base = [
-    where("jobId", "==", input.jobId),
-    orderBy("submittedAt", "desc"),
-    limit(APPLICANTS_PAGE_SIZE),
-  ] as const;
-
-  const q = input.cursor
-    ? query(collection(db, "applications"), ...base, startAfter(input.cursor))
-    : query(collection(db, "applications"), ...base);
-
-  const snap = await getDocs(q);
-  const items = snap.docs.map((d) => d.data() as Application);
-  const nextCursor = snap.docs.length === APPLICANTS_PAGE_SIZE ? snap.docs[snap.docs.length - 1]! : null;
-  return { items, nextCursor };
+  const rows = await listEmployerApplicationsRtdb(input.businessId, input.jobId);
+  return { items: rows.map(toApplication), nextCursor: null };
 }
 
 export async function updateApplicationStatus(input: {
@@ -207,13 +185,10 @@ export async function updateApplicationStatus(input: {
   await batch.commit();
 }
 
-export async function listApplicationAnswers(applicationId: string): Promise<ApplicationAnswer[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "applicationAnswers"),
-    where("applicationId", "==", applicationId),
-    limit(50),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as ApplicationAnswer);
+export async function listApplicationAnswers(
+  applicationId: string,
+  businessId?: string,
+): Promise<ApplicationAnswer[]> {
+  if (!businessId) return [];
+  return listApplicationAnswersRtdb(businessId, applicationId);
 }

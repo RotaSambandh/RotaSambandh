@@ -15,20 +15,19 @@
         ".read": true
       }
     },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid"
+      }
+    },
     "candidate": {
       "$candidateId": {
-        ".read": "auth != null && auth.uid == $candidateId",
-        "dashboard": { ".read": "auth != null && auth.uid == $candidateId" },
-        "applications": { ".read": "auth != null && auth.uid == $candidateId" },
-        "notifications": { ".read": "auth != null && auth.uid == $candidateId" }
+        ".read": "auth != null && auth.uid == $candidateId"
       }
     },
     "inbox": {
       "$uid": {
-        ".read": "auth != null && auth.uid == $uid",
-        "notifications": {
-          ".read": "auth != null && auth.uid == $uid"
-        }
+        ".read": "auth != null && auth.uid == $uid"
       }
     },
     "employer": {
@@ -42,6 +41,9 @@
     "system": {
       "counters": {
         ".read": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      },
+      "taxonomy": {
+        ".read": "auth != null"
       }
     },
     "employerMembers": {
@@ -49,6 +51,11 @@
         "$uid": {
           ".read": "auth != null && auth.uid == $uid"
         }
+      }
+    },
+    "userEmployerMemberships": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid"
       }
     },
     "admins": {

@@ -11,6 +11,24 @@
 - Cloudflare R2 for resumes/documents
 - PWA + Capacitor Android (same codebase)
 
+## Data architecture
+
+- **Writes:** Firestore (source of truth) + Cloudflare R2 for binaries
+- **UI reads:** Realtime Database projections only (feeds, dashboards, applications, inbox, employer workspace, admin queues, taxonomy, user/profile slices)
+- **Sync:** Cloud Functions in `functions/src` project Firestore → RTDB (`READ_MODEL_VERSION` in `functions/src/constants.ts`)
+- **Allowed Firestore reads:** mutation helpers, Admin SDK session/privileged APIs, Function triggers — not page-load UI lists
+- **Rebuild:** `cd functions && npm run rebuild:readmodels` after projection changes
+- **Guardrail:** `npm run check:ui-reads` (no `firebase/firestore` imports under `app/` / `components/`)
+
+### Firestore read exceptions (server / mutations only)
+
+| Path | Why |
+|------|-----|
+| `lib/dal/*` write helpers (`setDoc` / `updateDoc` + load-before-mutate) | Mutations need SoT |
+| `app/api/auth/session`, `ensure-employer`, privileged admin APIs | Claims sync / privileged writes |
+| `functions/src/**` triggers + rebuild scripts | Project FS → RTDB |
+| Cloud Function Admin SDK | Never exposed to browser |
+
 ## Quick start
 
 ```bash
@@ -39,6 +57,7 @@ Auth is **Google sign-in only** on every portal. Enable the Google provider in F
 | `npm run dev` | Next.js local server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
+| `npm run check:ui-reads` | Guardrail: no Firestore SDK in UI layers |
 | `npm test` | Unit + static rules assertions |
 | `npm run test:rules` | Firestore rules emulator suite |
 | `npm run seed:super-admin` | Promote `SUPER_ADMIN_EMAIL` to super admin |

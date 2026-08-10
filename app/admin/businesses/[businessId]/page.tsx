@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAdminBusiness } from "@/lib/dal/admin";
-import { listBusinessJobs, listBusinessMembers } from "@/lib/dal/employer";
+import {
+  listBusinessJobsRtdb,
+  listEmployerMembersRtdb,
+} from "@/lib/dal/employer-rtdb";
 import { JOB_TYPE_LABELS } from "@/lib/dal/job-meta";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingBlock, PageHeader, Panel } from "@/components/ui";
@@ -45,8 +48,8 @@ export default function AdminBusinessDetailPage() {
       setLoading(true);
       const [biz, team, roles] = await Promise.all([
         getAdminBusiness(businessId),
-        listBusinessMembers(businessId),
-        listBusinessJobs(businessId),
+        listEmployerMembersRtdb(businessId),
+        listBusinessJobsRtdb(businessId),
       ]);
       if (!cancelled) {
         setBusiness(biz);

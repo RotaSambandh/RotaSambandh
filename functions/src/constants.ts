@@ -1,1 +1,1 @@
-export const READ_MODEL_VERSION = 1;
+export const READ_MODEL_VERSION = 2;

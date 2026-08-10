@@ -1,13 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { callPrivilegedAdmin } from "@/lib/admin/privileged-client";
 import { useAuth } from "@/components/auth/auth-provider";
 import { usePlatformAccess } from "@/hooks/use-platform-access";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
+import { isFirebaseConfigured } from "@/lib/firebase/client";
+import { listStaffUsersRtdb } from "@/lib/dal/admin-rtdb";
 import type { UserDoc, UserRole } from "@/shared/types";
-import { PLATFORM_STAFF_ROLES, isSuperAdmin as hasSuperAdminRole } from "@/shared/rbac";
+import { isPlatformStaff, PLATFORM_STAFF_ROLES, isSuperAdmin as hasSuperAdminRole } from "@/shared/rbac";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,19 +38,8 @@ export default function AdminStaffPage() {
       setLoading(false);
       return;
     }
-    const db = getClientFirestore();
-    const snaps = await Promise.all(
-      PLATFORM_STAFF_ROLES.map((role) =>
-        getDocs(query(collection(db, "users"), where("roles", "array-contains", role), limit(50))),
-      ),
-    );
-    const byId = new Map<string, UserDoc>();
-    for (const snap of snaps) {
-      for (const d of snap.docs) {
-        byId.set(d.id, d.data() as UserDoc);
-      }
-    }
-    setStaff(Array.from(byId.values()));
+    const all = await listStaffUsersRtdb();
+    setStaff(all.filter((u) => isPlatformStaff(u.roles)));
     setLoading(false);
   }
 
@@ -69,17 +58,17 @@ export default function AdminStaffPage() {
       if (!isFirebaseConfigured()) {
         throw new Error("Firebase is not configured");
       }
-      const snap = await getDocs(
-        query(collection(getClientFirestore(), "users"), where("email", "==", email), limit(1)),
+      const matches = (await listStaffUsersRtdb()).filter(
+        (u) => u.email.toLowerCase() === email,
       );
-      if (snap.empty) {
+      if (matches.length === 0) {
         throw new Error("No user with that email. They must sign in with Google once first.");
       }
-      const userId = snap.docs[0]!.id;
+      const target = matches[0]!;
+      const userId = target.uid;
       if (userId === user?.uid) {
         throw new Error("You cannot change your own platform role from this screen.");
       }
-      const target = snap.docs[0]!.data() as UserDoc;
       if (hasSuperAdminRole(target.roles) && role !== "super_admin") {
         throw new Error("A super admin cannot be demoted or removed from this screen.");
       }

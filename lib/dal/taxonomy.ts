@@ -1,7 +1,8 @@
-import { collection, doc, getDocs, setDoc, query, where } from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 import type { Category, Skill } from "@/shared/types";
 import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
 import { now, slugify } from "@/lib/utils";
+import { listCategoriesRtdb, listSkillsRtdb } from "@/lib/dal/admin-rtdb";
 
 const defaultCategories: Category[] = [
   { id: "cat_tech", name: "Technology", slug: "technology", active: true, createdAt: 0, updatedAt: 0 },
@@ -17,16 +18,14 @@ const defaultSkills: Skill[] = [
 
 export async function listCategories(): Promise<Category[]> {
   if (!isFirebaseConfigured()) return defaultCategories;
-  const q = query(collection(getClientFirestore(), "categories"), where("active", "==", true));
-  const snap = await getDocs(q);
-  return snap.empty ? defaultCategories : snap.docs.map((d) => d.data() as Category);
+  const list = await listCategoriesRtdb();
+  return list.length ? list : defaultCategories;
 }
 
 export async function listSkills(): Promise<Skill[]> {
   if (!isFirebaseConfigured()) return defaultSkills;
-  const q = query(collection(getClientFirestore(), "skills"), where("active", "==", true));
-  const snap = await getDocs(q);
-  return snap.empty ? defaultSkills : snap.docs.map((d) => d.data() as Skill);
+  const list = await listSkillsRtdb();
+  return list.length ? list : defaultSkills;
 }
 
 export async function upsertCategory(name: string): Promise<Category> {

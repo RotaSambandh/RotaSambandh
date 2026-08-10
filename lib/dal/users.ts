@@ -6,6 +6,10 @@ import {
   canApplyToJobs,
   isCandidateOnboardingComplete,
 } from "@/lib/dal/onboarding-gates";
+import {
+  getCandidateProfileRtdb,
+  getUserRtdb,
+} from "@/lib/dal/users-rtdb";
 
 export { canApplyToJobs, isCandidateOnboardingComplete };
 
@@ -106,15 +110,11 @@ export async function ensureUserDoc(input: {
 }
 
 export async function getUser(uid: string): Promise<UserDoc | null> {
-  if (!isFirebaseConfigured()) return null;
-  const snap = await getDoc(doc(getClientFirestore(), "users", uid));
-  return snap.exists() ? (snap.data() as UserDoc) : null;
+  return getUserRtdb(uid);
 }
 
 export async function getCandidateProfile(uid: string): Promise<CandidateProfile | null> {
-  if (!isFirebaseConfigured()) return null;
-  const snap = await getDoc(doc(getClientFirestore(), "candidateProfiles", uid));
-  return snap.exists() ? (snap.data() as CandidateProfile) : null;
+  return getCandidateProfileRtdb(uid);
 }
 
 export async function updateCandidateProfile(

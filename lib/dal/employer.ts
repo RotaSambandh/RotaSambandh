@@ -2,14 +2,8 @@ import {
   collection,
   doc,
   getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
   setDoc,
   updateDoc,
-  where,
-  documentId,
 } from "firebase/firestore";
 import type {
   Business,
@@ -21,9 +15,20 @@ import type {
   JobType,
   WorkplaceType,
 } from "@/shared/types";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
+import { get, ref } from "firebase/database";
+import {
+  getClientFirestore,
+  getClientRtdb,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 import { now, omitUndefined, slugify } from "@/lib/utils";
 import { assertBusinessAcceptsMutations } from "@/lib/dal/business-guards";
+import {
+  listBusinessJobsRtdb,
+  listEmployerMembersRtdb,
+  listOwnedBusinessesRtdb,
+  resolveActiveBusinessRtdb,
+} from "@/lib/dal/employer-rtdb";
 
 /** Wizard finished when verification was submitted (no longer a draft). */
 export function isEmployerBusinessOnboarded(business: Business): boolean {
@@ -243,45 +248,54 @@ export async function updateDraftJob(
 
 export async function getJobById(jobId: string): Promise<Job | null> {
   if (!isFirebaseConfigured()) return null;
-  const snap = await getDoc(doc(getClientFirestore(), "jobs", jobId));
-  return snap.exists() ? (snap.data() as Job) : null;
+  try {
+    const publicSnap = await get(ref(getClientRtdb(), `jobs/${jobId}`));
+    if (publicSnap.exists()) {
+      const j = publicSnap.val() as Record<string, unknown>;
+      return {
+        id: jobId,
+        businessId: String(j.businessId ?? ""),
+        title: String(j.title ?? ""),
+        description: String(j.description ?? ""),
+        responsibilities: j.responsibilities
+          ? String(j.responsibilities)
+          : undefined,
+        requirements: j.requirements ? String(j.requirements) : undefined,
+        benefits: j.benefits ? String(j.benefits) : undefined,
+        status: "published",
+        type: (j.type as Job["type"]) ?? "full_time",
+        workplace: (j.workplace as Job["workplace"]) ?? "remote",
+        location: j.location ? String(j.location) : undefined,
+        salaryDisplay: j.salary ? String(j.salary) : undefined,
+        skills: (j.skills as string[]) ?? [],
+        categoryIds: [],
+        createdBy: "",
+        slug: "",
+        createdAt: Number(j.postedAt ?? 0),
+        updatedAt: Number(j.postedAt ?? 0),
+      };
+    }
+  } catch {
+    /* try employer trees */
+  }
+  return null;
+}
+
+/** Employer workspace job lookup (includes drafts). */
+export async function getEmployerJobById(
+  businessId: string,
+  jobId: string,
+): Promise<Job | null> {
+  const jobs = await listBusinessJobsRtdb(businessId);
+  return jobs.find((j) => j.id === jobId) ?? null;
 }
 
 export async function listBusinessJobs(businessId: string): Promise<Job[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "jobs"),
-    where("businessId", "==", businessId),
-    orderBy("updatedAt", "desc"),
-    limit(100),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Job);
+  return listBusinessJobsRtdb(businessId);
 }
 
 export async function listOwnedBusinesses(userId: string): Promise<Business[]> {
-  if (!isFirebaseConfigured()) return [];
-  const membersSnap = await getDocs(
-    query(collection(getClientFirestore(), "businessMembers"), where("userId", "==", userId), limit(40)),
-  );
-  const activeMembers = membersSnap.docs
-    .map((d) => d.data() as BusinessMember)
-    .filter((m) => m.status !== "revoked" && m.status !== "invited");
-  const ids = Array.from(new Set(activeMembers.map((m) => m.businessId)));
-  if (ids.length === 0) return [];
-
-  // Batch get in chunks of 10 (Firestore `in` limit)
-  const businesses: Business[] = [];
-  for (let i = 0; i < ids.length; i += 10) {
-    const chunk = ids.slice(i, i + 10);
-    const snap = await getDocs(
-      query(collection(getClientFirestore(), "businesses"), where(documentId(), "in", chunk)),
-    );
-    businesses.push(...snap.docs.map((d) => d.data() as Business));
-  }
-  // Stable-ish order: name then id
-  businesses.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
-  return businesses;
+  return listOwnedBusinessesRtdb(userId);
 }
 
 /** Resolve which company the employer UI should use. */
@@ -289,17 +303,7 @@ export async function resolveActiveBusiness(
   userId: string,
   preferredId?: string | null,
 ): Promise<{ businesses: Business[]; business: Business | null }> {
-  const businesses = await listOwnedBusinesses(userId);
-  if (businesses.length === 0) return { businesses, business: null };
-
-  let preferred = preferredId ?? null;
-  if (!preferred && isFirebaseConfigured()) {
-    const userSnap = await getDoc(doc(getClientFirestore(), "users", userId));
-    preferred = (userSnap.data()?.activeBusinessId as string | undefined) ?? null;
-  }
-
-  const match = preferred ? businesses.find((b) => b.id === preferred) : undefined;
-  return { businesses, business: match ?? businesses[0] ?? null };
+  return resolveActiveBusinessRtdb(userId, preferredId);
 }
 
 export async function setActiveBusinessId(userId: string, businessId: string): Promise<void> {
@@ -315,15 +319,7 @@ export async function setActiveBusinessId(userId: string, businessId: string): P
 }
 
 export async function listBusinessMembers(businessId: string): Promise<BusinessMember[]> {
-  if (!isFirebaseConfigured()) return [];
-  const snap = await getDocs(
-    query(
-      collection(getClientFirestore(), "businessMembers"),
-      where("businessId", "==", businessId),
-      limit(50),
-    ),
-  );
-  return snap.docs.map((d) => d.data() as BusinessMember);
+  return listEmployerMembersRtdb(businessId);
 }
 
 export async function inviteBusinessManager(input: {

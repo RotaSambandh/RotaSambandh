@@ -4,7 +4,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveBusiness } from "@/components/employer/active-business-provider";
-import { createJob, listBusinessJobs } from "@/lib/dal/employer";
+import { createJob } from "@/lib/dal/employer";
+import { listBusinessJobsRtdb } from "@/lib/dal/employer-rtdb";
 import { createChangeRequest, jobLiveSnapshot } from "@/lib/dal/change-requests";
 import { JOB_TYPE_LABELS, WORKPLACE_LABELS } from "@/lib/dal/job-meta";
 import type { Job, JobStatus, JobType, WorkplaceType } from "@/shared/types";
@@ -77,7 +78,7 @@ export default function EmployerJobsPage() {
         setLoading(false);
         return;
       }
-      const listed = await listBusinessJobs(business.id);
+      const listed = await listBusinessJobsRtdb(business.id);
       setJobs(listed);
       setLoading(false);
     })();

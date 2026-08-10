@@ -1,47 +1,14 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from "firebase/firestore";
+import { get, ref } from "firebase/database";
+import { doc, updateDoc } from "firebase/firestore";
 import type { NotificationDoc, NotificationType } from "@/shared/types";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  getClientFirestore,
+  getClientRtdb,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 import { now } from "@/lib/utils";
 
-export async function createNotification(input: {
-  userId: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  href?: string;
-  meta?: Record<string, string>;
-}): Promise<NotificationDoc> {
-  const ts = now();
-  const id = isFirebaseConfigured()
-    ? doc(collection(getClientFirestore(), "notifications")).id
-    : `n_${ts}`;
-  const notification: NotificationDoc = {
-    id,
-    userId: input.userId,
-    type: input.type,
-    title: input.title,
-    body: input.body,
-    href: input.href,
-    meta: input.meta,
-    read: false,
-    createdAt: ts,
-    updatedAt: ts,
-  };
-  if (!isFirebaseConfigured()) return notification;
-  await setDoc(doc(getClientFirestore(), "notifications", id), notification);
-  return notification;
-}
-
+/** UI reads from RTDB inbox only. */
 export async function listNotifications(userId: string): Promise<NotificationDoc[]> {
   if (!isFirebaseConfigured()) {
     return [
@@ -58,16 +25,33 @@ export async function listNotifications(userId: string): Promise<NotificationDoc
       },
     ];
   }
-  const q = query(
-    collection(getClientFirestore(), "notifications"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-    limit(50),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as NotificationDoc);
+  try {
+    const snap = await get(ref(getClientRtdb(), `inbox/${userId}/notifications`));
+    if (!snap.exists()) return [];
+    const val = snap.val() as Record<string, Record<string, unknown>>;
+    return Object.values(val)
+      .map(
+        (n) =>
+          ({
+            id: String(n.id ?? ""),
+            userId: String(n.userId ?? userId),
+            type: n.type as NotificationType,
+            title: String(n.title ?? ""),
+            body: String(n.body ?? ""),
+            href: n.href ? String(n.href) : undefined,
+            read: Boolean(n.read),
+            createdAt: Number(n.createdAt ?? 0),
+            updatedAt: Number(n.updatedAt ?? 0),
+          }) satisfies NotificationDoc,
+      )
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 50);
+  } catch {
+    return [];
+  }
 }
 
+/** Mutation only — Functions mirror read flag into RTDB. */
 export async function markNotificationRead(id: string) {
   if (!isFirebaseConfigured()) return;
   await updateDoc(doc(getClientFirestore(), "notifications", id), {

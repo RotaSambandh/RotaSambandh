@@ -1,6 +1,11 @@
-import { collection, doc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { get, ref } from "firebase/database";
 import type { DocumentMeta } from "@/shared/types";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  getClientFirestore,
+  getClientRtdb,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 import { now } from "@/lib/utils";
 
 export async function createDocumentMeta(input: Omit<DocumentMeta, "createdAt" | "updatedAt">) {
@@ -17,6 +22,7 @@ export async function createDocumentMeta(input: Omit<DocumentMeta, "createdAt" |
   return meta;
 }
 
+/** UI list reads from RTDB `candidate/{uid}/documents` (Functions mirror). */
 export async function listCandidateDocuments(candidateId: string): Promise<DocumentMeta[]> {
   if (!isFirebaseConfigured()) {
     return [
@@ -34,10 +40,25 @@ export async function listCandidateDocuments(candidateId: string): Promise<Docum
       },
     ];
   }
-  const q = query(
-    collection(getClientFirestore(), "documents"),
-    where("candidateId", "==", candidateId),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as DocumentMeta);
+  try {
+    const snap = await get(
+      ref(getClientRtdb(), `candidate/${candidateId}/documents`),
+    );
+    if (!snap.exists()) return [];
+    const val = snap.val() as Record<string, Record<string, unknown>>;
+    return Object.values(val).map((d) => ({
+      id: String(d.id ?? ""),
+      candidateId,
+      fileName: String(d.fileName ?? ""),
+      storageKey: String(d.storageKey ?? ""),
+      mimeType: String(d.mimeType ?? ""),
+      fileSize: Number(d.fileSize ?? 0),
+      isPrimary: Boolean(d.isPrimary),
+      kind: (d.kind as DocumentMeta["kind"]) ?? "resume",
+      createdAt: Number(d.createdAt ?? 0),
+      updatedAt: Number(d.updatedAt ?? 0),
+    }));
+  } catch {
+    return [];
+  }
 }

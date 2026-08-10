@@ -1,15 +1,10 @@
 import {
   collection,
   doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
   setDoc,
   updateDoc,
-  where,
 } from "firebase/firestore";
+import { get, ref } from "firebase/database";
 import type {
   Business,
   ChangeRequest,
@@ -18,10 +13,15 @@ import type {
   ChangeRequestTarget,
   Job,
 } from "@/shared/types";
-import { ADMIN_PAGE_SIZE } from "@/shared/constants";
-import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  getClientFirestore,
+  getClientRtdb,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 import { now, slugify } from "@/lib/utils";
 import { assertBusinessAcceptsMutations } from "@/lib/dal/business-guards";
+import { getEmployerMetaRtdb, listChangeRequestsForBusinessRtdb } from "@/lib/dal/employer-rtdb";
+import { listPendingChangeRequestsRtdb } from "@/lib/dal/admin-rtdb";
 
 function demoStore(): ChangeRequest[] {
   if (typeof globalThis === "undefined") return [];
@@ -42,9 +42,9 @@ export async function createChangeRequest(input: {
   submit?: boolean;
 }): Promise<ChangeRequest> {
   if (isFirebaseConfigured()) {
-    const bizSnap = await getDoc(doc(getClientFirestore(), "businesses", input.businessId));
-    if (bizSnap.exists()) {
-      assertBusinessAcceptsMutations(bizSnap.data() as Business);
+    const biz = await getEmployerMetaRtdb(input.businessId);
+    if (biz) {
+      assertBusinessAcceptsMutations(biz);
     }
   }
 
@@ -96,36 +96,42 @@ export async function listChangeRequestsForBusiness(businessId: string): Promise
   if (!isFirebaseConfigured()) {
     return demoStore().filter((c) => c.businessId === businessId);
   }
-  const q = query(
-    collection(getClientFirestore(), "changeRequests"),
-    where("businessId", "==", businessId),
-    orderBy("updatedAt", "desc"),
-    limit(50),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as ChangeRequest);
+  return listChangeRequestsForBusinessRtdb(businessId);
 }
 
 export async function listPendingChangeRequests(): Promise<ChangeRequest[]> {
   if (!isFirebaseConfigured()) {
     return demoStore().filter((c) => c.status === "pending_review");
   }
-  const q = query(
-    collection(getClientFirestore(), "changeRequests"),
-    where("status", "==", "pending_review"),
-    orderBy("updatedAt", "desc"),
-    limit(ADMIN_PAGE_SIZE),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as ChangeRequest);
+  return listPendingChangeRequestsRtdb();
 }
 
 export async function getChangeRequest(id: string): Promise<ChangeRequest | null> {
   if (!isFirebaseConfigured()) {
     return demoStore().find((c) => c.id === id) ?? null;
   }
-  const snap = await getDoc(doc(getClientFirestore(), "changeRequests", id));
-  return snap.exists() ? (snap.data() as ChangeRequest) : null;
+  try {
+    const snap = await get(
+      ref(getClientRtdb(), `admin/queues/changeRequests/${id}`),
+    );
+    if (!snap.exists()) return null;
+    const c = snap.val() as Record<string, unknown>;
+    return {
+      id,
+      businessId: String(c.businessId ?? ""),
+      targetType: c.targetType as ChangeRequest["targetType"],
+      targetId: String(c.targetId ?? ""),
+      action: "update",
+      proposed: {},
+      status: c.status as ChangeRequest["status"],
+      submittedBy: String(c.submittedBy ?? ""),
+      adminNote: c.adminNote ? String(c.adminNote) : undefined,
+      createdAt: Number(c.submittedAt ?? 0),
+      updatedAt: Number(c.submittedAt ?? 0),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function reviewChangeRequestLocal(input: {

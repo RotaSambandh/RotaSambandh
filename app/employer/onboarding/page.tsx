@@ -14,10 +14,10 @@ import { useAuth } from "@/components/auth/auth-provider";
 import {
   createBusiness,
   isEmployerBusinessOnboarded,
-  listOwnedBusinesses,
   submitVerification,
   updateDraftBusiness,
 } from "@/lib/dal/employer";
+import { listOwnedBusinessesRtdb } from "@/lib/dal/employer-rtdb";
 import { uploadBusinessLogo } from "@/lib/uploads/encode-logo";
 import { isNonEmptyHtml, sanitizeCompanyHtml } from "@/lib/sanitize/html";
 import type { Business, BusinessVerification } from "@/shared/types";
@@ -85,7 +85,7 @@ function EmployerOnboardingForm() {
       router.replace("/employer/sign-up");
       return;
     }
-    void listOwnedBusinesses(user.uid).then((list) => {
+    void listOwnedBusinessesRtdb(user.uid).then((list) => {
       if (forceNew) {
         setBusiness(null);
         setStep("basics");

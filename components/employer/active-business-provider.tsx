@@ -10,10 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
-import {
-  resolveActiveBusiness,
-  setActiveBusinessId as persistActiveBusinessId,
-} from "@/lib/dal/employer";
+import { setActiveBusinessId as persistActiveBusinessId } from "@/lib/dal/employer";
+import { resolveActiveBusinessRtdb } from "@/lib/dal/employer-rtdb";
 import type { Business } from "@/shared/types";
 
 interface ActiveBusinessContextValue {
@@ -41,7 +39,7 @@ export function ActiveBusinessProvider({ children }: { children: ReactNode }) {
     }
     setLoading(true);
     try {
-      const resolved = await resolveActiveBusiness(user.uid);
+      const resolved = await resolveActiveBusinessRtdb(user.uid);
       setBusinesses(resolved.businesses);
       setBusiness(resolved.business);
     } finally {

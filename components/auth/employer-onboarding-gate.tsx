@@ -3,7 +3,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
-import { isEmployerBusinessOnboarded, listOwnedBusinesses } from "@/lib/dal/employer";
+import { isEmployerBusinessOnboarded } from "@/lib/dal/employer";
+import { listOwnedBusinessesRtdb } from "@/lib/dal/employer-rtdb";
 import { LoadingBlock } from "@/components/ui";
 
 /** First-time employers must finish the company wizard before the portal. */
@@ -25,7 +26,7 @@ export function EmployerOnboardingGate({ children }: { children: ReactNode }) {
         if (!cancelled) setReady(true);
         return;
       }
-      const businesses = await listOwnedBusinesses(user.uid);
+      const businesses = await listOwnedBusinessesRtdb(user.uid);
       if (cancelled) return;
       const hasCompleted = businesses.some(isEmployerBusinessOnboarded);
       if (!hasCompleted) {

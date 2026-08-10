@@ -1,5 +1,6 @@
 import { getDatabase } from "firebase-admin/database";
 import { READ_MODEL_VERSION } from "../constants";
+import { projectEmployerJob, removeEmployerJob } from "./employer";
 
 export interface JobDoc {
   id: string;
@@ -29,9 +30,12 @@ export interface BusinessDoc {
   status: string;
 }
 
+/** Public feeds + detail only for published; employer workspace for all statuses. */
 export async function projectJob(job: JobDoc, business?: BusinessDoc | null) {
+  await projectEmployerJob(job, business);
+
   if (job.status !== "published") {
-    await removeJobProjections(job.id, job.type, job.workplace);
+    await removePublicJobProjections(job.id, job.type, job.workplace);
     return;
   }
 
@@ -70,15 +74,23 @@ export async function projectJob(job: JobDoc, business?: BusinessDoc | null) {
     [`feeds/latest/${job.id}`]: feedItem,
     [`feeds/${job.type}/${job.id}`]: feedItem,
     [`feeds/${job.workplace}/${job.id}`]: feedItem,
-    [`employer/${job.businessId}/jobs/${job.id}`]: {
-      id: job.id,
-      title: job.title,
-      status: job.status,
-      postedAt: feedItem.postedAt,
-      readModelVersion: READ_MODEL_VERSION,
-    },
   };
 
+  await db.ref().update(updates);
+}
+
+async function removePublicJobProjections(
+  jobId: string,
+  type?: string,
+  workplace?: string,
+) {
+  const db = getDatabase();
+  const updates: Record<string, null> = {
+    [`jobs/${jobId}`]: null,
+    [`feeds/latest/${jobId}`]: null,
+  };
+  if (type) updates[`feeds/${type}/${jobId}`] = null;
+  if (workplace) updates[`feeds/${workplace}/${jobId}`] = null;
   await db.ref().update(updates);
 }
 
@@ -88,15 +100,8 @@ export async function removeJobProjections(
   workplace?: string,
   businessId?: string,
 ) {
-  const db = getDatabase();
-  const updates: Record<string, null> = {
-    [`jobs/${jobId}`]: null,
-    [`feeds/latest/${jobId}`]: null,
-  };
-  if (type) updates[`feeds/${type}/${jobId}`] = null;
-  if (workplace) updates[`feeds/${workplace}/${jobId}`] = null;
-  if (businessId) updates[`employer/${businessId}/jobs/${jobId}`] = null;
-  await db.ref().update(updates);
+  await removePublicJobProjections(jobId, type, workplace);
+  if (businessId) await removeEmployerJob(businessId, jobId);
 }
 
 export async function invalidateNetlifyCache(tags: string[]) {

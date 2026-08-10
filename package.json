@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check:ui-reads": "bash scripts/check-no-ui-firestore-reads.sh",
     "test": "tsx --test tests/onboarding-gates.test.ts tests/firestore-rules.test.ts",
     "test:rules": "firebase emulators:exec --only firestore \"FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 tsx --test tests/firestore-rules.test.ts\"",
     "seed:super-admin": "node --env-file=.env.local scripts/seed-super-admin.mjs",

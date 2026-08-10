@@ -1,5 +1,4 @@
 import { getDatabase } from "firebase-admin/database";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { READ_MODEL_VERSION } from "../constants";
 
 export async function bumpEmployerStats(
@@ -104,15 +103,4 @@ export async function bumpAdminCounters(
 
   const next = result.snapshot.val();
   if (next) await db.ref("system/counters").set(next);
-
-  const fs = getFirestore();
-  await fs.doc("counters/global").set(
-    {
-      ...Object.fromEntries(
-        Object.entries(deltas).map(([k, v]) => [k, FieldValue.increment(v ?? 0)]),
-      ),
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
 }

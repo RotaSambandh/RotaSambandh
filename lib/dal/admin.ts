@@ -1,15 +1,4 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from "firebase/firestore";
+import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
 import type {
   AdminAction,
   Business,
@@ -20,27 +9,29 @@ import type {
   ReportStatus,
   UserDoc,
 } from "@/shared/types";
-import { ADMIN_PAGE_SIZE } from "@/shared/constants";
 import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
 import { now } from "@/lib/utils";
+import {
+  listAdminQueueBusinessesRtdb,
+  listAdminQueueJobsRtdb,
+  listPendingJobsRtdb,
+  listPendingVerificationsRtdb,
+  listReportsRtdb,
+  listStaffUsersRtdb,
+} from "@/lib/dal/admin-rtdb";
+import { getEmployerMetaRtdb } from "@/lib/dal/employer-rtdb";
+import { get, ref } from "firebase/database";
+import { getClientRtdb } from "@/lib/firebase/client";
 
 async function logAdminAction(input: Omit<AdminAction, "id" | "createdAt" | "updatedAt">) {
   if (!isFirebaseConfigured()) return;
   const ts = now();
-  const ref = doc(collection(getClientFirestore(), "adminActions"));
-  await setDoc(ref, { ...input, id: ref.id, createdAt: ts, updatedAt: ts });
+  const refDoc = doc(collection(getClientFirestore(), "adminActions"));
+  await setDoc(refDoc, { ...input, id: refDoc.id, createdAt: ts, updatedAt: ts });
 }
 
 export async function listPendingVerifications(): Promise<BusinessVerification[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "businessVerifications"),
-    where("status", "==", "pending"),
-    orderBy("updatedAt", "desc"),
-    limit(ADMIN_PAGE_SIZE),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as BusinessVerification);
+  return listPendingVerificationsRtdb();
 }
 
 /** @deprecated Use reviewVerificationAdmin from admin-server via privileged API. */
@@ -55,49 +46,51 @@ export async function reviewVerification(_input: {
 }
 
 export async function listPendingJobs(): Promise<Job[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "jobs"),
-    where("status", "==", "pending_review"),
-    orderBy("updatedAt", "desc"),
-    limit(ADMIN_PAGE_SIZE),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Job);
+  return listPendingJobsRtdb();
 }
 
 export async function listAllJobs(pageSize = 100): Promise<Job[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "jobs"),
-    orderBy("updatedAt", "desc"),
-    limit(pageSize),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Job);
+  const jobs = await listAdminQueueJobsRtdb();
+  return jobs
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, pageSize);
 }
 
 export async function getAdminJob(jobId: string): Promise<Job | null> {
   if (!isFirebaseConfigured()) return null;
-  const snap = await getDoc(doc(getClientFirestore(), "jobs", jobId));
-  return snap.exists() ? (snap.data() as Job) : null;
+  try {
+    const snap = await get(
+      ref(getClientRtdb(), `admin/queues/jobs/${jobId}`),
+    );
+    if (!snap.exists()) return null;
+    const j = snap.val() as Record<string, unknown>;
+    return {
+      id: jobId,
+      businessId: String(j.businessId ?? ""),
+      title: String(j.title ?? ""),
+      description: "",
+      skills: [],
+      categoryIds: [],
+      createdBy: "",
+      status: j.status as Job["status"],
+      type: (j.type as Job["type"]) ?? "full_time",
+      workplace: (j.workplace as Job["workplace"]) ?? "remote",
+      slug: "",
+      createdAt: Number(j.updatedAt ?? 0),
+      updatedAt: Number(j.updatedAt ?? 0),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function listAllBusinesses(pageSize = 100): Promise<Business[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "businesses"),
-    orderBy("updatedAt", "desc"),
-    limit(pageSize),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Business);
+  const list = await listAdminQueueBusinessesRtdb();
+  return list.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, pageSize);
 }
 
 export async function getAdminBusiness(businessId: string): Promise<Business | null> {
-  if (!isFirebaseConfigured()) return null;
-  const snap = await getDoc(doc(getClientFirestore(), "businesses", businessId));
-  return snap.exists() ? (snap.data() as Business) : null;
+  return getEmployerMetaRtdb(businessId);
 }
 
 /** @deprecated Use moderateJobAdmin from admin-server via privileged API. */
@@ -122,7 +115,6 @@ export async function setUserSuspended(_input: {
 
 export async function suspendBusiness(input: { businessId: string; adminId: string }) {
   if (!isFirebaseConfigured()) return;
-  // Client-callable path kept for legacy UI; prefer privileged Admin SDK for production ops.
   await updateDoc(doc(getClientFirestore(), "businesses", input.businessId), {
     status: "suspended",
     updatedAt: now(),
@@ -159,15 +151,8 @@ export async function createReport(input: {
 }
 
 export async function listOpenReports(): Promise<Report[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "reports"),
-    where("status", "==", "open"),
-    orderBy("updatedAt", "desc"),
-    limit(ADMIN_PAGE_SIZE),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Report);
+  const reports = await listReportsRtdb();
+  return reports.filter((r) => r.status === "open");
 }
 
 /** @deprecated Use resolveReportAdmin from admin-server via privileged API. */
@@ -179,26 +164,16 @@ export async function resolveReport(_input: {
   throw new Error("Use privileged Admin SDK path (resolveReportAdmin)");
 }
 
-export async function listBusinessesByStatus(status: Business["status"]): Promise<Business[]> {
-  if (!isFirebaseConfigured()) return [];
-  const q = query(
-    collection(getClientFirestore(), "businesses"),
-    where("status", "==", status),
-    orderBy("updatedAt", "desc"),
-    limit(ADMIN_PAGE_SIZE),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Business);
+export async function listBusinessesByStatus(
+  status: Business["status"],
+): Promise<Business[]> {
+  const list = await listAdminQueueBusinessesRtdb();
+  return list.filter((b) => b.status === status);
 }
 
 export async function searchUsers(emailPrefix: string): Promise<UserDoc[]> {
-  if (!isFirebaseConfigured() || !emailPrefix.trim()) return [];
-  const q = query(
-    collection(getClientFirestore(), "users"),
-    where("email", ">=", emailPrefix.toLowerCase()),
-    where("email", "<=", `${emailPrefix.toLowerCase()}\uf8ff`),
-    limit(ADMIN_PAGE_SIZE),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as UserDoc);
+  if (!emailPrefix.trim()) return [];
+  const staff = await listStaffUsersRtdb();
+  const prefix = emailPrefix.toLowerCase();
+  return staff.filter((u) => u.email.toLowerCase().startsWith(prefix));
 }

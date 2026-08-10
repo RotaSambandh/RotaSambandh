@@ -3,7 +3,6 @@ import { createHash } from "crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, getAdminRtdb } from "@/lib/firebase/admin";
 import { getMessaging } from "firebase-admin/messaging";
-import { READ_MODEL_VERSION } from "@/shared/constants";
 import type { NotificationType } from "@/shared/types";
 
 /**
@@ -51,19 +50,7 @@ export async function deliverNotification(input: {
     return ref.id;
   }
 
-  const mirror = {
-    id: notification.id,
-    userId: notification.userId,
-    type: notification.type,
-    title: notification.title,
-    body: notification.body,
-    href: input.href ?? "",
-    read: false,
-    createdAt: ts,
-    updatedAt: ts,
-    readModelVersion: READ_MODEL_VERSION,
-  };
-  await getAdminRtdb().ref(`inbox/${input.userId}/notifications/${ref.id}`).set(mirror);
+  // RTDB inbox mirror is owned by onNotificationWritten (Functions).
 
   if (input.skipPush) return ref.id;
 

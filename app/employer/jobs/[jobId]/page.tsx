@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveBusiness } from "@/components/employer/active-business-provider";
 import { ApplicantsPanel } from "@/components/employer/applicants-panel";
-import { getJobById, updateDraftJob } from "@/lib/dal/employer";
+import { getEmployerJobById, updateDraftJob } from "@/lib/dal/employer";
 import {
   createChangeRequest,
   jobLiveSnapshot,
@@ -109,7 +109,11 @@ export default function EmployerJobDetailPage() {
     if (!user || bizLoading) return;
     void (async () => {
       setLoading(true);
-      const loaded = await getJobById(jobId);
+      let loaded: Job | null = null;
+      for (const b of businesses) {
+        loaded = await getEmployerJobById(b.id, jobId);
+        if (loaded) break;
+      }
       if (!loaded) {
         setJob(null);
         setBusinessId(null);
@@ -117,7 +121,7 @@ export default function EmployerJobDetailPage() {
         return;
       }
 
-      const ownsJob = businesses.some((b) => b.id === loaded.businessId);
+      const ownsJob = businesses.some((b) => b.id === loaded!.businessId);
       if (!ownsJob) {
         setJob(null);
         setBusinessId(null);
@@ -133,7 +137,7 @@ export default function EmployerJobDetailPage() {
       setJob(loaded);
       const [crs, jobQuestions, platform] = await Promise.all([
         listChangeRequestsForBusiness(loaded.businessId),
-        listJobQuestions(jobId),
+        listJobQuestions(jobId, loaded.businessId),
         listPlatformQuestions(),
       ]);
       setChangeRequests(crs);

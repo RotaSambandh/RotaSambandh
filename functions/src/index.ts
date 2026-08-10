@@ -3,7 +3,11 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getDatabase } from "firebase-admin/database";
 import { getAuth } from "firebase-admin/auth";
 import { setGlobalOptions } from "firebase-functions/v2";
-import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+  onDocumentWritten,
+} from "firebase-functions/v2/firestore";
 import {
   invalidateNetlifyCache,
   projectJob,
@@ -16,7 +20,30 @@ import {
   bumpCandidateStats,
   bumpEmployerStats,
 } from "./projections/dashboards";
-import { createAndDeliverNotification, notifyBusinessMembers, notifyPlatformStaff } from "./notifications";
+import {
+  projectApplication,
+  projectApplicationAnswers,
+  removeApplicationProjections,
+  type ApplicationDoc,
+} from "./projections/applications";
+import {
+  countPublishedJobs,
+  projectChangeRequest,
+  projectEmployerMember,
+  projectEmployerMeta,
+} from "./projections/employer";
+import { projectCandidateProfile, projectUserSlice } from "./projections/users";
+import {
+  projectAdminQueueItem,
+  projectJobQuestions,
+  projectTaxonomyDoc,
+} from "./projections/admin-queues";
+import { projectCandidateDocument } from "./projections/documents";
+import {
+  createAndDeliverNotification,
+  notifyBusinessMembers,
+  notifyPlatformStaff,
+} from "./notifications";
 import { READ_MODEL_VERSION } from "./constants";
 
 /** All functions run next to Firestore / RTDB (asia-southeast1). */
@@ -27,292 +54,410 @@ initializeApp();
 export const onJobWritten = onDocumentWritten("jobs/{jobId}", async (event) => {
   const after = event.data?.after?.data() as JobDoc | undefined;
   const before = event.data?.before?.data() as JobDoc | undefined;
+  const jobId = event.params.jobId;
 
   if (!after) {
-    if (before) await removeJobProjections(before.id, before.type, before.workplace, before.businessId);
+    if (before) {
+      await removeJobProjections(
+        before.id ?? jobId,
+        before.type,
+        before.workplace,
+        before.businessId,
+      );
+      await projectAdminQueueItem("jobs", jobId, null);
+    }
     return;
   }
 
+  const job = { ...after, id: after.id ?? jobId };
   let business: BusinessDoc | null = null;
-  const bizSnap = await getFirestore().doc(`businesses/${after.businessId}`).get();
+  const bizSnap = await getFirestore().doc(`businesses/${job.businessId}`).get();
   if (bizSnap.exists) business = { id: bizSnap.id, ...bizSnap.data() } as BusinessDoc;
 
-  if (after.status !== "published") {
-    await removeJobProjections(after.id, after.type, after.workplace, after.businessId);
-  } else {
-    await projectJob({ ...after, id: after.id ?? event.params.jobId }, business);
-  }
+  await projectJob(job, business);
+
+  await projectAdminQueueItem("jobs", jobId, {
+    title: job.title,
+    businessId: job.businessId,
+    status: job.status,
+    type: job.type,
+    workplace: job.workplace,
+    updatedAt: Date.now(),
+  });
+
   await invalidateNetlifyCache([
-    `job:${after.id}`,
+    `job:${job.id}`,
     `feed:latest`,
-    `feed:${after.type}`,
-    `business:${after.businessId}`,
+    `feed:${job.type}`,
+    `business:${job.businessId}`,
   ]);
 
-  if (before?.status !== "published" && after.status === "published") {
-    await bumpAdminCounters({ activeJobs: 1, pendingJobs: before?.status === "pending_review" ? -1 : 0 });
-    await bumpEmployerStats(after.businessId, { activeJobs: 1 });
+  if (before?.status !== "published" && job.status === "published") {
+    await bumpAdminCounters({
+      activeJobs: 1,
+      pendingJobs: before?.status === "pending_review" ? -1 : 0,
+    });
+    await bumpEmployerStats(job.businessId, { activeJobs: 1 });
   }
-  if (before?.status === "published" && after.status !== "published") {
+  if (before?.status === "published" && job.status !== "published") {
     await bumpAdminCounters({ activeJobs: -1 });
-    await bumpEmployerStats(after.businessId, { activeJobs: -1 });
+    await bumpEmployerStats(job.businessId, { activeJobs: -1 });
   }
-  if (before?.status === "pending_review" && after.status === "draft") {
+  if (before?.status === "pending_review" && job.status === "draft") {
     await bumpAdminCounters({ pendingJobs: -1 });
   }
-  if (before?.status !== "pending_review" && after.status === "pending_review") {
+  if (before?.status !== "pending_review" && job.status === "pending_review") {
     await bumpAdminCounters({ pendingJobs: 1 });
   }
+
+  if (business) {
+    const openJobsCount = await countPublishedJobs(job.businessId);
+    if (business.status === "verified") {
+      await getDatabase().ref(`businesses/${job.businessId}/openJobsCount`).set(openJobsCount);
+    }
+    await projectEmployerMeta(
+      job.businessId,
+      { ...business, id: business.id },
+      { openJobsCount },
+    );
+  }
 });
 
-export const onApplicationCreated = onDocumentCreated("applications/{applicationId}", async (event) => {
-  const app = event.data?.data();
-  if (!app) return;
+export const onApplicationCreated = onDocumentCreated(
+  "applications/{applicationId}",
+  async (event) => {
+    const raw = event.data?.data();
+    if (!raw) return;
+    const app: ApplicationDoc = {
+      ...(raw as ApplicationDoc),
+      id: (raw as ApplicationDoc).id ?? event.params.applicationId,
+    };
 
-  await bumpEmployerStats(app.businessId, { applications: 1, newApplications: 1 });
-  await bumpCandidateStats(app.candidateId, { applications: 1 });
-  await bumpAdminCounters({ applications: 1 });
+    await bumpEmployerStats(app.businessId, { applications: 1, newApplications: 1 });
+    await bumpCandidateStats(app.candidateId, { applications: 1 });
+    await bumpAdminCounters({ applications: 1 });
 
-  await getDatabase().ref(`candidate/${app.candidateId}/applications/${app.id}`).set({
-    id: app.id,
-    jobId: app.jobId,
-    status: app.status,
-    submittedAt: app.submittedAt,
-    readModelVersion: READ_MODEL_VERSION,
-  });
+    const model = await projectApplication(app);
 
-  await getDatabase().ref(`employer/${app.businessId}/recentApplications/${app.id}`).set({
-    id: app.id,
-    jobId: app.jobId,
-    candidateId: app.candidateId,
-    status: app.status,
-    submittedAt: app.submittedAt,
-    readModelVersion: READ_MODEL_VERSION,
-  });
+    const answersSnap = await getFirestore()
+      .collection("applicationAnswers")
+      .where("applicationId", "==", app.id)
+      .limit(50)
+      .get();
+    await projectApplicationAnswers(
+      app.id,
+      app.businessId,
+      answersSnap.docs.map((d) => {
+        const a = d.data();
+        return {
+          id: d.id,
+          questionId: String(a.questionId ?? ""),
+          questionVersion: Number(a.questionVersion ?? 1),
+          promptSnapshot: String(a.promptSnapshot ?? ""),
+          type: String(a.type ?? "short_text"),
+          value: a.value ?? null,
+        };
+      }),
+    );
 
-  await createAndDeliverNotification({
-    userId: app.candidateId,
-    type: "application_submitted",
-    title: "Application submitted",
-    body: "Your application was received successfully.",
-    href: "/candidate/applications",
-    meta: { applicationId: app.id, jobId: app.jobId },
-    channel: "candidate",
-  });
+    await createAndDeliverNotification({
+      userId: app.candidateId,
+      type: "application_submitted",
+      title: "Application submitted",
+      body: "Your application was received successfully.",
+      href: "/candidate/applications",
+      meta: { applicationId: app.id, jobId: app.jobId },
+      channel: "candidate",
+    });
 
-  let jobTitle = "a role";
-  try {
-    const jobSnap = await getFirestore().doc(`jobs/${app.jobId}`).get();
-    if (jobSnap.exists) jobTitle = String(jobSnap.data()?.title ?? jobTitle);
-  } catch {
-    /* ignore */
-  }
-
-  await notifyBusinessMembers({
-    businessId: app.businessId,
-    type: "application_received",
-    title: "New application",
-    body: `Someone applied for ${jobTitle}.`,
-    href: `/employer/jobs/${app.jobId}`,
-    meta: { applicationId: app.id, jobId: app.jobId },
-    roles: ["company_admin", "manager"],
-    dedupeKeyPrefix: `app-recv:${app.id}`,
-  });
-});
-
-export const onApplicationUpdated = onDocumentUpdated("applications/{applicationId}", async (event) => {
-  const before = event.data?.before.data();
-  const after = event.data?.after.data();
-  if (!before || !after || before.status === after.status) return;
-
-  await getDatabase().ref(`candidate/${after.candidateId}/applications/${after.id}`).update({
-    status: after.status,
-    statusUpdatedAt: after.statusUpdatedAt,
-    readModelVersion: READ_MODEL_VERSION,
-  });
-
-  if (after.status === "shortlisted") {
-    await bumpEmployerStats(after.businessId, { shortlisted: 1, newApplications: -1 });
-  }
-  if (after.status === "interview") {
-    await bumpEmployerStats(after.businessId, { interviews: 1 });
-    await bumpCandidateStats(after.candidateId, { interviews: 1, underReview: -1 });
-  }
-  if (after.status === "under_review") {
-    await bumpCandidateStats(after.candidateId, { underReview: 1 });
-  }
-  if (after.status === "selected") {
-    await bumpEmployerStats(after.businessId, { selected: 1 });
-    await bumpAdminCounters({ placements: 1 });
-  }
-
-  const status = String(after.status);
-  const type =
-    status === "interview" ? "interview_update" : "application_status_changed";
-  const title =
-    status === "selected"
-      ? "You were selected"
-      : status === "rejected"
-        ? "Application update"
-        : status === "interview"
-          ? "Interview update"
-          : status === "shortlisted"
-            ? "You've been shortlisted"
-            : "Application update";
-
-  await createAndDeliverNotification({
-    userId: after.candidateId,
-    type,
-    title,
-    body: `Your application status is now ${status.replaceAll("_", " ")}.`,
-    href: "/candidate/applications",
-    meta: { applicationId: after.id, status },
-    channel: "candidate",
-    dedupeKey: `app-status:${after.id}:${status}`,
-  });
-
-  if (status === "withdrawn") {
     await notifyBusinessMembers({
-      businessId: after.businessId,
-      type: "application_status_changed",
-      title: "Candidate withdrew",
-      body: "A candidate withdrew an application.",
-      href: `/employer/jobs/${after.jobId}`,
-      meta: { applicationId: after.id },
+      businessId: app.businessId,
+      type: "application_received",
+      title: "New application",
+      body: `Someone applied for ${model.jobTitle}.`,
+      href: `/employer/jobs/${app.jobId}`,
+      meta: { applicationId: app.id, jobId: app.jobId },
       roles: ["company_admin", "manager"],
-      dedupeKeyPrefix: `app-withdraw:${after.id}`,
+      dedupeKeyPrefix: `app-recv:${app.id}`,
     });
-  }
-});
+  },
+);
 
-export const onBusinessWritten = onDocumentWritten("businesses/{businessId}", async (event) => {
-  const after = event.data?.after?.data();
-  const before = event.data?.before?.data();
-  const businessId = event.params.businessId;
-  if (!after) {
-    await getDatabase().ref(`businesses/${businessId}`).remove();
-    if (before) {
-      await bumpAdminCounters({ businesses: -1 });
-      if (before.status === "deletion_pending") {
-        await bumpAdminCounters({ pendingBusinessDeletions: -1 });
-      }
-      if (before.status === "verification_pending") {
-        await bumpAdminCounters({ pendingBusinesses: -1 });
-      }
+export const onApplicationUpdated = onDocumentUpdated(
+  "applications/{applicationId}",
+  async (event) => {
+    const before = event.data?.before.data();
+    const afterRaw = event.data?.after.data();
+    if (!before || !afterRaw) return;
+    const after: ApplicationDoc = {
+      ...(afterRaw as ApplicationDoc),
+      id: (afterRaw as ApplicationDoc).id ?? event.params.applicationId,
+    };
+
+    await projectApplication(after);
+
+    if (before.status === after.status) return;
+
+    if (after.status === "shortlisted") {
+      await bumpEmployerStats(after.businessId, { shortlisted: 1, newApplications: -1 });
     }
-    return;
-  }
+    if (after.status === "interview") {
+      await bumpEmployerStats(after.businessId, { interviews: 1 });
+      await bumpCandidateStats(after.candidateId, { interviews: 1, underReview: -1 });
+    }
+    if (after.status === "under_review") {
+      await bumpCandidateStats(after.candidateId, { underReview: 1 });
+    }
+    if (after.status === "selected") {
+      await bumpEmployerStats(after.businessId, { selected: 1 });
+      await bumpAdminCounters({ placements: 1 });
+    }
 
-  const verified = after.status === "verified";
-  if (!verified) {
-    await getDatabase().ref(`businesses/${businessId}`).remove();
-  } else {
-    await getDatabase().ref(`businesses/${businessId}`).set({
-      id: after.id ?? businessId,
-      name: after.name,
-      slug: after.slug,
-      logoUrl: after.logoUrl,
-      coverUrl: after.coverUrl,
-      description: after.description,
-      website: after.website,
-      industry: after.industry,
-      companySize: after.companySize,
-      location: after.location,
-      rotaryContactName: after.rotaryContactName,
-      rotaryContactClub: after.rotaryContactClub,
-      verified: true,
-      openJobsCount: 0,
+    const status = String(after.status);
+    const type =
+      status === "interview" ? "interview_update" : "application_status_changed";
+    const title =
+      status === "selected"
+        ? "You were selected"
+        : status === "rejected"
+          ? "Application update"
+          : status === "interview"
+            ? "Interview update"
+            : status === "shortlisted"
+              ? "You've been shortlisted"
+              : "Application update";
+
+    await createAndDeliverNotification({
+      userId: after.candidateId,
+      type,
+      title,
+      body: `Your application status is now ${status.replaceAll("_", " ")}.`,
+      href: "/candidate/applications",
+      meta: { applicationId: after.id, status },
+      channel: "candidate",
+      dedupeKey: `app-status:${after.id}:${status}`,
+    });
+
+    if (status === "withdrawn") {
+      await notifyBusinessMembers({
+        businessId: after.businessId,
+        type: "application_status_changed",
+        title: "Candidate withdrew",
+        body: "A candidate withdrew an application.",
+        href: `/employer/jobs/${after.jobId}`,
+        meta: { applicationId: after.id },
+        roles: ["company_admin", "manager"],
+        dedupeKeyPrefix: `app-withdraw:${after.id}`,
+      });
+    }
+  },
+);
+
+export const onApplicationDeleted = onDocumentWritten(
+  "applications/{applicationId}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    const before = event.data?.before?.data();
+    if (!after && before) {
+      await removeApplicationProjections({
+        id: (before as ApplicationDoc).id ?? event.params.applicationId,
+        candidateId: String((before as ApplicationDoc).candidateId),
+        businessId: String((before as ApplicationDoc).businessId),
+      });
+    }
+  },
+);
+
+export const onNotificationWritten = onDocumentWritten(
+  "notifications/{id}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    const id = event.params.id;
+    const db = getDatabase();
+    if (!after) {
+      const before = event.data?.before?.data();
+      const uid = before?.userId as string | undefined;
+      if (uid) {
+        await db.ref().update({
+          [`inbox/${uid}/notifications/${id}`]: null,
+          [`candidate/${uid}/notifications/${id}`]: null,
+        });
+      }
+      return;
+    }
+    const uid = String(after.userId);
+    const mirror = {
+      id,
+      userId: uid,
+      type: after.type,
+      title: after.title,
+      body: after.body,
+      href: after.href ?? "",
+      read: Boolean(after.read),
+      createdAt: after.createdAt ?? Date.now(),
+      updatedAt: after.updatedAt ?? Date.now(),
       readModelVersion: READ_MODEL_VERSION,
-    });
-  }
-
-  // Keep feed companyLogo / company name in sync when branding changes.
-  const brandingChanged =
-    before?.logoUrl !== after.logoUrl ||
-    before?.name !== after.name ||
-    before?.description !== after.description;
-  if (verified && brandingChanged) {
-    const jobsSnap = await getFirestore()
-      .collection("jobs")
-      .where("businessId", "==", businessId)
-      .where("status", "==", "published")
-      .get();
-    const business: BusinessDoc = { id: after.id ?? businessId, ...after } as BusinessDoc;
-    for (const jobDoc of jobsSnap.docs) {
-      const job = { id: jobDoc.id, ...jobDoc.data() } as JobDoc;
-      await projectJob(job, business);
+    };
+    await db.ref(`inbox/${uid}/notifications/${id}`).set(mirror);
+    // Keep candidate mirror in sync when present / for candidate channel items
+    const candidateRef = db.ref(`candidate/${uid}/notifications/${id}`);
+    const existing = await candidateRef.get();
+    if (existing.exists() || String(after.audience ?? "") === "candidate") {
+      await candidateRef.set(mirror);
     }
-    await invalidateNetlifyCache([`business:${businessId}`, "feed:latest"]);
-  }
+  },
+);
 
-  if (before?.status !== "verification_pending" && after.status === "verification_pending") {
-    await bumpAdminCounters({ pendingBusinesses: 1 });
-  }
-  if (before?.status === "verification_pending" && after.status !== "verification_pending") {
-    await bumpAdminCounters({ pendingBusinesses: -1 });
-  }
-  if (before?.status !== "deletion_pending" && after.status === "deletion_pending") {
-    await bumpAdminCounters({ pendingBusinessDeletions: 1 });
-    await notifyPlatformStaff({
-      type: "business_deletion",
-      title: "Company deletion requested",
-      body: `${after.name} asked to leave the network.`,
-      href: "/admin/businesses",
-      dedupeKeyPrefix: `biz-del-req:${businessId}`,
-    });
-    await notifyBusinessMembers({
+export const onBusinessWritten = onDocumentWritten(
+  "businesses/{businessId}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    const before = event.data?.before?.data();
+    const businessId = event.params.businessId;
+    if (!after) {
+      await getDatabase().ref(`businesses/${businessId}`).remove();
+      await getDatabase().ref(`employer/${businessId}/meta`).remove();
+      await projectAdminQueueItem("businesses", businessId, null);
+      if (before) {
+        await bumpAdminCounters({ businesses: -1 });
+        if (before.status === "deletion_pending") {
+          await bumpAdminCounters({ pendingBusinessDeletions: -1 });
+        }
+        if (before.status === "verification_pending") {
+          await bumpAdminCounters({ pendingBusinesses: -1 });
+        }
+      }
+      return;
+    }
+
+    const verified = after.status === "verified";
+    const openJobsCount = verified ? await countPublishedJobs(businessId) : 0;
+
+    await projectEmployerMeta(
       businessId,
-      type: "business_deletion",
-      title: "Company deletion pending",
-      body: `${after.name} is hidden pending admin restore or permanent delete.`,
-      href: "/employer/company",
-      roles: ["company_admin"],
-      excludeUserId: after.deletionRequestedBy,
-      dedupeKeyPrefix: `biz-del-peer:${businessId}`,
-    });
-    // Batch candidates with applications
-    const appsSnap = await getFirestore()
-      .collection("applications")
-      .where("businessId", "==", businessId)
-      .limit(400)
-      .get();
-    const candidateIds = Array.from(
-      new Set(appsSnap.docs.map((d) => d.data().candidateId as string).filter(Boolean)),
+      { ...after, id: after.id ?? businessId },
+      { openJobsCount },
     );
-    await Promise.all(
-      candidateIds.map((candidateId) =>
-        createAndDeliverNotification({
-          userId: candidateId,
-          type: "business_deletion",
-          title: "Employer requested removal",
-          body: `${after.name} asked to leave RotaSambandh. Your application stays on file.`,
-          href: "/candidate/applications",
-          channel: "candidate",
-          dedupeKey: `biz-del-cand:${businessId}:${candidateId}`,
-          skipPush: true,
-        }),
-      ),
-    );
-  }
-  if (before?.status === "deletion_pending" && after.status !== "deletion_pending") {
-    await bumpAdminCounters({ pendingBusinessDeletions: -1 });
-  }
-  if (!before && after) {
-    await bumpAdminCounters({ businesses: 1 });
-  }
-  if (before?.status !== "verified" && after.status === "verified") {
-    await notifyBusinessMembers({
-      businessId,
-      type: "business_verification",
-      title: "Business verified",
-      body: `${after.name} is now a verified Rotary ecosystem business.`,
-      href: "/employer/company",
-      roles: ["company_admin"],
-      meta: { decision: "approved" },
-      dedupeKeyPrefix: `biz-verified:${businessId}`,
+
+    await projectAdminQueueItem("businesses", businessId, {
+      name: after.name,
+      status: after.status,
+      ownerId: after.ownerId,
+      updatedAt: after.updatedAt ?? Date.now(),
     });
-  }
-});
+
+    if (!verified) {
+      await getDatabase().ref(`businesses/${businessId}`).remove();
+    } else {
+      await getDatabase().ref(`businesses/${businessId}`).set({
+        id: after.id ?? businessId,
+        name: after.name,
+        slug: after.slug,
+        logoUrl: after.logoUrl,
+        coverUrl: after.coverUrl,
+        description: after.description,
+        website: after.website,
+        industry: after.industry,
+        companySize: after.companySize,
+        location: after.location,
+        rotaryContactName: after.rotaryContactName,
+        rotaryContactClub: after.rotaryContactClub,
+        verified: true,
+        openJobsCount,
+        readModelVersion: READ_MODEL_VERSION,
+      });
+    }
+
+    // branding / queue digest paths continue below
+
+    const brandingChanged =
+      before?.logoUrl !== after.logoUrl ||
+      before?.name !== after.name ||
+      before?.description !== after.description;
+    if (verified && brandingChanged) {
+      const jobsSnap = await getFirestore()
+        .collection("jobs")
+        .where("businessId", "==", businessId)
+        .get();
+      const business: BusinessDoc = {
+        id: after.id ?? businessId,
+        ...after,
+      } as BusinessDoc;
+      for (const jobDoc of jobsSnap.docs) {
+        const job = { id: jobDoc.id, ...jobDoc.data() } as JobDoc;
+        await projectJob(job, business);
+      }
+      await invalidateNetlifyCache([`business:${businessId}`, "feed:latest"]);
+    }
+
+    if (before?.status !== "verification_pending" && after.status === "verification_pending") {
+      await bumpAdminCounters({ pendingBusinesses: 1 });
+    }
+    if (before?.status === "verification_pending" && after.status !== "verification_pending") {
+      await bumpAdminCounters({ pendingBusinesses: -1 });
+    }
+    if (before?.status !== "deletion_pending" && after.status === "deletion_pending") {
+      await bumpAdminCounters({ pendingBusinessDeletions: 1 });
+      await notifyPlatformStaff({
+        type: "business_deletion",
+        title: "Company deletion requested",
+        body: `${after.name} asked to leave the network.`,
+        href: "/admin/businesses",
+        dedupeKeyPrefix: `biz-del-req:${businessId}`,
+      });
+      await notifyBusinessMembers({
+        businessId,
+        type: "business_deletion",
+        title: "Company deletion pending",
+        body: `${after.name} is hidden pending admin restore or permanent delete.`,
+        href: "/employer/company",
+        roles: ["company_admin"],
+        excludeUserId: after.deletionRequestedBy,
+        dedupeKeyPrefix: `biz-del-peer:${businessId}`,
+      });
+      const appsSnap = await getFirestore()
+        .collection("applications")
+        .where("businessId", "==", businessId)
+        .limit(400)
+        .get();
+      const candidateIds = Array.from(
+        new Set(appsSnap.docs.map((d) => d.data().candidateId as string).filter(Boolean)),
+      );
+      await Promise.all(
+        candidateIds.map((candidateId) =>
+          createAndDeliverNotification({
+            userId: candidateId,
+            type: "business_deletion",
+            title: "Employer requested removal",
+            body: `${after.name} asked to leave RotaSambandh. Your application stays on file.`,
+            href: "/candidate/applications",
+            channel: "candidate",
+            dedupeKey: `biz-del-cand:${businessId}:${candidateId}`,
+            skipPush: true,
+          }),
+        ),
+      );
+    }
+    if (before?.status === "deletion_pending" && after.status !== "deletion_pending") {
+      await bumpAdminCounters({ pendingBusinessDeletions: -1 });
+    }
+    if (!before && after) {
+      await bumpAdminCounters({ businesses: 1 });
+    }
+    if (before?.status !== "verified" && after.status === "verified") {
+      await notifyBusinessMembers({
+        businessId,
+        type: "business_verification",
+        title: "Business verified",
+        body: `${after.name} is now a verified Rotary ecosystem business.`,
+        href: "/employer/company",
+        roles: ["company_admin"],
+        meta: { decision: "approved" },
+        dedupeKeyPrefix: `biz-verified:${businessId}`,
+      });
+    }
+  },
+);
 
 export const onBusinessMemberWritten = onDocumentWritten(
   "businessMembers/{memberId}",
@@ -320,19 +465,33 @@ export const onBusinessMemberWritten = onDocumentWritten(
     const after = event.data?.after?.data();
     const before = event.data?.before?.data();
     const db = getDatabase();
-    // Only active memberships grant employer RTDB workspace access (multi-company safe).
     if (after) {
       const status = (after.status as string | undefined) ?? "active";
       const path = `employerMembers/${after.businessId}/${after.userId}`;
+      const reverse = `userEmployerMemberships/${after.userId}/${after.businessId}`;
       if (status === "active") {
         await db.ref(path).set(true);
+        await db.ref(reverse).set(true);
       } else {
         await db.ref(path).remove();
+        await db.ref(reverse).remove();
       }
+      await projectEmployerMember({
+        id: (after.id as string) ?? event.params.memberId,
+        businessId: String(after.businessId),
+        userId: String(after.userId),
+        role: String(after.role ?? "viewer"),
+        status,
+        invitedEmail: after.invitedEmail as string | undefined,
+      });
       return;
     }
     if (before) {
       await db.ref(`employerMembers/${before.businessId}/${before.userId}`).remove();
+      await db.ref(`userEmployerMemberships/${before.userId}/${before.businessId}`).remove();
+      await getDatabase()
+        .ref(`employer/${before.businessId}/members/${before.userId}`)
+        .remove();
     }
   },
 );
@@ -342,6 +501,28 @@ export const onChangeRequestWritten = onDocumentWritten(
   async (event) => {
     const after = event.data?.after?.data();
     const before = event.data?.before?.data();
+    const id = event.params.id;
+
+    if (after) {
+      await projectChangeRequest({
+        id,
+        businessId: after.businessId as string | undefined,
+        targetType: String(after.targetType),
+        targetId: String(after.targetId),
+        status: String(after.status),
+        submittedBy: after.submittedBy as string | undefined,
+        submittedAt: after.submittedAt as number | undefined,
+        adminNote: after.adminNote as string | undefined,
+      });
+    } else {
+      await getDatabase().ref(`admin/queues/changeRequests/${id}`).remove();
+      if (before?.businessId) {
+        await getDatabase()
+          .ref(`employer/${before.businessId}/changeRequests/${id}`)
+          .remove();
+      }
+    }
+
     if (before?.status !== "pending_review" && after?.status === "pending_review") {
       await bumpAdminCounters({
         pendingJobs: after.targetType === "job" ? 1 : 0,
@@ -361,7 +542,7 @@ export const onChangeRequestWritten = onDocumentWritten(
           body: "Your submitted changes are now live.",
           href: after.targetType === "job" ? "/employer/jobs" : "/employer/company",
           channel: "employer",
-          dedupeKey: `cr-ok:${event.params.id}`,
+          dedupeKey: `cr-ok:${id}`,
         });
       }
       if (after.status === "rejected" && after.submittedBy) {
@@ -373,7 +554,7 @@ export const onChangeRequestWritten = onDocumentWritten(
           href: after.targetType === "job" ? "/employer/jobs" : "/employer/company",
           channel: "employer",
           meta: { decision: "rejected" },
-          dedupeKey: `cr-rej:${event.params.id}`,
+          dedupeKey: `cr-rej:${id}`,
         });
       }
       if (after.status === "info_requested" && after.submittedBy) {
@@ -385,7 +566,7 @@ export const onChangeRequestWritten = onDocumentWritten(
           href: after.targetType === "job" ? "/employer/jobs" : "/employer/company",
           channel: "employer",
           meta: { decision: "info_requested" },
-          dedupeKey: `cr-info:${event.params.id}`,
+          dedupeKey: `cr-info:${id}`,
         });
       }
     }
@@ -401,7 +582,19 @@ export const onBusinessVerificationWritten = onDocumentWritten(
   async (event) => {
     const after = event.data?.after?.data();
     const before = event.data?.before?.data();
-    if (!after) return;
+    const id = event.params.id;
+    if (!after) {
+      await projectAdminQueueItem("verifications", id, null);
+      return;
+    }
+
+    await projectAdminQueueItem("verifications", id, {
+      businessId: after.businessId,
+      status: after.status,
+      affiliationType: after.affiliationType,
+      submittedBy: after.submittedBy,
+      updatedAt: after.updatedAt ?? Date.now(),
+    });
 
     if (before?.status !== "pending" && after.status === "pending") {
       await notifyPlatformStaff({
@@ -409,7 +602,7 @@ export const onBusinessVerificationWritten = onDocumentWritten(
         title: "New verification pending",
         body: "A business submitted Rotary affiliation for review.",
         href: "/admin/businesses",
-        dedupeKeyPrefix: `ver-pend:${event.params.id}`,
+        dedupeKeyPrefix: `ver-pend:${id}`,
       });
       await refreshAdminQueueDigest();
     }
@@ -438,7 +631,7 @@ export const onBusinessVerificationWritten = onDocumentWritten(
           href: "/employer/company",
           roles: ["company_admin"],
           meta: { decision },
-          dedupeKeyPrefix: `ver-dec:${event.params.id}:${decision}`,
+          dedupeKeyPrefix: `ver-dec:${id}:${decision}`,
         });
       }
     }
@@ -448,6 +641,13 @@ export const onBusinessVerificationWritten = onDocumentWritten(
 export const onReportCreated = onDocumentCreated("reports/{id}", async (event) => {
   const report = event.data?.data();
   if (!report) return;
+  await projectAdminQueueItem("reports", event.params.id, {
+    targetType: report.targetType,
+    targetId: report.targetId,
+    reason: report.reason,
+    status: report.status ?? "open",
+    createdAt: report.createdAt ?? Date.now(),
+  });
   await refreshAdminQueueDigest();
   await notifyPlatformStaff({
     type: "admin_queue_digest",
@@ -455,6 +655,22 @@ export const onReportCreated = onDocumentCreated("reports/{id}", async (event) =
     body: `A ${String(report.targetType)} was reported (${String(report.reason).replaceAll("_", " ")}).`,
     href: "/admin/reports",
     dedupeKeyPrefix: `report:${event.params.id}`,
+  });
+});
+
+export const onReportWritten = onDocumentWritten("reports/{id}", async (event) => {
+  const after = event.data?.after?.data();
+  const id = event.params.id;
+  if (!after) {
+    await projectAdminQueueItem("reports", id, null);
+    return;
+  }
+  await projectAdminQueueItem("reports", id, {
+    targetType: after.targetType,
+    targetId: after.targetId,
+    reason: after.reason,
+    status: after.status ?? "open",
+    createdAt: after.createdAt ?? Date.now(),
   });
 });
 
@@ -500,6 +716,19 @@ export const onUserWritten = onDocumentWritten("users/{uid}", async (event) => {
     await db.ref(`admins/${uid}`).remove();
   }
 
+  await projectUserSlice(uid, after as Record<string, unknown> | undefined);
+
+  if (after) {
+    await projectAdminQueueItem("users", uid, {
+      email: after.email,
+      displayName: after.displayName,
+      roles,
+      updatedAt: after.updatedAt ?? Date.now(),
+    });
+  } else {
+    await projectAdminQueueItem("users", uid, null);
+  }
+
   const beforeRoles = beforeRoleList.slice().sort().join(",");
   const afterRoles = roles.slice().sort().join(",");
   if (after && beforeRoles !== afterRoles) {
@@ -507,4 +736,92 @@ export const onUserWritten = onDocumentWritten("users/{uid}", async (event) => {
   }
 });
 
-// savedJobs feature removed from the app — no projection writes.
+export const onCandidateProfileWritten = onDocumentWritten(
+  "candidateProfiles/{uid}",
+  async (event) => {
+    const uid = event.params.uid;
+    const after = event.data?.after?.data();
+    await projectCandidateProfile(uid, after as Record<string, unknown> | undefined);
+  },
+);
+
+export const onCategoryWritten = onDocumentWritten(
+  "categories/{id}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    await projectTaxonomyDoc(
+      "categories",
+      event.params.id,
+      after ? ({ ...after } as Record<string, unknown>) : null,
+    );
+  },
+);
+
+export const onSkillWritten = onDocumentWritten("skills/{id}", async (event) => {
+  const after = event.data?.after?.data();
+  await projectTaxonomyDoc(
+    "skills",
+    event.params.id,
+    after ? ({ ...after } as Record<string, unknown>) : null,
+  );
+});
+
+export const onQuestionWritten = onDocumentWritten(
+  "questions/{id}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    await projectTaxonomyDoc(
+      "questions",
+      event.params.id,
+      after ? ({ ...after } as Record<string, unknown>) : null,
+    );
+  },
+);
+
+export const onJobQuestionWritten = onDocumentWritten(
+  "jobQuestions/{id}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    const before = event.data?.before?.data();
+    const jobId = String(after?.jobId ?? before?.jobId ?? "");
+    if (!jobId) return;
+    const jobSnap = await getFirestore().doc(`jobs/${jobId}`).get();
+    const businessId = String(jobSnap.data()?.businessId ?? "");
+    if (!businessId) return;
+    const linksSnap = await getFirestore()
+      .collection("jobQuestions")
+      .where("jobId", "==", jobId)
+      .get();
+    await projectJobQuestions(
+      jobId,
+      businessId,
+      linksSnap.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          questionId: String(data.questionId),
+          sortOrder: Number(data.sortOrder ?? 0),
+          required: Boolean(data.required),
+        };
+      }),
+    );
+  },
+);
+
+export const onDocumentMetaWritten = onDocumentWritten(
+  "documents/{id}",
+  async (event) => {
+    const after = event.data?.after?.data();
+    const before = event.data?.before?.data();
+    const id = event.params.id;
+    const candidateId = String(
+      after?.candidateId ?? before?.candidateId ?? "",
+    );
+    if (!candidateId) return;
+    await projectCandidateDocument(
+      candidateId,
+      id,
+      after ? ({ ...after, id } as Record<string, unknown>) : null,
+    );
+  },
+);
