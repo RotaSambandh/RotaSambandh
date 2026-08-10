@@ -7,7 +7,12 @@
 #   FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY,
 #   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
 #
-# Firebase Web SDK config lives in lib/firebase/public-config.ts (public by design).
+# Public identifiers live in code (do not set / do not mark secret on Netlify):
+#   lib/firebase/public-config.ts  — Web SDK + VAPID
+#   lib/r2/public-config.ts        — account / buckets / CDN
+#   lib/observability/public-config.ts — GA4
+#
+# NEXT_PUBLIC_APP_URL stays in this file for production builds.
 
 [build.environment]
   NODE_VERSION = "22"

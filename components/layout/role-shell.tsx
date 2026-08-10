@@ -10,6 +10,7 @@ import { EmployerOnboardingGate } from "@/components/auth/employer-onboarding-ga
 import { Suspense } from "react";
 import { isAdminAuthPath, isEmployerAuthPath } from "@/lib/auth/portal";
 import { usePushRegistration } from "@/lib/push/use-push-registration";
+import { NotificationPermissionBanner } from "@/components/notifications/notification-permission-banner";
 
 function PushRegistrationHost() {
   usePushRegistration();
@@ -36,15 +37,18 @@ export function RoleShell({
   }
 
   const body = (
-    <div className={`flex min-h-screen bg-[var(--color-surface)] ${dense ? "text-sm" : ""}`}>
+    <div className={`flex min-h-screen flex-col bg-[var(--color-surface)] ${dense ? "text-sm" : ""}`}>
       <PushRegistrationHost />
-      <DesktopSideNav role={role} />
-      <div className="min-w-0 flex-1 pb-36 md:pb-0">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">{children}</div>
-      </div>
-      <div className="fixed inset-x-0 bottom-0 z-30 md:hidden">
-        <SidebarAccount role={role} variant="mobile" />
-        <MobileNav role={role} />
+      <NotificationPermissionBanner />
+      <div className="flex min-h-0 flex-1">
+        <DesktopSideNav role={role} />
+        <div className="min-w-0 flex-1 pb-36 md:pb-0">
+          <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">{children}</div>
+        </div>
+        <div className="fixed inset-x-0 bottom-0 z-30 md:hidden">
+          <SidebarAccount role={role} variant="mobile" />
+          <MobileNav role={role} />
+        </div>
       </div>
     </div>
   );

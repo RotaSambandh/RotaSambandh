@@ -26,8 +26,9 @@ Auth is **Google sign-in only** on every portal. Enable the Google provider in F
 
 | Kind | Where |
 |------|--------|
-| Firebase Web SDK (public) | `lib/firebase/public-config.ts` |
+| Firebase Web SDK + VAPID (public) | `lib/firebase/public-config.ts` |
 | GA4 Measurement ID (public) | `lib/observability/public-config.ts` |
+| R2 account / buckets / CDN (public) | `lib/r2/public-config.ts` |
 | Non-secret Netlify flags | `netlify.toml` (`NEXT_PUBLIC_APP_URL=https://rotasambandh.com`, Node) |
 | Secrets | Netlify UI / `.env.local` (`FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`) |
 

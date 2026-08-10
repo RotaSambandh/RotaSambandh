@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   PutObjectCommand,
   GetObjectCommand,
@@ -12,53 +14,43 @@ import {
   MAX_LOGO_BYTES,
   MAX_RESUME_BYTES,
 } from "@/shared/constants";
+import { r2PublicConfig } from "@/lib/r2/public-config";
 
 function getR2Client() {
-  const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
-  if (!accountId || !accessKeyId || !secretAccessKey) {
-    throw new Error("R2 is not configured. Set R2_* environment variables.");
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error(
+      "R2 is not configured. Set R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY.",
+    );
   }
 
   return new S3Client({
     region: "auto",
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    endpoint: `https://${r2PublicConfig.accountId}.r2.cloudflarestorage.com`,
     credentials: { accessKeyId, secretAccessKey },
   });
 }
 
 function resumeBucket(): string {
-  const b = process.env.R2_BUCKET;
-  if (!b) throw new Error("R2_BUCKET is not set");
-  return b;
+  return r2PublicConfig.resumeBucket;
 }
 
 function logosBucket(): string {
-  return process.env.R2_LOGOS_BUCKET || "rotasambandhassets";
+  return r2PublicConfig.logosBucket;
 }
 
 export function logosPublicBaseUrl(): string {
-  const base = process.env.R2_PUBLIC_BASE_URL || "https://assets.rotasambandh.com";
-  return base.replace(/\/$/, "");
+  return r2PublicConfig.publicBaseUrl.replace(/\/$/, "");
 }
 
 export function isR2Configured(): boolean {
-  return Boolean(
-    process.env.R2_ACCOUNT_ID &&
-      process.env.R2_ACCESS_KEY_ID &&
-      process.env.R2_SECRET_ACCESS_KEY &&
-      process.env.R2_BUCKET,
-  );
+  return Boolean(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY);
 }
 
 export function isR2LogosConfigured(): boolean {
-  return Boolean(
-    process.env.R2_ACCOUNT_ID &&
-      process.env.R2_ACCESS_KEY_ID &&
-      process.env.R2_SECRET_ACCESS_KEY,
-  );
+  return isR2Configured();
 }
 
 export function buildResumeKey(userId: string, documentId: string, fileName: string) {

@@ -9,7 +9,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Capacitor } from "@capacitor/core";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -20,13 +19,16 @@ import {
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
 import { ensureUserDoc, getUser } from "@/lib/dal/users";
+import { isNativeApp } from "@/lib/native/platform";
 import type { UserRole } from "@/shared/types";
 
 interface AuthContextValue {
   user: User | null;
   roles: UserRole[];
   loading: boolean;
-  signInGoogle: () => Promise<void>;
+  signInGoogle: (opts?: {
+    onProgress?: (stage: "google" | "session") => void;
+  }) => Promise<void>;
   setRoles: (roles: UserRole[]) => void;
   logout: () => Promise<void>;
 }
@@ -34,24 +36,30 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function syncSession(user: User): Promise<UserRole[]> {
-  // Ensure user + candidate profile shells exist without clobbering roles.
   const doc = await ensureUserDoc({
     uid: user.uid,
     email: user.email ?? "",
     displayName: user.displayName ?? user.email ?? "User",
     photoURL: user.photoURL ?? undefined,
   });
-  // Force-refresh so ID token picks up custom claims (roles) after seed/promote.
   const idToken = await user.getIdToken(true);
   const res = await fetch("/api/auth/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken }),
   });
-  if (res.ok) {
-    const body = (await res.json()) as { roles?: UserRole[] };
-    if (body.roles?.length) return body.roles;
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+      code?: string;
+    } | null;
+    throw new Error(
+      body?.error ||
+        `Could not create server session (${res.status}). Check Netlify Firebase Admin secrets.`,
+    );
   }
+  const body = (await res.json()) as { roles?: UserRole[] };
+  if (body.roles?.length) return body.roles;
   return doc.roles?.length ? doc.roles : ["candidate"];
 }
 
@@ -59,7 +67,6 @@ async function rolesForUser(user: User): Promise<UserRole[]> {
   try {
     return await syncSession(user);
   } catch (err) {
-    // Never invent roles that demote staff — fall back to Firestore if sync failed mid-write.
     try {
       const existing = await getUser(user.uid);
       if (existing?.roles?.length) return existing.roles;
@@ -74,12 +81,20 @@ async function signInGoogleNative(): Promise<User> {
   const { FirebaseAuthentication } = await import(
     "@capacitor-firebase/authentication"
   );
-  const result = await FirebaseAuthentication.signInWithGoogle();
+  // Native account picker (Credential Manager). Do not use browser popup/redirect.
+  const result = await FirebaseAuthentication.signInWithGoogle({
+    useCredentialManager: true,
+  });
   const idToken = result.credential?.idToken;
   if (!idToken) {
-    throw new Error("Google sign-in did not return an ID token.");
+    throw new Error(
+      "Google did not return an ID token. Confirm the Android SHA-1 is in Firebase and google-services.json is up to date.",
+    );
   }
-  const credential = GoogleAuthProvider.credential(idToken);
+  const credential = GoogleAuthProvider.credential(
+    idToken,
+    result.credential?.accessToken,
+  );
   const signedIn = await signInWithCredential(getClientAuth(), credential);
   return signedIn.user;
 }
@@ -89,6 +104,20 @@ async function signInGoogleWeb(): Promise<User> {
   provider.setCustomParameters({ prompt: "select_account" });
   const result = await signInWithPopup(getClientAuth(), provider);
   return result.user;
+}
+
+function authErrorMessage(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  if (/database is closing|closing\/hidden/i.test(message)) {
+    return "Google sign-in was interrupted. Close other auth windows, refresh, and try again.";
+  }
+  if (/popup|blocked|cancelled|canceled|12501|12500/i.test(message)) {
+    return "Google sign-in was cancelled or blocked. Try again.";
+  }
+  if (/network|unavailable|offline/i.test(message)) {
+    return "Network error during Google sign-in. Check your connection and try again.";
+  }
+  return message || "Google sign-in failed";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -104,7 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           setRoles(await rolesForUser(next));
         } catch {
-          // Keep previous roles if any; default only when we have nothing better.
           setRoles((prev) => (prev.length ? prev : ["candidate"]));
         }
       } else {
@@ -114,35 +142,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const signInGoogle = useCallback(async () => {
-    try {
-      const nextUser =
-        Capacitor.isNativePlatform()
+  const signInGoogle = useCallback(
+    async (opts?: { onProgress?: (stage: "google" | "session") => void }) => {
+      try {
+        opts?.onProgress?.("google");
+        // Never use popup inside the Android WebView — it opens Chrome and cannot return.
+        const nextUser = isNativeApp()
           ? await signInGoogleNative()
           : await signInGoogleWeb();
-      const nextRoles = await rolesForUser(nextUser);
-      setUser(nextUser);
-      setRoles(nextRoles);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (/database is closing|closing\/hidden/i.test(message)) {
-        throw new Error(
-          "Google sign-in was interrupted by the browser. Close other auth popups, refresh this page, and try again.",
-        );
+        opts?.onProgress?.("session");
+        const nextRoles = await rolesForUser(nextUser);
+        setUser(nextUser);
+        setRoles(nextRoles);
+      } catch (err) {
+        throw new Error(authErrorMessage(err));
       }
-      throw err;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
-    if (Capacitor.isNativePlatform()) {
+    if (isNativeApp()) {
       try {
         const { FirebaseAuthentication } = await import(
           "@capacitor-firebase/authentication"
         );
         await FirebaseAuthentication.signOut();
       } catch {
-        // Web session is still cleared below.
+        // Web session still cleared below.
       }
     }
     await signOut(getClientAuth());

@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
 import { getToken, onMessage } from "firebase/messaging";
 import { useAuth } from "@/components/auth/auth-provider";
 import { getClientMessaging, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  firebasePublicConfig,
+  hasWebPushVapidKey,
+} from "@/lib/firebase/public-config";
+import { isNativeApp, nativePlatform } from "@/lib/native/platform";
 import { registerPushToken } from "@/lib/push/register-token";
 
 /**
- * Best-effort push registration. Tray notifications never depend on this.
- * Web/PWA uses Firebase Messaging + VAPID; Android uses Capacitor Push.
+ * Best-effort silent registration when permission is already granted.
+ * First-time permission is requested via NotificationPermissionBanner (user gesture).
  */
 export function usePushRegistration() {
   const { user } = useAuth();
@@ -20,11 +24,11 @@ export function usePushRegistration() {
 
     async function run() {
       try {
-        if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
-          await registerAndroid(user!.uid);
+        if (isNativeApp() && nativePlatform() === "android") {
+          await registerAndroidIfGranted(user!.uid);
           return;
         }
-        await registerWeb(user!.uid);
+        await registerWebIfGranted(user!.uid);
       } catch {
         // Permission denied or unsupported — tray still works.
       }
@@ -35,16 +39,10 @@ export function usePushRegistration() {
       cancelled = true;
     };
 
-    async function registerWeb(uid: string) {
+    async function registerWebIfGranted(uid: string) {
       if (typeof window === "undefined" || !("Notification" in window)) return;
-      const vapid = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-      if (!vapid) return;
-
-      const permission =
-        Notification.permission === "granted"
-          ? "granted"
-          : await Notification.requestPermission();
-      if (permission !== "granted" || cancelled) return;
+      if (Notification.permission !== "granted") return;
+      if (!hasWebPushVapidKey()) return;
 
       const messaging = await getClientMessaging();
       if (!messaging || cancelled) return;
@@ -53,19 +51,19 @@ export function usePushRegistration() {
         (await navigator.serviceWorker.getRegistration()) ??
         (await navigator.serviceWorker.register("/sw.js"));
       const token = await getToken(messaging, {
-        vapidKey: vapid,
+        vapidKey: firebasePublicConfig.vapidKey,
         serviceWorkerRegistration: reg,
       });
       if (token && !cancelled) await registerPushToken(uid, token);
 
       onMessage(messaging, () => {
-        // Foreground: tray is source of truth; optional UI can refresh lists.
+        // Foreground: tray is source of truth.
       });
     }
 
-    async function registerAndroid(uid: string) {
+    async function registerAndroidIfGranted(uid: string) {
       const { PushNotifications } = await import("@capacitor/push-notifications");
-      const perm = await PushNotifications.requestPermissions();
+      const perm = await PushNotifications.checkPermissions();
       if (perm.receive !== "granted" || cancelled) return;
       await PushNotifications.register();
 

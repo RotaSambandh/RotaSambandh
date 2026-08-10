@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
+import { SessionCheckingScreen } from "@/components/auth/sign-in-progress";
 import type { Portal } from "@/lib/auth/portal";
 import { canAccessPortal, portalHome, portalSignInPath } from "@/lib/auth/portal";
 import { isPlatformStaff } from "@/shared/rbac";
@@ -44,11 +45,7 @@ export function RequireAuth({
   }
 
   if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center text-sm text-[var(--color-muted)]">
-        Checking your session…
-      </main>
-    );
+    return <SessionCheckingScreen />;
   }
 
   if (!user) return null;
