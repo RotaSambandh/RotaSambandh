@@ -17,6 +17,20 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# firebase-admin needs real node_modules + Firestore protos on Netlify Functions.
+# Without this, /api/auth/session crashes at module load (HTTP 500, empty body).
+[functions]
+  external_node_modules = [
+    "firebase-admin",
+    "@google-cloud/firestore",
+    "@google-cloud/storage",
+  ]
+  included_files = [
+    "node_modules/firebase-admin/**",
+    "node_modules/@google-cloud/firestore/**",
+    "node_modules/@google-cloud/storage/**",
+  ]
+
 # Canonical custom domain (OG, sitemap, Capacitor after `cap sync`).
 [context.production.environment]
   NEXT_PUBLIC_APP_URL = "https://rotasambandh.com"
