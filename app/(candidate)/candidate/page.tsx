@@ -58,10 +58,27 @@ export default async function CandidateHomePage() {
         ))}
       </dl>
       <div className="mt-4 text-sm text-[var(--color-muted)]">
-        Profile completion: {dashboard.profileCompletion}% ·{" "}
-        <Link href="/candidate/profile" className="font-semibold text-[var(--color-accent-strong)]">
-          Complete profile
-        </Link>
+        {dashboard.profileCompletion >= 100 ? (
+          <>
+            Profile completion: {dashboard.profileCompletion}% ·{" "}
+            <Link
+              href="/candidate/profile"
+              className="font-semibold text-[var(--color-accent-strong)]"
+            >
+              View profile
+            </Link>
+          </>
+        ) : (
+          <>
+            Profile completion: {dashboard.profileCompletion}% ·{" "}
+            <Link
+              href="/candidate/profile"
+              className="font-semibold text-[var(--color-accent-strong)]"
+            >
+              Complete profile
+            </Link>
+          </>
+        )}
       </div>
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold">Latest opportunities</h2>

@@ -55,6 +55,13 @@ FIREBASE_DATABASE_URL=https://rotasambandh2-default-rtdb.asia-southeast1.firebas
   node --env-file=../.env.local lib/scripts/rebuildReadModels.js
 ```
 
+## Candidate home / profile completion
+
+- Home reads `candidate/{uid}/dashboard.profileCompletion` (Admin RTDB).
+- Score is computed from club, district, headline, about, skills, LinkedIn, phone (`shared/profile-completion.ts`).
+- `updateCandidateProfile` / `updateUserPhone` persist `completionScore` on Firestore; Functions sync dashboard + profile RTDB mirrors.
+- Job feeds filter `readModelVersion === READ_MODEL_VERSION` — **keep `shared/constants.ts` and `functions/src/constants.ts` in lockstep**.
+
 ## Product docs
 
 Human-facing architecture, scripts, and roles: [README.md](README.md). Visual system: [DESIGN.md](DESIGN.md).

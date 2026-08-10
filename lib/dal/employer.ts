@@ -107,17 +107,17 @@ export async function submitVerification(input: {
     ? doc(collection(getClientFirestore(), "businessVerifications")).id
     : `ver_${ts}`;
 
-  const verification: BusinessVerification = {
+  const verification = omitUndefined({
     id,
     businessId: input.businessId,
     submittedBy: input.submittedBy,
     affiliationType: input.affiliationType,
     affiliationDetails: input.affiliationDetails,
-    supportingInfo: input.supportingInfo,
-    status: "pending",
+    supportingInfo: input.supportingInfo?.trim() || undefined,
+    status: "pending" as const,
     createdAt: ts,
     updatedAt: ts,
-  };
+  }) as BusinessVerification;
 
   if (!isFirebaseConfigured()) return verification;
 
@@ -187,7 +187,7 @@ export async function createJob(input: {
   const id = isFirebaseConfigured() ? doc(collection(getClientFirestore(), "jobs")).id : `job_${ts}`;
   const status: JobStatus = "draft";
 
-  const job: Job = {
+  const job = omitUndefined({
     id,
     businessId: input.businessId,
     title: input.title,
@@ -208,7 +208,7 @@ export async function createJob(input: {
     createdBy: input.createdBy,
     createdAt: ts,
     updatedAt: ts,
-  };
+  }) as Job;
 
   if (!isFirebaseConfigured()) return job;
 
@@ -241,7 +241,7 @@ export async function updateDraftJob(
   >,
 ): Promise<void> {
   if (!isFirebaseConfigured()) return;
-  const next: Record<string, unknown> = { ...patch, updatedAt: now() };
+  const next = omitUndefined({ ...patch, updatedAt: now() } as Record<string, unknown>);
   if (patch.title) next.slug = slugify(patch.title);
   await updateDoc(doc(getClientFirestore(), "jobs", jobId), next);
 }

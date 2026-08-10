@@ -32,7 +32,7 @@ import {
   projectEmployerMember,
   projectEmployerMeta,
 } from "./projections/employer";
-import { projectCandidateProfile, projectUserSlice } from "./projections/users";
+import { projectCandidateProfile, projectUserSlice, syncCandidateDashboardCompletion } from "./projections/users";
 import {
   projectAdminQueueItem,
   projectJobQuestions,
@@ -717,6 +717,18 @@ export const onUserWritten = onDocumentWritten("users/{uid}", async (event) => {
   }
 
   await projectUserSlice(uid, after as Record<string, unknown> | undefined);
+
+  // Phone changes affect candidate profile completion %.
+  if (after) {
+    const profileSnap = await getFirestore().doc(`candidateProfiles/${uid}`).get();
+    if (profileSnap.exists) {
+      await syncCandidateDashboardCompletion(
+        uid,
+        profileSnap.data() as Record<string, unknown>,
+        String(after.phone ?? ""),
+      );
+    }
+  }
 
   if (after) {
     await projectAdminQueueItem("users", uid, {

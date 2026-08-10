@@ -149,7 +149,7 @@ async function main() {
   for (const doc of profiles.docs) {
     await projectCandidateProfile(doc.id, doc.data() as Record<string, unknown>);
   }
-  console.log(`Projected ${profiles.size} profiles`);
+  console.log(`Projected ${profiles.size} profiles (+ dashboard completion)`);
 
   const businesses = await fs.collection("businesses").get();
   for (const doc of businesses.docs) {

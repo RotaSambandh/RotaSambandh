@@ -12,7 +12,8 @@ export function appOrigin(): string {
   );
 }
 
-export const READ_MODEL_VERSION = 1;
+/** Must match `functions/src/constants.ts` — bump both when read-model shape changes. */
+export const READ_MODEL_VERSION = 2;
 
 export const MAX_RESUME_BYTES = 2 * 1024 * 1024;
 export const ALLOWED_RESUME_MIME = [

@@ -87,7 +87,10 @@ export async function createQuestion(input: {
   };
 
   if (!isFirebaseConfigured()) return question;
-  await setDoc(doc(getClientFirestore(), "questions", id), question);
+  await setDoc(
+    doc(getClientFirestore(), "questions", id),
+    omitUndefined(question as unknown as Record<string, unknown>),
+  );
   return question;
 }
 

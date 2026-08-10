@@ -4,6 +4,7 @@ import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client"
 import { now, omitUndefined } from "@/lib/utils";
 import {
   canApplyToJobs,
+  computeProfileCompletionPercent,
   isCandidateOnboardingComplete,
 } from "@/lib/dal/onboarding-gates";
 import {
@@ -11,7 +12,7 @@ import {
   getUserRtdb,
 } from "@/lib/dal/users-rtdb";
 
-export { canApplyToJobs, isCandidateOnboardingComplete };
+export { canApplyToJobs, computeProfileCompletionPercent, isCandidateOnboardingComplete };
 
 function emptyCandidateProfile(
   uid: string,
@@ -131,20 +132,40 @@ export async function updateCandidateProfile(
     rotaractDistrict: patch.rotaractDistrict?.trim() || undefined,
   } as Record<string, unknown>) as Partial<CandidateProfile>;
 
+  const prev = existing.exists()
+    ? (existing.data() as CandidateProfile)
+    : undefined;
+  const merged = { ...(prev ?? {}), ...cleaned } as CandidateProfile;
+  const userSnap = await getDoc(doc(getClientFirestore(), "users", uid));
+  const phone = (userSnap.data()?.phone as string | undefined) ?? undefined;
+  const completionScore = computeProfileCompletionPercent(merged, phone);
+
   if (!existing.exists()) {
-    await setDoc(ref, emptyCandidateProfile(uid, cleaned));
+    await setDoc(ref, emptyCandidateProfile(uid, { ...cleaned, completionScore }));
     return;
   }
   await updateDoc(ref, {
     ...cleaned,
+    completionScore,
     updatedAt: ts,
   });
 }
 
 export async function updateUserPhone(uid: string, phone: string): Promise<void> {
   if (!isFirebaseConfigured()) return;
+  const trimmed = phone.trim();
   await updateDoc(doc(getClientFirestore(), "users", uid), {
-    phone: phone.trim(),
+    phone: trimmed,
     updatedAt: now(),
   });
+  // Keep completionScore in sync when phone is the last missing piece.
+  const profileRef = doc(getClientFirestore(), "candidateProfiles", uid);
+  const profileSnap = await getDoc(profileRef);
+  if (profileSnap.exists()) {
+    const profile = profileSnap.data() as CandidateProfile;
+    await updateDoc(profileRef, {
+      completionScore: computeProfileCompletionPercent(profile, trimmed),
+      updatedAt: now(),
+    });
+  }
 }

@@ -6,6 +6,7 @@ import type {
 } from "@/shared/types";
 import { getAdminRtdb } from "@/lib/firebase/admin";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
+import { computeProfileCompletionPercent } from "@/shared/profile-completion";
 
 const emptyCandidate: CandidateDashboardProjection = {
   applications: 0,
@@ -39,14 +40,44 @@ const emptyAdmin: SystemCounters = {
   readModelVersion: 1,
 };
 
+async function resolveProfileCompletion(candidateId: string): Promise<number> {
+  const rtdb = getAdminRtdb();
+  const [profileSnap, userSnap] = await Promise.all([
+    rtdb.ref(`candidate/${candidateId}/profile`).get(),
+    rtdb.ref(`users/${candidateId}`).get(),
+  ]);
+  if (!profileSnap.exists()) return 0;
+  const profile = profileSnap.val() as Record<string, unknown>;
+  const stored = Number(profile.completionScore ?? 0);
+  if (stored > 0) return stored;
+  const phone = String(userSnap.val()?.phone ?? "");
+  return computeProfileCompletionPercent(
+    {
+      rotaractClub: String(profile.rotaractClub ?? ""),
+      rotaractDistrict: String(profile.rotaractDistrict ?? ""),
+      headline: String(profile.headline ?? ""),
+      about: String(profile.about ?? ""),
+      skills: Array.isArray(profile.skills) ? (profile.skills as string[]) : [],
+      linkedInUrl: String(profile.linkedInUrl ?? ""),
+    },
+    phone,
+  );
+}
+
 export async function getCandidateDashboard(
   candidateId: string,
 ): Promise<CandidateDashboardProjection> {
   if (!isFirebaseConfigured()) return emptyCandidate;
   try {
     const snap = await getAdminRtdb().ref(`candidate/${candidateId}/dashboard`).get();
-    if (!snap.exists()) return emptyCandidate;
-    return snap.val() as CandidateDashboardProjection;
+    const dash = snap.exists()
+      ? (snap.val() as CandidateDashboardProjection)
+      : emptyCandidate;
+    let profileCompletion = Number(dash.profileCompletion ?? 0);
+    if (profileCompletion <= 0) {
+      profileCompletion = await resolveProfileCompletion(candidateId);
+    }
+    return { ...emptyCandidate, ...dash, profileCompletion };
   } catch {
     return emptyCandidate;
   }

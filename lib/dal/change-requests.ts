@@ -18,7 +18,7 @@ import {
   getClientRtdb,
   isFirebaseConfigured,
 } from "@/lib/firebase/client";
-import { now, slugify } from "@/lib/utils";
+import { now, omitUndefined, slugify } from "@/lib/utils";
 import { assertBusinessAcceptsMutations } from "@/lib/dal/business-guards";
 import { getEmployerMetaRtdb, listChangeRequestsForBusinessRtdb } from "@/lib/dal/employer-rtdb";
 import { listPendingChangeRequestsRtdb } from "@/lib/dal/admin-rtdb";
@@ -53,7 +53,7 @@ export async function createChangeRequest(input: {
     ? doc(collection(getClientFirestore(), "changeRequests")).id
     : `cr_${ts}`;
 
-  const cr: ChangeRequest = {
+  const cr = omitUndefined({
     id,
     targetType: input.targetType,
     targetId: input.targetId,
@@ -61,19 +61,22 @@ export async function createChangeRequest(input: {
     action: input.action,
     proposed: input.proposed,
     liveSnapshot: input.liveSnapshot,
-    status: input.submit ? "pending_review" : "draft",
+    status: (input.submit ? "pending_review" : "draft") as ChangeRequestStatus,
     submittedBy: input.submittedBy,
     title: input.title,
     createdAt: ts,
     updatedAt: ts,
-  };
+  }) as ChangeRequest;
 
   if (!isFirebaseConfigured()) {
     demoStore().unshift(cr);
     return cr;
   }
 
-  await setDoc(doc(getClientFirestore(), "changeRequests", id), cr);
+  await setDoc(
+    doc(getClientFirestore(), "changeRequests", id),
+    omitUndefined(cr as unknown as Record<string, unknown>),
+  );
   return cr;
 }
 

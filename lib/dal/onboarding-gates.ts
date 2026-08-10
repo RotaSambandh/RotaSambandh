@@ -1,4 +1,7 @@
 import type { CandidateProfile, UserDoc } from "@/shared/types";
+import { computeProfileCompletionPercent } from "@/shared/profile-completion";
+
+export { computeProfileCompletionPercent } from "@/shared/profile-completion";
 
 /** Soft-gate for apply: club + phone required. Portfolio is never required. */
 export function canApplyToJobs(
@@ -19,14 +22,5 @@ export function isCandidateOnboardingComplete(
   user: UserDoc | null | undefined,
 ): boolean {
   if (!profile || !user) return false;
-  const phone = user.phone?.trim();
-  return Boolean(
-    profile.rotaractClub?.trim() &&
-      profile.rotaractDistrict?.trim() &&
-      profile.headline?.trim() &&
-      profile.about?.trim() &&
-      (profile.skills?.length ?? 0) > 0 &&
-      profile.linkedInUrl?.trim() &&
-      phone,
-  );
+  return computeProfileCompletionPercent(profile, user) === 100;
 }

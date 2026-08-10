@@ -10,7 +10,7 @@ import type {
   UserDoc,
 } from "@/shared/types";
 import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
-import { now } from "@/lib/utils";
+import { now, omitUndefined } from "@/lib/utils";
 import {
   listAdminQueueBusinessesRtdb,
   listAdminQueueJobsRtdb,
@@ -146,7 +146,10 @@ export async function createReport(input: {
     updatedAt: ts,
   };
   if (!isFirebaseConfigured()) return report;
-  await setDoc(doc(getClientFirestore(), "reports", id), report);
+  await setDoc(
+    doc(getClientFirestore(), "reports", id),
+    omitUndefined(report as unknown as Record<string, unknown>),
+  );
   return report;
 }
 

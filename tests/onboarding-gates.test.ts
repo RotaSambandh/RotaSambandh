@@ -81,3 +81,22 @@ describe("isCandidateOnboardingComplete", () => {
     );
   });
 });
+
+describe("computeProfileCompletionPercent", () => {
+  it("returns 100 when all fields filled", async () => {
+    const { computeProfileCompletionPercent } = await import(
+      "../shared/profile-completion"
+    );
+    const p = profile({
+      rotaractClub: "East",
+      rotaractDistrict: "3191",
+      headline: "H",
+      about: "A",
+      skills: ["x"],
+      linkedInUrl: "https://linkedin.com/in/x",
+    });
+    assert.equal(computeProfileCompletionPercent(p, user({ phone: "1" })), 100);
+    assert.equal(computeProfileCompletionPercent(p, user()), 86);
+    assert.equal(computeProfileCompletionPercent(profile(), user()), 0);
+  });
+});
