@@ -1,0 +1,60 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Non-secret build/runtime config (safe to commit).
+# Real secrets stay in Netlify UI / `netlify env:set --secret` only:
+#   FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY,
+#   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
+#
+# Firebase Web SDK config lives in lib/firebase/public-config.ts (public by design).
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Canonical custom domain (OG, sitemap, Capacitor after `cap sync`).
+[context.production.environment]
+  NEXT_PUBLIC_APP_URL = "https://rotasambandh.com"
+
+# *.netlify.app → custom domain (only matches that host).
+[[redirects]]
+  from = "/*"
+  to = "https://rotasambandh.com/:splat"
+  status = 301
+  force = true
+  conditions = {Host = ["rotasambandh.netlify.app"]}
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+
+[[headers]]
+  for = "/candidate/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/employer/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/jobs"
+  [headers.values]
+    Cache-Control = "public, s-maxage=60, stale-while-revalidate=300"
+
+[[headers]]
+  for = "/jobs/*"
+  [headers.values]
+    Cache-Control = "public, s-maxage=60, stale-while-revalidate=300"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

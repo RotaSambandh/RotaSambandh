@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "feeds": {
+      ".read": true
+    },
+    "jobs": {
+      "$jobId": {
+        ".read": true
+      }
+    },
+    "businesses": {
+      "$businessId": {
+        ".read": true
+      }
+    },
+    "candidate": {
+      "$candidateId": {
+        ".read": "auth != null && auth.uid == $candidateId",
+        "dashboard": { ".read": "auth != null && auth.uid == $candidateId" },
+        "applications": { ".read": "auth != null && auth.uid == $candidateId" },
+        "notifications": { ".read": "auth != null && auth.uid == $candidateId" }
+      }
+    },
+    "inbox": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        "notifications": {
+          ".read": "auth != null && auth.uid == $uid"
+        }
+      }
+    },
+    "employer": {
+      "$businessId": {
+        ".read": "auth != null && root.child('employerMembers').child($businessId).child(auth.uid).val() === true"
+      }
+    },
+    "admin": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    },
+    "system": {
+      "counters": {
+        ".read": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      }
+    },
+    "employerMembers": {
+      "$businessId": {
+        "$uid": {
+          ".read": "auth != null && auth.uid == $uid"
+        }
+      }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid"
+      }
+    }
+  }
+}

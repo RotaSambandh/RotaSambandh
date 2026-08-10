@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1077147403199",
+    "firebase_url": "https://rotasambandh2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "rotasambandh2",
+    "storage_bucket": "rotasambandh2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077147403199:android:5369a3138a0eb247e8570a",
+        "android_client_info": {
+          "package_name": "app.rotasambandh.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1077147403199-vj0jgulb35nt56atbuptnivhg9c6v9qq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWYVRKzVy1XHk_7g1Z8jyyS4B_Ptex8KE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1077147403199-vj0jgulb35nt56atbuptnivhg9c6v9qq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

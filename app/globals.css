@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
 :root {
+  /* Primary */
+  --color-navy-deep: #0a2540;
+  --color-navy: #0f3358;
+  --color-ink: #0a2540;
+  --color-ink-inverse: #ffffff;
+  --color-muted: #475569;
+  --color-surface: #f8fafc;
+  --color-surface-elevated: #ffffff;
+  --color-border: #e2e8f0;
+
+  /* Electric Blue - CTAs / links */
+  --color-accent: #2563eb;
+  --color-accent-strong: #1d4ed8;
+  --color-accent-soft: #dbeafe;
+
+  /* Emerald - success / verified */
+  --color-success: #059669;
+  --color-success-soft: #d1fae5;
+
+  /* Soft Amber - pending / warning */
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fef3c7;
+  --color-warning-ink: #92400e;
+
+  --color-danger: #dc2626;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: var(--color-ink);
+
+  /*
+   * Rotary International free digital fonts
+   * Primary: Open Sans (Arial fallback) — headlines, nav, UI, and all body copy
+   * (Georgia/Sentinel is Rotary's secondary option; we prefer Open Sans for
+   * long-form screen reading.)
+   */
+  --font-body: var(--font-open-sans), Arial, Helvetica, sans-serif;
+  --font-display: var(--font-open-sans), Arial, Helvetica, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  min-height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Open Sans everywhere — UI, forms, headlines, body (Rotary primary) */
+.font-body,
+.font-display,
+.font-serif,
+.font-\[family-name\:var\(--font-display\)\] {
+  font-family: var(--font-body);
+  font-variation-settings: "wdth" 100;
+  font-stretch: 100%;
+}
+
+/* Main nav labels: uppercase tracking, regular width */
+.font-nav {
+  font-family: var(--font-body);
+  font-variation-settings: "wdth" 100;
+  font-stretch: 100%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
 }

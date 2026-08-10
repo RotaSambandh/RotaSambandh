@@ -1,0 +1,285 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function roles() {
+      return userDoc().roles;
+    }
+
+    function isSuspended() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        userDoc().suspended == true;
+    }
+
+    function notSuspended() {
+      return signedIn() && !isSuspended();
+    }
+
+    /** Super admin or admin — trust ops writes. */
+    function isPlatformAdmin() {
+      return notSuspended() && (
+        'super_admin' in roles() ||
+        'admin' in roles()
+      );
+    }
+
+    /** Includes coordinators (read-heavy ops). */
+    function isPlatformStaff() {
+      return notSuspended() && (
+        'super_admin' in roles() ||
+        'admin' in roles() ||
+        'coordinator' in roles()
+      );
+    }
+
+    function businessMemberDoc(businessId) {
+      return get(/databases/$(database)/documents/businessMembers/$(businessId + '_' + request.auth.uid)).data;
+    }
+
+    function isBusinessMember(businessId) {
+      return notSuspended() &&
+        exists(/databases/$(database)/documents/businessMembers/$(businessId + '_' + request.auth.uid)) &&
+        (
+          !('status' in businessMemberDoc(businessId)) ||
+          businessMemberDoc(businessId).status == 'active'
+        );
+    }
+
+    function isCompanyAdmin(businessId) {
+      return isBusinessMember(businessId) &&
+        businessMemberDoc(businessId).role in ['company_admin', 'owner'];
+    }
+
+    function applicationData(applicationId) {
+      return get(/databases/$(database)/documents/applications/$(applicationId)).data;
+    }
+
+    function canAccessApplication(applicationId) {
+      return notSuspended() &&
+        exists(/databases/$(database)/documents/applications/$(applicationId)) &&
+        (
+          applicationData(applicationId).candidateId == request.auth.uid ||
+          isBusinessMember(applicationData(applicationId).businessId) ||
+          isPlatformStaff()
+        );
+    }
+
+    function isOwnerBootstrapMember() {
+      return notSuspended()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.role in ['company_admin', 'owner']
+        && request.resource.data.status == 'active'
+        && exists(/databases/$(database)/documents/businesses/$(request.resource.data.businessId))
+        && get(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerId == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isPlatformAdmin() ||
+        (isPlatformStaff()
+          && !('super_admin' in resource.data.roles)
+          && !('admin' in resource.data.roles)
+          && !('coordinator' in resource.data.roles));
+      allow create: if isSelf(uid)
+        && !isSuspended()
+        && !('super_admin' in request.resource.data.roles)
+        && !('admin' in request.resource.data.roles)
+        && !('coordinator' in request.resource.data.roles);
+      allow update: if isPlatformAdmin() ||
+        (isSelf(uid)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['roles', 'suspended'])
+          && (resource.data.suspended != true));
+    }
+
+    match /candidateProfiles/{uid} {
+      allow read: if isSelf(uid) || isPlatformStaff();
+      allow write: if isSelf(uid) && notSuspended();
+    }
+
+    match /documents/{docId} {
+      allow read: if notSuspended() && (resource.data.candidateId == request.auth.uid || isPlatformStaff());
+      allow create, update: if notSuspended()
+        && request.resource.data.candidateId == request.auth.uid;
+    }
+
+    // Public marketing pages use RTDB projections. Signed-in users may read
+    // verified businesses (needed for apply guards). Prefer RTDB for public UI.
+    // Rotary contact email/phone remain member/staff-sensitive; full field split is follow-up.
+    match /businesses/{businessId} {
+      allow read: if isPlatformStaff() || isBusinessMember(businessId) ||
+        (notSuspended() && resource.data.status == 'verified');
+      allow create: if notSuspended()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'draft';
+      allow update: if isPlatformAdmin() ||
+        (isBusinessMember(businessId)
+          && resource.data.status in ['draft', 'verification_pending']
+          && request.resource.data.status in ['draft', 'verification_pending']
+          && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['verifiedAt', 'ownerId', 'deletionRequestedAt', 'deletionRequestedBy',
+              'statusBeforeDeletion', 'purgeStatus', 'purgeError']));
+    }
+
+    match /businessMembers/{memberId} {
+      allow read: if notSuspended() && (resource.data.userId == request.auth.uid || isPlatformStaff() ||
+        isBusinessMember(resource.data.businessId));
+      allow create: if isPlatformAdmin()
+        || isCompanyAdmin(request.resource.data.businessId)
+        || (isOwnerBootstrapMember()
+          && memberId == request.resource.data.businessId + '_' + request.auth.uid);
+      allow update: if isPlatformAdmin() || isCompanyAdmin(resource.data.businessId);
+      allow delete: if isPlatformAdmin() || isCompanyAdmin(resource.data.businessId);
+    }
+
+    match /businessVerifications/{id} {
+      allow read: if notSuspended() && (resource.data.submittedBy == request.auth.uid || isPlatformStaff() ||
+        isBusinessMember(resource.data.businessId));
+      allow create: if notSuspended()
+        && isBusinessMember(request.resource.data.businessId)
+        && request.resource.data.submittedBy == request.auth.uid;
+      allow update: if isPlatformAdmin() ||
+        (notSuspended() && resource.data.submittedBy == request.auth.uid
+          && resource.data.status == 'info_requested'
+          && request.resource.data.status == 'pending');
+    }
+
+    match /jobs/{jobId} {
+      allow read: if resource.data.status == 'published' || isPlatformStaff() ||
+        (notSuspended() && isBusinessMember(resource.data.businessId));
+      allow create: if notSuspended() && isBusinessMember(request.resource.data.businessId)
+        && request.resource.data.status in ['draft', 'pending_review'];
+      allow update: if isPlatformAdmin() ||
+        (notSuspended() && isBusinessMember(resource.data.businessId)
+          && resource.data.status in ['draft', 'pending_review']
+          && request.resource.data.status in ['draft', 'pending_review', 'closed']);
+    }
+
+    match /changeRequests/{id} {
+      allow read: if isPlatformStaff() ||
+        (notSuspended() && (resource.data.submittedBy == request.auth.uid ||
+          isBusinessMember(resource.data.businessId)));
+      allow create: if notSuspended()
+        && request.resource.data.submittedBy == request.auth.uid
+        && isBusinessMember(request.resource.data.businessId)
+        && request.resource.data.status in ['draft', 'pending_review'];
+      allow update: if isPlatformAdmin() ||
+        (notSuspended() && resource.data.submittedBy == request.auth.uid
+          && resource.data.status in ['draft', 'info_requested', 'rejected']
+          && request.resource.data.status in ['draft', 'pending_review']);
+    }
+
+    match /questions/{questionId} {
+      allow read: if true;
+      allow create: if isPlatformAdmin() ||
+        (notSuspended() && request.resource.data.scope in ['employer', 'job']
+          && (request.resource.data.businessId == null || isBusinessMember(request.resource.data.businessId)));
+      allow update: if isPlatformAdmin() ||
+        (notSuspended() && resource.data.scope in ['employer', 'job']
+          && resource.data.businessId != null
+          && isBusinessMember(resource.data.businessId));
+    }
+
+    match /jobQuestions/{id} {
+      allow read: if true;
+      allow write: if notSuspended() && isBusinessMember(
+        get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.businessId
+      );
+    }
+
+    match /applications/{applicationId} {
+      allow read: if notSuspended() && (
+        resource.data.candidateId == request.auth.uid ||
+        isBusinessMember(resource.data.businessId) ||
+        isPlatformStaff()
+      );
+      allow create: if notSuspended()
+        && request.resource.data.candidateId == request.auth.uid;
+      allow update: if isPlatformAdmin() ||
+        (notSuspended() && isBusinessMember(resource.data.businessId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'statusUpdatedAt', 'updatedAt'])) ||
+        (notSuspended()
+          && resource.data.candidateId == request.auth.uid
+          && request.resource.data.status == 'withdrawn'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'statusUpdatedAt', 'updatedAt']));
+    }
+
+    match /applicationAnswers/{id} {
+      allow read: if canAccessApplication(resource.data.applicationId);
+      allow create: if notSuspended()
+        && request.resource.data.applicationId is string
+        && canAccessApplication(request.resource.data.applicationId)
+        && applicationData(request.resource.data.applicationId).candidateId == request.auth.uid;
+    }
+
+    match /applicationEvents/{id} {
+      allow read: if canAccessApplication(resource.data.applicationId);
+      allow create: if notSuspended()
+        && request.resource.data.applicationId is string
+        && canAccessApplication(request.resource.data.applicationId);
+    }
+
+    // savedJobs removed from product — deny all client access (legacy docs may remain).
+    match /savedJobs/{id} {
+      allow read, write: if false;
+    }
+
+    match /notifications/{id} {
+      allow read, update: if notSuspended() && resource.data.userId == request.auth.uid;
+      allow create: if false;
+    }
+
+    match /announcements/{id} {
+      allow read: if isPlatformStaff();
+      allow write: if false;
+    }
+
+    match /reports/{id} {
+      allow create: if notSuspended();
+      allow read: if isPlatformStaff();
+      allow update: if isPlatformAdmin();
+    }
+
+    match /adminActions/{id} {
+      allow read: if isPlatformAdmin();
+      allow create: if false;
+    }
+
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isPlatformAdmin();
+    }
+
+    match /skills/{id} {
+      allow read: if true;
+      allow write: if isPlatformAdmin();
+    }
+
+    match /systemCounters/{id} {
+      allow read: if isPlatformStaff();
+      allow write: if false;
+    }
+
+    match /counters/{id} {
+      allow read: if isPlatformStaff();
+      allow write: if false;
+    }
+
+    match /systemConfig/{id} {
+      allow read: if true;
+      allow write: if isPlatformAdmin();
+    }
+  }
+}
