@@ -58,3 +58,11 @@ next-env.d.ts
 # design exports / local junk
 stitch_*/
 .DS_Store
+
+# Android local SDK path
+android/local.properties
+
+# Local Android/Gradle tooling
+.gradle-home/
+dist/
+android/local.properties

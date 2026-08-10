@@ -9,9 +9,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { Capacitor } from "@capacitor/core";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithCredential,
   signInWithPopup,
   signOut,
   type User,
@@ -68,6 +70,27 @@ async function rolesForUser(user: User): Promise<UserRole[]> {
   }
 }
 
+async function signInGoogleNative(): Promise<User> {
+  const { FirebaseAuthentication } = await import(
+    "@capacitor-firebase/authentication"
+  );
+  const result = await FirebaseAuthentication.signInWithGoogle();
+  const idToken = result.credential?.idToken;
+  if (!idToken) {
+    throw new Error("Google sign-in did not return an ID token.");
+  }
+  const credential = GoogleAuthProvider.credential(idToken);
+  const signedIn = await signInWithCredential(getClientAuth(), credential);
+  return signedIn.user;
+}
+
+async function signInGoogleWeb(): Promise<User> {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  const result = await signInWithPopup(getClientAuth(), provider);
+  return result.user;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<UserRole[]>(["candidate"]);
@@ -92,12 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInGoogle = useCallback(async () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
     try {
-      const result = await signInWithPopup(getClientAuth(), provider);
-      const nextRoles = await rolesForUser(result.user);
-      setUser(result.user);
+      const nextUser =
+        Capacitor.isNativePlatform()
+          ? await signInGoogleNative()
+          : await signInGoogleWeb();
+      const nextRoles = await rolesForUser(nextUser);
+      setUser(nextUser);
       setRoles(nextRoles);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -111,6 +135,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { FirebaseAuthentication } = await import(
+          "@capacitor-firebase/authentication"
+        );
+        await FirebaseAuthentication.signOut();
+      } catch {
+        // Web session is still cleared below.
+      }
+    }
     await signOut(getClientAuth());
     await fetch("/api/auth/session", { method: "DELETE" });
   }, []);

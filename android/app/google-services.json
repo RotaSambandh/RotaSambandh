@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1077147403199-46kjp8uelj2i7sn4lujju4sagpqbj2cl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.rotasambandh.mobile",
+            "certificate_hash": "e118f354c5c6e19a126b7c408542d9ef346e6ea0"
+          }
+        },
+        {
           "client_id": "1077147403199-vj0jgulb35nt56atbuptnivhg9c6v9qq.apps.googleusercontent.com",
           "client_type": 3
         }

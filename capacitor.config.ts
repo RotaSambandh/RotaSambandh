@@ -12,6 +12,24 @@ const config = {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
     },
+    SplashScreen: {
+      launchShowDuration: 0,
+      launchAutoHide: false,
+      backgroundColor: "#0a2540",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      style: "DARK",
+      backgroundColor: "#0a2540",
+    },
+    FirebaseAuthentication: {
+      // Web Firebase Auth stays source of truth; native layer only supplies Google credential.
+      skipNativeAuth: true,
+      providers: ["google.com"],
+    },
   },
 };
 
