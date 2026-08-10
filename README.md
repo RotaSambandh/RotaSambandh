@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/ca35a190-f2cd-4eb8-8520-5a11c4259735/deploy-status)](https://app.netlify.com/projects/rotasambandh/deploys)
+
 # RotaSambandh
 
 **Rotaract Career Network.** Connecting Rotaractors with verified Rotary-linked businesses.
@@ -6,28 +8,61 @@
 
 ## Stack
 
-- Next.js + TypeScript + Tailwind (Netlify)
-- Firebase Auth, Firestore (source of truth), Realtime Database (read models), Cloud Functions
+- Next.js + TypeScript + Tailwind (**Netlify**)
+- Firebase Auth, Firestore (write / SoT), Realtime Database (UI read models), Cloud Functions (**Firebase CLI**)
 - Cloudflare R2 for resumes/documents
 - PWA + Capacitor Android (same codebase)
 
 ## Data architecture
 
-- **Writes:** Firestore (source of truth) + Cloudflare R2 for binaries
-- **UI reads:** Realtime Database projections only (feeds, dashboards, applications, inbox, employer workspace, admin queues, taxonomy, user/profile slices)
-- **Sync:** Cloud Functions in `functions/src` project Firestore → RTDB (`READ_MODEL_VERSION` in `functions/src/constants.ts`)
-- **Allowed Firestore reads:** mutation helpers, Admin SDK session/privileged APIs, Function triggers — not page-load UI lists
-- **Rebuild:** `cd functions && npm run rebuild:readmodels` after projection changes
-- **Guardrail:** `npm run check:ui-reads` (no `firebase/firestore` imports under `app/` / `components/`)
+```
+UI (browser / APK) ──read──► Realtime Database
+UI (browser / APK) ──write─► Firestore (+ R2 blobs)
+Next Admin APIs   ──write─► Firestore (mutations / session only)
+Cloud Functions   ◄─FS triggers─ Firestore ──project──► RTDB
+```
 
-### Firestore read exceptions (server / mutations only)
+| Rule | Detail |
+|------|--------|
+| **UI reads** | RTDB only — feeds, dashboards, applications, inbox, employer workspace, admin queues, taxonomy, user/profile slices |
+| **Writes** | Firestore is source of truth; R2 for binaries |
+| **Sync** | `functions/src` projectors (`READ_MODEL_VERSION` in `functions/src/constants.ts`) |
+| **Client RTDB writes** | Forbidden (rules `.write: false`). Mark-read writes Firestore; Functions mirror `inbox/` |
+| **Guardrail** | `npm run check:ui-reads` |
+
+### Allowed Firestore reads (exceptions only)
 
 | Path | Why |
 |------|-----|
-| `lib/dal/*` write helpers (`setDoc` / `updateDoc` + load-before-mutate) | Mutations need SoT |
+| `lib/dal/*` mutation helpers (`setDoc` / `updateDoc` + load-before-mutate) | Mutations need SoT |
 | `app/api/auth/session`, `ensure-employer`, privileged admin APIs | Claims sync / privileged writes |
 | `functions/src/**` triggers + rebuild scripts | Project FS → RTDB |
-| Cloud Function Admin SDK | Never exposed to browser |
+
+Do **not** use client Firestore `getDoc` / `getDocs` for page lists or trays. Prefer `lib/dal/*-rtdb.ts`.
+
+Agent-facing rules (including Next.js notes): [AGENTS.md](AGENTS.md).
+
+## Deploy (two surfaces)
+
+Netlify and Firebase are **independent**. Pushing to Git updates the site; it does **not** update Cloud Functions or database rules.
+
+| What changed | Deploy with |
+|--------------|-------------|
+| `app/`, `components/`, `lib/`, Netlify config | Git push → Netlify |
+| `functions/src/**` | `firebase deploy --only functions --project rotasambandh2` |
+| `database.rules.json` | `firebase deploy --only database --project rotasambandh2` |
+| `firestore.rules` / indexes | `firebase deploy --only firestore --project rotasambandh2` |
+
+Typical after a read-model change:
+
+```bash
+firebase deploy --only functions,database --project rotasambandh2
+cd functions && npm run build
+FIREBASE_DATABASE_URL=https://rotasambandh2-default-rtdb.asia-southeast1.firebasedatabase.app \
+  node --env-file=../.env.local lib/scripts/rebuildReadModels.js
+```
+
+Rebuild needs `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` in `.env.local` (or `GOOGLE_APPLICATION_CREDENTIALS`).
 
 ## Quick start
 
@@ -35,6 +70,7 @@
 npm install
 cp .env.example .env.local   # secrets only (Admin + R2)
 # Fill lib/firebase/public-config.ts from Firebase Console (public web config)
+npm run functions:install && npm run functions:build
 npm run dev
 ```
 
@@ -61,13 +97,19 @@ Auth is **Google sign-in only** on every portal. Enable the Google provider in F
 | `npm test` | Unit + static rules assertions |
 | `npm run test:rules` | Firestore rules emulator suite |
 | `npm run seed:super-admin` | Promote `SUPER_ADMIN_EMAIL` to super admin |
+| `npm run functions:install` | Install Functions deps |
 | `npm run functions:build` | Compile Cloud Functions |
+| `cd functions && npm run rebuild:readmodels` | Backfill RTDB from Firestore (needs Admin env) |
 | `npm run cap:sync` | Sync Capacitor config |
 
-### Firebase functions
+### Firebase project
+
+- Project id: `rotasambandh2`
+- RTDB: `https://rotasambandh2-default-rtdb.asia-southeast1.firebasedatabase.app`
 
 ```bash
 cd functions && npm install && npm run build
+firebase deploy --only functions,database --project rotasambandh2
 ```
 
 ## Design
