@@ -30,6 +30,11 @@ import { projectCandidateDocument } from "../projections/documents";
 import { READ_MODEL_VERSION } from "../constants";
 
 function init() {
+  const databaseURL =
+    process.env.FIREBASE_DATABASE_URL ||
+    "https://rotasambandh2-default-rtdb.asia-southeast1.firebasedatabase.app";
+  const projectId = process.env.FIREBASE_PROJECT_ID || "rotasambandh2";
+
   const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (keyPath && existsSync(keyPath)) {
     const json = JSON.parse(readFileSync(resolve(keyPath), "utf8")) as {
@@ -43,13 +48,28 @@ function init() {
         clientEmail: json.client_email,
         privateKey: json.private_key,
       }),
-      databaseURL: process.env.FIREBASE_DATABASE_URL,
+      databaseURL,
     });
     return;
   }
+
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  if (clientEmail && privateKey) {
+    initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+      databaseURL,
+    });
+    return;
+  }
+
   initializeApp({
     credential: applicationDefault(),
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
+    databaseURL,
   });
 }
 
@@ -216,6 +236,7 @@ async function main() {
   console.log(`Projected ${documents.size} documents`);
 
   console.log("Rebuild complete");
+  process.exit(0);
 }
 
 main().catch((err) => {
