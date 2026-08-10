@@ -4,11 +4,29 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, getAdminRtdb } from "@/lib/firebase/admin";
 import { getMessaging } from "firebase-admin/messaging";
 import type { NotificationType } from "@/shared/types";
+import { NOTIFICATION_INBOX_CAP } from "@/shared/constants";
 
 /**
  * Server-side (Next.js Admin SDK) twin of functions createAndDeliverNotification.
  * Always writes the tray; push is best-effort.
  */
+async function enforceInboxCap(userId: string) {
+  const fs = getAdminFirestore();
+  const snap = await fs
+    .collection("notifications")
+    .where("userId", "==", userId)
+    .orderBy("createdAt", "desc")
+    .offset(NOTIFICATION_INBOX_CAP)
+    .limit(200)
+    .get();
+  if (snap.empty) return;
+  const batch = fs.batch();
+  for (const doc of snap.docs) {
+    batch.delete(doc.ref);
+  }
+  await batch.commit();
+}
+
 export async function deliverNotification(input: {
   userId: string;
   type: NotificationType | string;
@@ -49,6 +67,8 @@ export async function deliverNotification(input: {
   } catch {
     return ref.id;
   }
+
+  await enforceInboxCap(input.userId).catch(() => undefined);
 
   // RTDB inbox mirror is owned by onNotificationWritten (Functions).
 

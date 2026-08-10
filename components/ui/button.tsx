@@ -6,12 +6,14 @@ type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-strong)] border border-transparent",
+    "bg-[var(--color-accent)] !text-[var(--color-ink-inverse)] hover:bg-[var(--color-accent-strong)] border border-transparent",
   secondary:
     "bg-white text-[var(--color-ink)] border border-[var(--color-border)] hover:border-[var(--color-accent)]",
   ghost: "bg-transparent text-[var(--color-ink)] hover:bg-[var(--color-surface)] border border-transparent",
-  danger: "bg-[var(--color-danger)] text-white hover:opacity-90 border border-transparent",
-  success: "bg-[var(--color-success)] text-white hover:opacity-90 border border-transparent",
+  danger:
+    "bg-[var(--color-danger)] !text-[var(--color-ink-inverse)] hover:opacity-90 border border-transparent",
+  success:
+    "bg-[var(--color-success)] !text-[var(--color-ink-inverse)] hover:opacity-90 border border-transparent",
 };
 
 const sizes: Record<Size, string> = {
@@ -20,6 +22,17 @@ const sizes: Record<Size, string> = {
   lg: "min-h-12 px-6 text-subtitle",
 };
 
+const base =
+  "inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-semibold no-underline transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50";
+
+export function buttonClassName(
+  variant: Variant = "primary",
+  size: Size = "md",
+  className?: string,
+): string {
+  return cn(base, variants[variant], sizes[size], className);
+}
+
 export const Button = forwardRef<
   HTMLButtonElement,
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }
@@ -27,12 +40,7 @@ export const Button = forwardRef<
   return (
     <button
       ref={ref}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      className={buttonClassName(variant, size, className)}
       {...props}
     />
   );

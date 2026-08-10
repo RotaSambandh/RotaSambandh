@@ -31,6 +31,7 @@ type NavItem = {
 const candidateNavBase: Omit<NavItem, "badge">[] = [
   { href: "/candidate", label: "Home", icon: Home },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/candidate/applications", label: "Applications", icon: ClipboardList },
   { href: "/candidate/notifications", label: "Notifications", icon: Bell },
   { href: "/candidate/profile", label: "Profile", icon: User },
@@ -117,7 +118,8 @@ export function MobileNav({ role }: { role: "candidate" | "employer" | "admin" }
       : role === "admin"
         ? withAlertsBadge(adminItems, "/admin/notifications", unread)
         : withAlertsBadge(candidateNavBase, "/candidate/notifications", unread);
-  const cols = items.length >= 5 ? "grid-cols-5" : "grid-cols-4";
+  const cols =
+    items.length >= 6 ? "grid-cols-6" : items.length >= 5 ? "grid-cols-5" : "grid-cols-4";
 
   return (
     <nav

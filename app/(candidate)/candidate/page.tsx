@@ -4,7 +4,8 @@ import { getCandidateDashboard } from "@/lib/dal/dashboards";
 import { getJobFeed } from "@/lib/dal/jobs";
 import { JobCard } from "@/components/jobs/job-card";
 import { Banner, EmptyState, PageHeader, Panel } from "@/components/ui";
-import { Button } from "@/components/ui/button";
+import { buttonClassName } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +52,8 @@ export default async function CandidateHomePage() {
         title="Home"
         description="Your career activity at a glance."
         actions={
-          <Link href="/jobs">
-            <Button variant="secondary" size="sm">
-              Browse jobs
-            </Button>
+          <Link href="/jobs" className={cn(buttonClassName("secondary", "sm"))}>
+            Browse jobs
           </Link>
         }
       />
@@ -78,10 +77,8 @@ export default async function CandidateHomePage() {
           title={`Profile ${dashboard.profileCompletion}% complete`}
           className="mt-6"
           action={
-            <Link href="/candidate/profile">
-              <Button size="sm" variant="secondary">
-                Complete profile
-              </Button>
+            <Link href="/candidate/profile" className={cn(buttonClassName("secondary", "sm"))}>
+              Complete profile
             </Link>
           }
         >
@@ -105,8 +102,8 @@ export default async function CandidateHomePage() {
             title="No open opportunities yet"
             description="Published roles from verified companies will appear here."
             action={
-              <Link href="/jobs">
-                <Button variant="secondary">Browse jobs</Button>
+              <Link href="/jobs" className={cn(buttonClassName("secondary"))}>
+                Browse jobs
               </Link>
             }
           />

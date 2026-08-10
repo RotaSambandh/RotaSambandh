@@ -2,9 +2,26 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { getDatabase } from "firebase-admin/database";
 import { getMessaging } from "firebase-admin/messaging";
 import { createHash } from "crypto";
-import { READ_MODEL_VERSION } from "./constants";
+import { NOTIFICATION_INBOX_CAP, READ_MODEL_VERSION } from "./constants";
 
 export type NotifyChannel = "candidate" | "employer" | "admin" | "auto";
+
+async function enforceInboxCap(userId: string) {
+  const fs = getFirestore();
+  const snap = await fs
+    .collection("notifications")
+    .where("userId", "==", userId)
+    .orderBy("createdAt", "desc")
+    .offset(NOTIFICATION_INBOX_CAP)
+    .limit(200)
+    .get();
+  if (snap.empty) return;
+  const batch = fs.batch();
+  for (const doc of snap.docs) {
+    batch.delete(doc.ref);
+  }
+  await batch.commit();
+}
 
 export async function createAndDeliverNotification(input: {
   userId: string;
@@ -55,6 +72,8 @@ export async function createAndDeliverNotification(input: {
     // Already delivered for this dedupeKey.
     return ref.id;
   }
+
+  await enforceInboxCap(input.userId).catch(() => undefined);
 
   const channel = await resolveChannel(input.userId, input.channel ?? "auto");
   const mirror = {

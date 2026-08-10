@@ -33,6 +33,10 @@ import {
   projectEmployerMeta,
   projectEmployerVerification,
 } from "./projections/employer";
+import {
+  projectPublicBusiness,
+  removePublicBusiness,
+} from "./projections/businesses";
 import { projectCandidateProfile, projectUserSlice, syncCandidateDashboardCompletion } from "./projections/users";
 import {
   projectAdminQueueItem,
@@ -96,7 +100,6 @@ export const onJobWritten = onDocumentWritten("jobs/{jobId}", async (event) => {
   if (before?.status !== "published" && job.status === "published") {
     await bumpAdminCounters({
       activeJobs: 1,
-      pendingJobs: before?.status === "pending_review" ? -1 : 0,
     });
     await bumpEmployerStats(job.businessId, { activeJobs: 1 });
   }
@@ -104,12 +107,7 @@ export const onJobWritten = onDocumentWritten("jobs/{jobId}", async (event) => {
     await bumpAdminCounters({ activeJobs: -1 });
     await bumpEmployerStats(job.businessId, { activeJobs: -1 });
   }
-  if (before?.status === "pending_review" && job.status === "draft") {
-    await bumpAdminCounters({ pendingJobs: -1 });
-  }
-  if (before?.status !== "pending_review" && job.status === "pending_review") {
-    await bumpAdminCounters({ pendingJobs: 1 });
-  }
+  // pendingJobs is owned solely by onChangeRequestWritten (job-target CRs).
 
   if (business) {
     const openJobsCount = await countPublishedJobs(job.businessId);
@@ -316,7 +314,7 @@ export const onBusinessWritten = onDocumentWritten(
     const before = event.data?.before?.data();
     const businessId = event.params.businessId;
     if (!after) {
-      await getDatabase().ref(`businesses/${businessId}`).remove();
+      await removePublicBusiness(businessId);
       await getDatabase().ref(`employer/${businessId}/meta`).remove();
       await projectAdminQueueItem("businesses", businessId, null);
       if (before) {
@@ -351,27 +349,11 @@ export const onBusinessWritten = onDocumentWritten(
       updatedAt: after.updatedAt ?? Date.now(),
     });
 
-    if (!verified) {
-      await getDatabase().ref(`businesses/${businessId}`).remove();
-    } else {
-      await getDatabase().ref(`businesses/${businessId}`).set({
-        id: after.id ?? businessId,
-        name: after.name,
-        slug: after.slug,
-        logoUrl: after.logoUrl,
-        coverUrl: after.coverUrl,
-        description: after.description,
-        website: after.website,
-        industry: after.industry,
-        companySize: after.companySize,
-        location: after.location,
-        rotaryContactName: after.rotaryContactName,
-        rotaryContactClub: after.rotaryContactClub,
-        verified: true,
-        openJobsCount,
-        readModelVersion: READ_MODEL_VERSION,
-      });
-    }
+    await projectPublicBusiness(
+      businessId,
+      { ...after, id: after.id ?? businessId },
+      openJobsCount,
+    );
 
     // branding / queue digest paths continue below
 

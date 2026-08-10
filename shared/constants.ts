@@ -30,6 +30,7 @@ export const LOGO_WEBP_QUALITY = 0.92;
 export const APPLICANTS_PAGE_SIZE = 20;
 export const ADMIN_PAGE_SIZE = 25;
 export const FEED_PAGE_SIZE = 30;
+export const NOTIFICATION_INBOX_CAP = 50;
 
 export const CACHE_TAGS = {
   job: (id: string) => `job:${id}`,

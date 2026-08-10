@@ -23,6 +23,7 @@ import {
   projectEmployerMeta,
   projectEmployerVerification,
 } from "../projections/employer";
+import { projectPublicBusiness } from "../projections/businesses";
 import {
   projectAdminQueueItem,
   projectTaxonomyDoc,
@@ -80,6 +81,27 @@ async function main() {
   const fs = getFirestore();
   const rtdb = getDatabase();
   console.log("READ_MODEL_VERSION", READ_MODEL_VERSION);
+
+  // Clear admin CR queue so terminal CRs do not linger; re-seed pending only below.
+  await rtdb.ref("admin/queues/changeRequests").remove();
+
+  const businesses = await fs.collection("businesses").get();
+  for (const doc of businesses.docs) {
+    const data = { id: doc.id, ...doc.data() } as Record<string, unknown>;
+    const verified = data.status === "verified";
+    const openJobsCount = verified
+      ? (
+          await fs
+            .collection("jobs")
+            .where("businessId", "==", doc.id)
+            .where("status", "==", "published")
+            .get()
+        ).size
+      : 0;
+    await projectEmployerMeta(doc.id, data, { openJobsCount });
+    await projectPublicBusiness(doc.id, data, openJobsCount);
+  }
+  console.log(`Projected ${businesses.size} businesses (public + employer meta)`);
 
   const jobs = await fs.collection("jobs").get();
   for (const doc of jobs.docs) {
@@ -152,12 +174,6 @@ async function main() {
   }
   console.log(`Projected ${profiles.size} profiles (+ dashboard completion)`);
 
-  const businesses = await fs.collection("businesses").get();
-  for (const doc of businesses.docs) {
-    await projectEmployerMeta(doc.id, { id: doc.id, ...doc.data() });
-  }
-  console.log(`Projected ${businesses.size} employer meta`);
-
   const members = await fs.collection("businessMembers").get();
   for (const doc of members.docs) {
     const m = doc.data();
@@ -191,14 +207,19 @@ async function main() {
   console.log(`Projected ${members.size} members`);
 
   const crs = await fs.collection("changeRequests").get();
+  let pendingJobCrs = 0;
   for (const doc of crs.docs) {
     const cr = doc.data();
+    const status = String(cr.status);
+    if (status === "pending_review" && String(cr.targetType) === "job") {
+      pendingJobCrs += 1;
+    }
     await projectChangeRequest({
       id: doc.id,
       businessId: cr.businessId as string | undefined,
       targetType: String(cr.targetType),
       targetId: String(cr.targetId),
-      status: String(cr.status),
+      status,
       action: cr.action ? String(cr.action) : undefined,
       submittedBy: cr.submittedBy as string | undefined,
       submittedAt: (cr.updatedAt ?? cr.createdAt ?? cr.submittedAt) as
@@ -210,6 +231,11 @@ async function main() {
       liveSnapshot: (cr.liveSnapshot as Record<string, unknown> | undefined) ?? {},
     });
   }
+  console.log(`Projected ${crs.size} change requests (${pendingJobCrs} pending job CRs)`);
+
+  // Recompute pendingJobs from CR source of truth (do not touch other counters).
+  await rtdb.ref("admin/dashboard/pendingJobs").set(pendingJobCrs);
+  await rtdb.ref("system/counters/pendingJobs").set(pendingJobCrs);
 
   for (const kind of ["categories", "skills", "questions"] as const) {
     const snap = await fs.collection(kind).get();

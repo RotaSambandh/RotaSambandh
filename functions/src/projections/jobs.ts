@@ -74,8 +74,12 @@ export async function projectJob(job: JobDoc, business?: BusinessDoc | null) {
     [`feeds/latest/${job.id}`]: feedItem,
     [`feeds/${job.type}/${job.id}`]: feedItem,
     [`feeds/${job.workplace}/${job.id}`]: feedItem,
-    [`businesses/${job.businessId}/openJobs/${job.id}`]: feedItem,
   };
+
+  // Only attach openJobs under a verified public business root.
+  if (business?.status === "verified") {
+    updates[`businesses/${job.businessId}/openJobs/${job.id}`] = feedItem;
+  }
 
   await db.ref().update(updates);
 }

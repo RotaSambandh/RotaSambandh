@@ -148,8 +148,10 @@ export async function projectChangeRequest(cr: {
     liveSnapshot: cr.liveSnapshot ?? {},
     readModelVersion: READ_MODEL_VERSION,
   };
+  // Admin queue = open work only; employer mirror keeps history.
   const updates: Record<string, unknown> = {
-    [`admin/queues/changeRequests/${cr.id}`]: payload,
+    [`admin/queues/changeRequests/${cr.id}`]:
+      cr.status === "pending_review" ? payload : null,
   };
   if (cr.businessId) {
     updates[`employer/${cr.businessId}/changeRequests/${cr.id}`] = payload;

@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, Briefcase, ShieldCheck, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { Button } from "@/components/ui/button";
+import { buttonClassName } from "@/components/ui/button";
 import { DISPLAY_NAME, TAGLINE } from "@/shared/constants";
+import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   return (
@@ -46,16 +47,20 @@ export default function HomePage() {
             businesses. Built for the Rotaract community, not an open public job board.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
-            <Link href="/auth/sign-in">
-              <Button className="min-h-12 min-w-44 px-6 text-base">Join the network</Button>
+            <Link
+              href="/auth/sign-in"
+              className={cn(buttonClassName("primary"), "min-h-12 min-w-44 px-6 text-base")}
+            >
+              Join the network
             </Link>
-            <Link href="/auth/sign-in?next=%2Fjobs">
-              <Button
-                variant="secondary"
-                className="min-h-12 min-w-44 border-white/25 bg-transparent px-6 text-base text-white hover:bg-white/10"
-              >
-                Sign in to browse jobs
-              </Button>
+            <Link
+              href="/auth/sign-in?next=%2Fjobs"
+              className={cn(
+                buttonClassName("secondary"),
+                "min-h-12 min-w-44 border-white/25 bg-transparent px-6 text-base !text-white hover:bg-white/10",
+              )}
+            >
+              Sign in to browse jobs
             </Link>
           </div>
         </div>
@@ -158,13 +163,17 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/auth/sign-in">
-              <Button className="min-h-11 min-w-36">Join</Button>
+            <Link
+              href="/auth/sign-in"
+              className={cn(buttonClassName("primary"), "min-h-11 min-w-36")}
+            >
+              Join
             </Link>
-            <Link href="/auth/sign-in">
-              <Button variant="secondary" className="min-h-11 min-w-36">
-                Sign in
-              </Button>
+            <Link
+              href="/auth/sign-in"
+              className={cn(buttonClassName("secondary"), "min-h-11 min-w-36")}
+            >
+              Sign in
             </Link>
           </div>
         </div>

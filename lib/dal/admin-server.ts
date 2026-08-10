@@ -186,6 +186,17 @@ export async function mergeChangeRequestAdmin(input: {
       reviewedAt: ts,
       updatedAt: ts,
     });
+    // Rejected create → return job to draft so it does not linger as pending_review.
+    if (
+      input.decision === "rejected" &&
+      cr.targetType === "job" &&
+      cr.action === "create"
+    ) {
+      await db.collection("jobs").doc(cr.targetId).set(
+        { status: "draft", updatedAt: ts },
+        { merge: true },
+      );
+    }
     await db.collection("adminActions").add(
       omitUndefined({
         adminId: input.adminId,

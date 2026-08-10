@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { buttonClassName } from "@/components/ui/button";
 import {
   PageHeader,
   Banner,
@@ -16,8 +16,8 @@ import { ShareJobButton } from "@/components/jobs/share-job-button";
 import { getJobDetail } from "@/lib/dal/jobs";
 import { getBusinessPublic, getBusinessOpenJobs } from "@/lib/dal/businesses";
 import { isJobOpenForApplications } from "@/lib/dal/job-meta";
-import { DISPLAY_NAME } from "@/shared/constants";
 import { htmlToPlainText } from "@/lib/sanitize/html";
+import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
 
@@ -58,6 +58,7 @@ export default async function JobDetailPage({
   const open = isJobOpenForApplications(job);
   const moreJobs = openJobs.filter((j) => j.id !== job.id).slice(0, 5);
   const about = business?.description || job.companySummary;
+  const hasPublicCompany = Boolean(business);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -96,7 +97,7 @@ export default async function JobDetailPage({
           </>
         }
         title={job.title}
-        description={`${DISPLAY_NAME} · ${job.company}${job.location ? ` · ${job.location}` : ""}`}
+        description={job.location ? job.location : undefined}
         actions={<ShareJobButton title={job.title} />}
       />
 
@@ -135,23 +136,17 @@ export default async function JobDetailPage({
           <>
             <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
               {open ? (
-                <Link href={`/candidate/apply/${job.id}`} className="block">
-                  <Button className="w-full">Apply now</Button>
+                <Link
+                  href={`/candidate/apply/${job.id}`}
+                  className={cn(buttonClassName("primary"), "w-full")}
+                >
+                  Apply now
                 </Link>
               ) : (
                 <Banner tone="warning" title="Applications closed">
                   The deadline for this opportunity has passed.
                 </Banner>
               )}
-              <JobMetaRow
-                className="mt-3"
-                type={job.type}
-                workplace={job.workplace}
-                location={job.location}
-                salary={job.salary}
-                postedAt={job.postedAt}
-                deadline={job.deadline}
-              />
             </div>
             <CompanySummaryCard
               businessId={job.businessId}
@@ -162,16 +157,19 @@ export default async function JobDetailPage({
               location={business?.location ?? job.location}
               about={about}
               verified={Boolean(business?.verified)}
+              linkToCompany={hasPublicCompany}
             />
           </>
         }
       />
 
-      {/* Mobile sticky apply */}
       {open ? (
         <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 border-t border-[var(--color-border)] bg-[var(--color-surface-elevated)]/95 p-3 backdrop-blur md:hidden">
-          <Link href={`/candidate/apply/${job.id}`}>
-            <Button className="w-full">Apply now</Button>
+          <Link
+            href={`/candidate/apply/${job.id}`}
+            className={cn(buttonClassName("primary"), "w-full")}
+          >
+            Apply now
           </Link>
         </div>
       ) : null}
