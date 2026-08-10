@@ -52,5 +52,10 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.11",
     "typescript": "^5"
+  },
+  "overrides": {
+    "jwks-rsa": {
+      "jose": "4.15.9"
+    }
   }
 }

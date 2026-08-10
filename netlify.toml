@@ -19,6 +19,8 @@
 
 # firebase-admin needs real node_modules + Firestore protos on Netlify Functions.
 # Without this, /api/auth/session crashes at module load (HTTP 500, empty body).
+# Also pin jwks-rsa→jose@4 via package.json overrides (jose@6 is ESM-only and
+# breaks require() in Netlify's CJS function runtime → admin_import_failed 503).
 [functions]
   external_node_modules = [
     "firebase-admin",
