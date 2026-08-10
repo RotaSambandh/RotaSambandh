@@ -208,16 +208,21 @@ async function main() {
 
   const crs = await fs.collection("changeRequests").get();
   let pendingJobCrs = 0;
+  let pendingBusinessCrs = 0;
   for (const doc of crs.docs) {
     const cr = doc.data();
     const status = String(cr.status);
-    if (status === "pending_review" && String(cr.targetType) === "job") {
+    const targetType = String(cr.targetType);
+    if (status === "pending_review" && targetType === "job") {
       pendingJobCrs += 1;
+    }
+    if (status === "pending_review" && targetType === "business") {
+      pendingBusinessCrs += 1;
     }
     await projectChangeRequest({
       id: doc.id,
       businessId: cr.businessId as string | undefined,
-      targetType: String(cr.targetType),
+      targetType,
       targetId: String(cr.targetId),
       status,
       action: cr.action ? String(cr.action) : undefined,
@@ -231,11 +236,35 @@ async function main() {
       liveSnapshot: (cr.liveSnapshot as Record<string, unknown> | undefined) ?? {},
     });
   }
-  console.log(`Projected ${crs.size} change requests (${pendingJobCrs} pending job CRs)`);
+  console.log(
+    `Projected ${crs.size} change requests (${pendingJobCrs} pending job CRs, ${pendingBusinessCrs} pending business CRs)`,
+  );
 
-  // Recompute pendingJobs from CR source of truth (do not touch other counters).
-  await rtdb.ref("admin/dashboard/pendingJobs").set(pendingJobCrs);
-  await rtdb.ref("system/counters/pendingJobs").set(pendingJobCrs);
+  let pendingVerificationBusinesses = 0;
+  let pendingDeletionBusinesses = 0;
+  for (const doc of businesses.docs) {
+    const status = String(doc.data().status ?? "");
+    if (status === "verification_pending") pendingVerificationBusinesses += 1;
+    if (status === "deletion_pending") pendingDeletionBusinesses += 1;
+  }
+  // Same formula as live bumps: verification_pending businesses + pending business CRs.
+  const pendingBusinesses = pendingVerificationBusinesses + pendingBusinessCrs;
+
+  await rtdb.ref("admin/dashboard").update({
+    pendingJobs: pendingJobCrs,
+    pendingBusinesses,
+    pendingBusinessDeletions: pendingDeletionBusinesses,
+    updatedAt: Date.now(),
+  });
+  await rtdb.ref("system/counters").update({
+    pendingJobs: pendingJobCrs,
+    pendingBusinesses,
+    pendingBusinessDeletions: pendingDeletionBusinesses,
+    updatedAt: Date.now(),
+  });
+  console.log(
+    `Recomputed counters: pendingJobs=${pendingJobCrs}, pendingBusinesses=${pendingBusinesses} (${pendingVerificationBusinesses} verification + ${pendingBusinessCrs} CRs), pendingDeletions=${pendingDeletionBusinesses}`,
+  );
 
   for (const kind of ["categories", "skills", "questions"] as const) {
     const snap = await fs.collection(kind).get();

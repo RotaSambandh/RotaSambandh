@@ -11,6 +11,12 @@ import {
 } from "@/components/employer/screening-questions-editor";
 import { createJob } from "@/lib/dal/employer";
 import { listBusinessJobsRtdb } from "@/lib/dal/employer-rtdb";
+import { listEmployerApplicationsRtdb } from "@/lib/dal/applications-rtdb";
+import {
+  formatJobApplicantStats,
+  statsByJobId,
+  type JobApplicantStats,
+} from "@/lib/dal/job-applicant-stats";
 import { createChangeRequest, jobLiveSnapshot } from "@/lib/dal/change-requests";
 import { persistJobScreeningDrafts } from "@/lib/dal/questions";
 import { JOB_TYPE_LABELS, WORKPLACE_LABELS } from "@/lib/dal/job-meta";
@@ -61,6 +67,7 @@ export default function EmployerJobsPage() {
   const { user } = useAuth();
   const { business, loading: bizLoading } = useActiveBusiness();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [statsByJob, setStatsByJob] = useState<Record<string, JobApplicantStats>>({});
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,11 +87,14 @@ export default function EmployerJobsPage() {
       setLoading(true);
       if (!business) {
         setJobs([]);
+        setStatsByJob({});
         setLoading(false);
         return;
       }
       const listed = await listBusinessJobsRtdb(business.id);
+      const apps = await listEmployerApplicationsRtdb(business.id);
       setJobs(listed);
+      setStatsByJob(statsByJobId(apps));
       setLoading(false);
     })();
   }, [user, business, bizLoading]);
@@ -160,7 +170,7 @@ export default function EmployerJobsPage() {
         title="Jobs"
         description={
           business
-            ? `Opportunities for ${business.name}. Open a job to review applicants and their answers.`
+            ? `Opportunities for ${business.name}. Applicant counts update from your pipeline — open a job to review and export.`
             : "Open a job to review its applicants and move candidates through your pipeline."
         }
         actions={
@@ -347,19 +357,14 @@ export default function EmployerJobsPage() {
                       .filter(Boolean)
                       .join(" · ")}
                     meta={
-                      job.status === "pending_review" ? (
-                        <span className="text-caption text-[var(--color-warning-ink)]">
-                          Waiting for review
-                        </span>
-                      ) : job.status === "published" ? (
-                        <span className="text-caption text-[var(--color-muted)]">
-                          Manage applicants
-                        </span>
-                      ) : job.status === "draft" ? (
-                        <span className="text-caption text-[var(--color-muted)]">
-                          Finish or submit for review
-                        </span>
-                      ) : null
+                      <span className="text-caption text-[var(--color-muted)]">
+                        {formatJobApplicantStats(statsByJob[job.id])}
+                        {job.status === "pending_review"
+                          ? " · Waiting for review"
+                          : job.status === "draft"
+                            ? " · Draft"
+                            : ""}
+                      </span>
                     }
                     trailing={
                       <StatusPill

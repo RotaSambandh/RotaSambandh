@@ -1,4 +1,4 @@
-import { get, ref } from "firebase/database";
+import { get, onValue, ref, type Unsubscribe } from "firebase/database";
 import type { Application, ApplicationAnswer, ApplicationStatus } from "@/shared/types";
 import { getClientRtdb, isFirebaseConfigured } from "@/lib/firebase/client";
 
@@ -44,6 +44,17 @@ function mapModel(raw: Record<string, unknown>): ApplicationReadModel {
   };
 }
 
+function parseCandidateApplicationsSnap(
+  snap: { exists: () => boolean; val: () => unknown },
+): ApplicationReadModel[] {
+  if (!snap.exists()) return [];
+  const val = snap.val() as Record<string, Record<string, unknown>>;
+  return Object.values(val)
+    .map(mapModel)
+    .sort((a, b) => b.submittedAt - a.submittedAt)
+    .slice(0, 50);
+}
+
 export async function listCandidateApplicationsRtdb(
   candidateId: string,
 ): Promise<ApplicationReadModel[]> {
@@ -52,15 +63,38 @@ export async function listCandidateApplicationsRtdb(
     const snap = await get(
       ref(getClientRtdb(), `candidate/${candidateId}/applications`),
     );
-    if (!snap.exists()) return [];
-    const val = snap.val() as Record<string, Record<string, unknown>>;
-    return Object.values(val)
-      .map(mapModel)
-      .sort((a, b) => b.submittedAt - a.submittedAt)
-      .slice(0, 50);
+    return parseCandidateApplicationsSnap(snap);
   } catch {
     return [];
   }
+}
+
+/** Live list — updates when Cloud Functions project new/changed applications. */
+export function subscribeCandidateApplicationsRtdb(
+  candidateId: string,
+  onChange: (items: ApplicationReadModel[]) => void,
+): Unsubscribe {
+  if (!isFirebaseConfigured()) {
+    onChange([]);
+    return () => undefined;
+  }
+  const applicationsRef = ref(
+    getClientRtdb(),
+    `candidate/${candidateId}/applications`,
+  );
+  return onValue(
+    applicationsRef,
+    (snap) => onChange(parseCandidateApplicationsSnap(snap)),
+    () => onChange([]),
+  );
+}
+
+export async function getCandidateApplicationForJobRtdb(
+  candidateId: string,
+  jobId: string,
+): Promise<ApplicationReadModel | null> {
+  const list = await listCandidateApplicationsRtdb(candidateId);
+  return list.find((a) => a.jobId === jobId) ?? null;
 }
 
 export async function listEmployerApplicationsRtdb(

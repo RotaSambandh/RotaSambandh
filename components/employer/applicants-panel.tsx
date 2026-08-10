@@ -72,6 +72,8 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [resumeError, setResumeError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!business) {
@@ -143,6 +145,32 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
+  async function exportCsv() {
+    setExportError(null);
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/employer/jobs/${jobId}/export`);
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "Export failed");
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = /filename="([^"]+)"/.exec(disposition);
+      const filename = match?.[1] ?? `applicants-${jobId}.csv`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) {
     return (
       <Panel title="Applicants">
@@ -152,12 +180,31 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
   }
 
   return (
-    <Panel title="Applicants">
+    <Panel
+      title="Applicants"
+      toolbar={
+        items.length > 0 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={exporting}
+            onClick={() => void exportCsv()}
+          >
+            {exporting ? "Exporting…" : "Export CSV"}
+          </Button>
+        ) : null
+      }
+    >
       <p className="mb-4 text-caption text-[var(--color-muted)]">
-        Manage this opportunity&apos;s pipeline.
+        Manage this opportunity&apos;s pipeline. Export includes contact details,
+        screening answers, status notes, and resume download links.
       </p>
       {resumeError ? (
         <Banner tone="danger" title={resumeError} className="mb-4" />
+      ) : null}
+      {exportError ? (
+        <Banner tone="danger" title={exportError} className="mb-4" />
       ) : null}
 
       {items.length === 0 ? (

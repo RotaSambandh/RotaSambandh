@@ -1,10 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { buttonClassName } from "@/components/ui/button";
 import {
   PageHeader,
-  Banner,
   Panel,
   ReviewWorkbenchFrame,
 } from "@/components/ui";
@@ -13,11 +11,11 @@ import { JobPostingBody } from "@/components/jobs/job-posting-body";
 import { CompanySummaryCard } from "@/components/jobs/company-summary-card";
 import { JobCard } from "@/components/jobs/job-card";
 import { ShareJobButton } from "@/components/jobs/share-job-button";
+import { JobApplyCta } from "@/components/jobs/job-apply-cta";
 import { getJobDetail } from "@/lib/dal/jobs";
 import { getBusinessPublic, getBusinessOpenJobs } from "@/lib/dal/businesses";
 import { isJobOpenForApplications } from "@/lib/dal/job-meta";
 import { htmlToPlainText } from "@/lib/sanitize/html";
-import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
 
@@ -135,18 +133,7 @@ export default async function JobDetailPage({
         rail={
           <>
             <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
-              {open ? (
-                <Link
-                  href={`/candidate/apply/${job.id}`}
-                  className={cn(buttonClassName("primary"), "w-full")}
-                >
-                  Apply now
-                </Link>
-              ) : (
-                <Banner tone="warning" title="Applications closed">
-                  The deadline for this opportunity has passed.
-                </Banner>
-              )}
+              <JobApplyCta jobId={job.id} open={open} />
             </div>
             <CompanySummaryCard
               businessId={job.businessId}
@@ -163,16 +150,9 @@ export default async function JobDetailPage({
         }
       />
 
-      {open ? (
-        <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 border-t border-[var(--color-border)] bg-[var(--color-surface-elevated)]/95 p-3 backdrop-blur md:hidden">
-          <Link
-            href={`/candidate/apply/${job.id}`}
-            className={cn(buttonClassName("primary"), "w-full")}
-          >
-            Apply now
-          </Link>
-        </div>
-      ) : null}
+      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 border-t border-[var(--color-border)] bg-[var(--color-surface-elevated)]/95 p-3 backdrop-blur md:hidden">
+        <JobApplyCta jobId={job.id} open={open} />
+      </div>
     </main>
   );
 }

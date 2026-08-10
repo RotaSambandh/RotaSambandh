@@ -76,6 +76,18 @@ service cloud.firestore {
         );
     }
 
+    /**
+     * Same as canAccessApplication but uses get() only — for creates in a batch
+     * with the parent application (exists() is unreliable on sibling in-batch creates).
+     */
+    function canWriteApplicationChild(applicationId) {
+      return notSuspended() && (
+        applicationData(applicationId).candidateId == request.auth.uid ||
+        isBusinessMember(applicationData(applicationId).businessId) ||
+        isPlatformStaff()
+      );
+    }
+
     function isOwnerBootstrapMember() {
       return notSuspended()
         && request.resource.data.userId == request.auth.uid
@@ -220,7 +232,7 @@ service cloud.firestore {
       allow read: if canAccessApplication(resource.data.applicationId);
       allow create: if notSuspended()
         && request.resource.data.applicationId is string
-        && canAccessApplication(request.resource.data.applicationId)
+        && canWriteApplicationChild(request.resource.data.applicationId)
         && applicationData(request.resource.data.applicationId).candidateId == request.auth.uid;
     }
 
@@ -228,7 +240,8 @@ service cloud.firestore {
       allow read: if canAccessApplication(resource.data.applicationId);
       allow create: if notSuspended()
         && request.resource.data.applicationId is string
-        && canAccessApplication(request.resource.data.applicationId);
+        && request.resource.data.actorId == request.auth.uid
+        && canWriteApplicationChild(request.resource.data.applicationId);
     }
 
     // savedJobs removed from product — deny all client access (legacy docs may remain).

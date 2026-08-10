@@ -1,9 +1,13 @@
 import {
   collection,
   doc,
+  getDocs,
   writeBatch,
   getDoc,
+  query,
+  setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import type {
   Application,
@@ -75,8 +79,15 @@ export async function submitApplication(input: SubmitApplicationInput): Promise<
     throw new Error("Phone number is required to apply.");
   }
 
+  // Guard duplicates (RTDB may lag; Firestore is source of truth).
+  const prior = await getDocs(
+    query(collection(db, "applications"), where("candidateId", "==", input.candidateId)),
+  );
+  if (prior.docs.some((d) => d.data().jobId === input.jobId)) {
+    throw new Error("You have already applied to this role.");
+  }
+
   const appRef = doc(collection(db, "applications"));
-  const batch = writeBatch(db);
   const ts = now();
 
   const application: Application = {
@@ -99,8 +110,11 @@ export async function submitApplication(input: SubmitApplicationInput): Promise<
     updatedAt: ts,
   };
 
-  batch.set(appRef, application);
+  // Write the application first so sibling answer/event rules can get() it.
+  // (A single batch with exists()/get() on the new parent is flaky under rules.)
+  await setDoc(appRef, application);
 
+  const batch = writeBatch(db);
   for (const answer of input.answers) {
     const answerRef = doc(collection(db, "applicationAnswers"));
     const payload: ApplicationAnswer = {

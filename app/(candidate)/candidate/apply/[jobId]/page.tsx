@@ -20,11 +20,22 @@ import { getJobDetail } from "@/lib/dal/jobs-client";
 import { isJobOpenForApplications } from "@/lib/dal/job-meta";
 import { listJobQuestions } from "@/lib/dal/questions";
 import { submitApplication } from "@/lib/dal/applications";
+import {
+  getCandidateApplicationForJobRtdb,
+  type ApplicationReadModel,
+} from "@/lib/dal/applications-rtdb";
 import { getUser, updateUserPhone } from "@/lib/dal/users";
 import { trackEvent } from "@/lib/observability/analytics";
 import { ALLOWED_RESUME_MIME, MAX_RESUME_BYTES } from "@/shared/constants";
 import type { JobDetailReadModel, Question } from "@/shared/types";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  applicationStatusLabel,
+  applicationStatusVariant,
+} from "@/lib/admin/status-badges";
+import { Badge } from "@/components/ui/badge";
+import { buttonClassName } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Step = "confirm" | "resume" | "questions" | "submit";
 
@@ -48,11 +59,26 @@ export default function ApplyWizardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
+  const [existingApp, setExistingApp] = useState<ApplicationReadModel | null>(null);
+  const [checkingExisting, setCheckingExisting] = useState(true);
 
   useEffect(() => {
     void getJobDetail(jobId).then(setJob);
     void listJobQuestions(jobId).then(setQuestions);
   }, [jobId]);
+
+  useEffect(() => {
+    if (!user) {
+      setExistingApp(null);
+      setCheckingExisting(false);
+      return;
+    }
+    setCheckingExisting(true);
+    void getCandidateApplicationForJobRtdb(user.uid, jobId).then((app) => {
+      setExistingApp(app);
+      setCheckingExisting(false);
+    });
+  }, [user, jobId]);
 
   useEffect(() => {
     if (!user) return;
@@ -200,16 +226,48 @@ export default function ApplyWizardPage() {
         })),
       });
       trackEvent("application_submitted", { jobId: job.id, applicationId: id });
-      router.push("/candidate/applications");
+      router.push("/candidate/applications?submitted=1");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Submission failed");
+      console.error("[apply] submission failed", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Submission failed";
+      setError(message);
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (!job) {
+  if (!job || checkingExisting) {
     return <LoadingBlock label="Loading application…" />;
+  }
+
+  if (existingApp) {
+    return (
+      <main>
+        <PageHeader title={job.title} description={job.company} />
+        <Panel className="mt-6 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-semibold">You already applied</p>
+            <Badge variant={applicationStatusVariant(existingApp.status)}>
+              {applicationStatusLabel(existingApp.status)}
+            </Badge>
+          </div>
+          <p className="text-sm text-[var(--color-muted)]">
+            Submitted{" "}
+            {new Date(existingApp.submittedAt).toLocaleString()}. You cannot apply
+            to this role again.
+          </p>
+          <Link
+            href="/candidate/applications"
+            className={cn(buttonClassName("primary"), "inline-flex")}
+          >
+            View applications
+          </Link>
+        </Panel>
+      </main>
+    );
   }
 
   const open = isJobOpenForApplications(job);

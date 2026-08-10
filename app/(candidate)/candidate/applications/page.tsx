@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { listCandidateApplicationsRtdb } from "@/lib/dal/applications-rtdb";
+import { subscribeCandidateApplicationsRtdb } from "@/lib/dal/applications-rtdb";
 import {
   applicationStatusLabel,
   applicationStatusVariant,
@@ -19,12 +20,13 @@ type ApplicationRow = {
   submittedAt: number;
   title: string;
   companyLabel: string;
-  deletionPending?: boolean;
   companyRemoved?: boolean;
 };
 
-export default function ApplicationsPage() {
+function ApplicationsPageInner() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const justSubmitted = searchParams.get("submitted") === "1";
   const [items, setItems] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +37,8 @@ export default function ApplicationsPage() {
       setLoading(false);
       return;
     }
-    void (async () => {
-      const list = await listCandidateApplicationsRtdb(uid);
+    setLoading(true);
+    return subscribeCandidateApplicationsRtdb(uid, (list) => {
       setItems(
         list.map((app) => ({
           id: app.id,
@@ -51,10 +53,12 @@ export default function ApplicationsPage() {
         })),
       );
       setLoading(false);
-    })();
+    });
   }, [user]);
 
   if (loading) return <LoadingBlock label="Loading applications…" />;
+
+  const syncing = justSubmitted && items.length === 0;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
@@ -63,7 +67,13 @@ export default function ApplicationsPage() {
         description="Track status updates in real time when available."
       />
 
-      {items.length === 0 ? (
+      {syncing ? (
+        <Banner tone="success" title="Application submitted">
+          Syncing your application into this list…
+        </Banner>
+      ) : null}
+
+      {items.length === 0 && !syncing ? (
         <EmptyState
           title="No applications yet"
           description="When you apply to a role, it will appear here with live status updates."
@@ -76,6 +86,8 @@ export default function ApplicationsPage() {
             </Link>
           }
         />
+      ) : items.length === 0 ? (
+        <LoadingBlock label="Waiting for sync…" />
       ) : (
         <ul className="mt-6 space-y-3">
           {items.map((item) => (
@@ -117,5 +129,13 @@ export default function ApplicationsPage() {
         </ul>
       )}
     </main>
+  );
+}
+
+export default function ApplicationsPage() {
+  return (
+    <Suspense fallback={<LoadingBlock label="Loading applications…" />}>
+      <ApplicationsPageInner />
+    </Suspense>
   );
 }
