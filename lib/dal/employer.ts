@@ -37,6 +37,8 @@ export function isEmployerBusinessOnboarded(business: Business): boolean {
 
 export async function createBusiness(input: {
   ownerId: string;
+  ownerEmail?: string;
+  ownerDisplayName?: string;
   name: string;
   description?: string;
   website?: string;
@@ -76,15 +78,17 @@ export async function createBusiness(input: {
   const db = getClientFirestore();
   await setDoc(doc(db, "businesses", id), business);
   const memberId = `${id}_${input.ownerId}`;
-  const member: BusinessMember = {
+  const member: BusinessMember = omitUndefined({
     id: memberId,
     businessId: id,
     userId: input.ownerId,
-    role: "company_admin",
-    status: "active",
+    role: "company_admin" as const,
+    status: "active" as const,
+    email: input.ownerEmail?.trim() || undefined,
+    displayName: input.ownerDisplayName?.trim() || undefined,
     createdAt: ts,
     updatedAt: ts,
-  };
+  }) as BusinessMember;
   await setDoc(doc(db, "businessMembers", memberId), omitUndefined(member as unknown as Record<string, unknown>));
   await setDoc(
     doc(db, "users", input.ownerId),

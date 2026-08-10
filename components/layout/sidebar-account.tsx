@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Briefcase, Building2, ChevronUp, LayoutDashboard, LogOut, User } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useOptionalActiveBusiness } from "@/components/employer/active-business-provider";
+import { PwaInstallButton } from "@/components/pwa/install-button";
 import {
   accessiblePortals,
   portalHome,
@@ -147,6 +148,9 @@ export function SidebarAccount({
             <User className="h-3.5 w-3.5" aria-hidden />
             {role === "admin" ? "Admin home" : "View profile"}
           </Link>
+          <div className="border-t border-[var(--color-border)] px-3 py-2">
+            <PwaInstallButton />
+          </div>
           {showCompanySwitch && activeBiz ? (
             <div className="border-t border-[var(--color-border)]">
               <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">

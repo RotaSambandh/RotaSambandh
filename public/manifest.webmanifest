@@ -2,7 +2,9 @@
   "name": "Rotaract Career Network",
   "short_name": "RotaSambandh",
   "description": "Trusted opportunities. Shared networks. Stronger careers.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0a2540",
@@ -31,6 +33,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

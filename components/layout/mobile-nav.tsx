@@ -7,7 +7,6 @@ import {
   Briefcase,
   Building2,
   ClipboardList,
-  Flag,
   Home,
   LayoutDashboard,
   Megaphone,
@@ -33,7 +32,7 @@ const candidateNavBase: Omit<NavItem, "badge">[] = [
   { href: "/candidate", label: "Home", icon: Home },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/candidate/applications", label: "Applications", icon: ClipboardList },
-  { href: "/candidate/notifications", label: "Alerts", icon: Bell },
+  { href: "/candidate/notifications", label: "Notifications", icon: Bell },
   { href: "/candidate/profile", label: "Profile", icon: User },
 ];
 
@@ -41,7 +40,7 @@ const employerNavBase: Omit<NavItem, "badge">[] = [
   { href: "/employer", label: "Dashboard", icon: LayoutDashboard },
   { href: "/employer/jobs", label: "Jobs", icon: Briefcase },
   { href: "/employer/company", label: "Company", icon: Building2 },
-  { href: "/employer/notifications", label: "Alerts", icon: Bell },
+  { href: "/employer/notifications", label: "Notifications", icon: Bell },
   { href: "/employer/profile", label: "Profile", icon: User },
 ];
 
@@ -49,11 +48,10 @@ function useAdminNavItems(): NavItem[] {
   const { canWrite, isSuperAdmin } = usePlatformAccess();
   const items: NavItem[] = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/notifications", label: "Alerts", icon: Bell },
+    { href: "/admin/notifications", label: "Notifications", icon: Bell },
     { href: "/admin/businesses", label: "Businesses", icon: Building2 },
     { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
     { href: "/admin/users", label: "Users", icon: Users },
-    { href: "/admin/reports", label: "Reports", icon: Flag },
   ];
   if (canWrite) {
     items.push({ href: "/admin/announcements", label: "Announce", icon: Megaphone });
@@ -89,7 +87,7 @@ function NavLink({
           ? "font-nav relative flex flex-col items-center gap-0.5 rounded-md px-1 py-1.5 text-[9px] leading-tight"
           : "font-nav relative flex items-center gap-2 rounded-md px-3 py-2.5 text-xs",
         active
-          ? "bg-[var(--color-accent-soft)] text-[var(--color-accent-strong)]"
+          ? "bg-[var(--color-accent-soft)] font-bold text-[var(--color-accent-strong)] shadow-sm ring-1 ring-[var(--color-accent)]/15"
           : compact
             ? "text-[var(--color-muted)]"
             : "text-[var(--color-ink)] hover:bg-white",
@@ -158,13 +156,16 @@ export function DesktopSideNav({ role }: { role: "candidate" | "employer" | "adm
         : withAlertsBadge(candidateNavBase, "/candidate/notifications", unread);
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface)] md:flex md:flex-col">
+    <aside className="hidden w-60 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-elevated)] md:flex md:flex-col">
       <div className="sticky top-0 flex min-h-screen flex-col">
         <div className="flex-1 p-4">
-          <p className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
+          <p className="mb-5 flex items-center gap-2 font-display text-xl font-semibold tracking-tight">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/mark-circle-64.webp" alt="" width={28} height={28} className="rounded-full" />
             Rota<span className="text-[var(--color-accent)]">Sambandh</span>
+          </p>
+          <p className="mb-2 px-3 text-overline text-[var(--color-muted)]">
+            {role === "admin" ? "Staff" : role === "employer" ? "Employer" : "Member"}
           </p>
           <nav aria-label={`${role} desktop`}>
             <ul className="space-y-1">

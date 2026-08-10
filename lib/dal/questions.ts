@@ -1,4 +1,12 @@
-import { collection, doc, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+  writeBatch,
+} from "firebase/firestore";
 import type { JobQuestion, Question, QuestionScope, QuestionType } from "@/shared/types";
 import {
   getClientFirestore,
@@ -146,19 +154,25 @@ export async function attachQuestionsToJob(
 ) {
   if (!isFirebaseConfigured()) return;
   const db = getClientFirestore();
-  await Promise.all(
-    items.map((item, index) => {
-      const id = `${jobId}_${item.questionId}`;
-      const payload: JobQuestion = {
-        jobId,
-        questionId: item.questionId,
-        questionVersion: item.questionVersion,
-        order: index,
-        required: item.required,
-      };
-      return setDoc(doc(db, "jobQuestions", id), payload);
-    }),
+  const existing = await getDocs(
+    query(collection(db, "jobQuestions"), where("jobId", "==", jobId)),
   );
+  const batch = writeBatch(db);
+  for (const d of existing.docs) {
+    batch.delete(d.ref);
+  }
+  items.forEach((item, index) => {
+    const id = `${jobId}_${item.questionId}`;
+    const payload: JobQuestion = {
+      jobId,
+      questionId: item.questionId,
+      questionVersion: item.questionVersion,
+      order: index,
+      required: item.required,
+    };
+    batch.set(doc(db, "jobQuestions", id), payload);
+  });
+  await batch.commit();
 }
 
 export async function listJobQuestions(
@@ -192,15 +206,72 @@ export async function listJobQuestions(
       if (links.length) break;
     }
 
-    if (!links.length) return platformDefaults.slice(0, 3);
+    if (!links.length) return [];
     links.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     const questions: Question[] = [];
     for (const link of links) {
       const q = await getQuestionRtdb(link.questionId);
       if (q) questions.push({ ...q, required: link.required ?? q.required });
     }
-    return questions.length ? questions : platformDefaults.slice(0, 3);
+    return questions;
   } catch {
-    return platformDefaults.slice(0, 3);
+    return [];
   }
+}
+
+/** Suggested library prompts (not auto-attached). */
+export function listSuggestedPlatformQuestions(): Question[] {
+  return platformDefaults;
+}
+
+/** Persist employer-chosen screening prompts for a job (replace set). */
+export async function persistJobScreeningDrafts(
+  jobId: string,
+  businessId: string,
+  drafts: Array<{
+    prompt: string;
+    required: boolean;
+    existingId?: string;
+    existingVersion?: number;
+  }>,
+): Promise<Question[]> {
+  const saved: Question[] = [];
+  for (const draft of drafts) {
+    const prompt = draft.prompt.trim();
+    if (!prompt) continue;
+    if (draft.existingId) {
+      saved.push({
+        id: draft.existingId,
+        scope: "job",
+        type: "short_text",
+        prompt,
+        version: draft.existingVersion ?? 1,
+        required: draft.required,
+        active: true,
+        jobId,
+        businessId,
+        createdAt: 0,
+        updatedAt: 0,
+      });
+      continue;
+    }
+    const created = await createQuestion({
+      scope: "job",
+      type: "short_text",
+      prompt,
+      required: draft.required,
+      jobId,
+      businessId,
+    });
+    saved.push(created);
+  }
+  await attachQuestionsToJob(
+    jobId,
+    saved.map((q) => ({
+      questionId: q.id,
+      questionVersion: q.version,
+      required: q.required,
+    })),
+  );
+  return saved;
 }

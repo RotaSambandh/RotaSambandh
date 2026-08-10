@@ -48,7 +48,7 @@ export async function encodeLogoFile(file: File): Promise<EncodedLogo> {
   });
   if (webp && webp.size > 0) {
     if (webp.size > MAX_LOGO_BYTES) {
-      throw new Error("Encoded logo exceeds 1 MB — try a simpler image");
+      throw new Error("Encoded logo exceeds 1 MB. Try a simpler image.");
     }
     return { blob: webp, fileName: "logo.webp", contentType: "image/webp" };
   }
@@ -58,7 +58,7 @@ export async function encodeLogoFile(file: File): Promise<EncodedLogo> {
   });
   if (!png) throw new Error("Could not encode logo");
   if (png.size > MAX_LOGO_BYTES) {
-    throw new Error("Encoded logo exceeds 1 MB — try a simpler image");
+    throw new Error("Encoded logo exceeds 1 MB. Try a simpler image.");
   }
   return { blob: png, fileName: "logo.png", contentType: "image/png" };
 }

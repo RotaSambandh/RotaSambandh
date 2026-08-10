@@ -8,12 +8,12 @@ import {
   firebasePublicConfig,
   hasWebPushVapidKey,
 } from "@/lib/firebase/public-config";
-import { isNativeApp, nativePlatform } from "@/lib/native/platform";
+import { ensurePushServiceWorker } from "@/lib/push/ensure-service-worker";
 import { registerPushToken } from "@/lib/push/register-token";
 
 /**
  * Best-effort silent registration when permission is already granted.
- * First-time permission is requested via NotificationPermissionBanner (user gesture).
+ * First-time permission is requested via NotificationPermissionSheet (user gesture).
  */
 export function usePushRegistration() {
   const { user } = useAuth();
@@ -24,10 +24,6 @@ export function usePushRegistration() {
 
     async function run() {
       try {
-        if (isNativeApp() && nativePlatform() === "android") {
-          await registerAndroidIfGranted(user!.uid);
-          return;
-        }
         await registerWebIfGranted(user!.uid);
       } catch {
         // Permission denied or unsupported — tray still works.
@@ -47,9 +43,7 @@ export function usePushRegistration() {
       const messaging = await getClientMessaging();
       if (!messaging || cancelled) return;
 
-      const reg =
-        (await navigator.serviceWorker.getRegistration()) ??
-        (await navigator.serviceWorker.register("/sw.js"));
+      const reg = await ensurePushServiceWorker();
       const token = await getToken(messaging, {
         vapidKey: firebasePublicConfig.vapidKey,
         serviceWorkerRegistration: reg,
@@ -58,24 +52,6 @@ export function usePushRegistration() {
 
       onMessage(messaging, () => {
         // Foreground: tray is source of truth.
-      });
-    }
-
-    async function registerAndroidIfGranted(uid: string) {
-      const { PushNotifications } = await import("@capacitor/push-notifications");
-      const perm = await PushNotifications.checkPermissions();
-      if (perm.receive !== "granted" || cancelled) return;
-      await PushNotifications.register();
-
-      await PushNotifications.addListener("registration", (token) => {
-        void registerPushToken(uid, token.value);
-      });
-
-      await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
-        const href = action.notification.data?.href as string | undefined;
-        if (href && typeof window !== "undefined") {
-          window.location.assign(href);
-        }
       });
     }
   }, [user]);

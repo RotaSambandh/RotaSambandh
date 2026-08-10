@@ -43,7 +43,8 @@ export default function AdminSettingsPage() {
   async function addQuestion(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canWrite) return;
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const q = await createQuestion({
       scope: "platform",
       type: String(fd.get("type") || "short_text") as Question["type"],
@@ -52,7 +53,7 @@ export default function AdminSettingsPage() {
       platformKey: String(fd.get("key")),
     });
     setQuestions((prev) => [...prev, q]);
-    e.currentTarget.reset();
+    form.reset();
   }
 
   async function saveEdit(e: FormEvent<HTMLFormElement>) {
@@ -87,26 +88,28 @@ export default function AdminSettingsPage() {
   async function addCategory(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canWrite) return;
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const cat = await upsertCategory(String(fd.get("name")));
     setCategories((prev) => [...prev.filter((c) => c.id !== cat.id), cat]);
-    e.currentTarget.reset();
+    form.reset();
   }
 
   async function addSkill(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canWrite) return;
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const skill = await upsertSkill(String(fd.get("name")));
     setSkills((prev) => [...prev.filter((s) => s.id !== skill.id), skill]);
-    e.currentTarget.reset();
+    form.reset();
   }
 
   return (
-    <main className="mx-auto max-w-4xl space-y-10 px-4 py-8 sm:px-6">
+    <main className="space-y-8">
       <PageHeader
         title="Settings"
-        description="Shared application questions and taxonomy used across employer job forms and candidate applications."
+        description="Shared application questions and the platform taxonomy catalog."
       />
 
       {!canWrite && (
@@ -124,7 +127,7 @@ export default function AdminSettingsPage() {
           type changes so historical applications keep the prompt they answered.{" "}
           <strong className="font-semibold text-[var(--color-ink)]">Platform key</strong> is a
           stable machine id (for example <code className="text-xs">notice_period</code>) used in
-          analytics and reporting.
+          analytics.
         </p>
 
         {questions.length === 0 ? (
@@ -219,9 +222,9 @@ export default function AdminSettingsPage() {
                         ). Past applications keep their original wording via prompt snapshots.
                       </p>
                       {editError ? (
-                        <p role="alert" className="text-sm text-[var(--color-danger)]">
+                        <Banner tone="danger" title="Could not save">
                           {editError}
-                        </p>
+                        </Banner>
                       ) : null}
                       <div className="flex flex-wrap gap-2">
                         <Button type="submit" disabled={savingEdit}>
@@ -273,51 +276,62 @@ export default function AdminSettingsPage() {
         )}
       </Panel>
 
-      <div className="grid gap-8 sm:grid-cols-2">
-        <Panel title="Categories">
-          <p className="mb-4 text-sm text-[var(--color-muted)]">
-            High-level job families (Technology, Marketing, Operations…). Employers pick these when
-            classifying a role.
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            Categories &amp; skills catalog
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-[var(--color-muted)]">
+            This is the platform taxonomy catalog. It may not yet drive employer job forms or
+            candidate filters—maintain it as the shared vocabulary for upcoming matching and
+            classification work.
           </p>
-          {categories.length === 0 ? (
-            <p className="text-sm text-[var(--color-muted)]">No categories yet.</p>
-          ) : (
-            <ul className="space-y-1 text-sm">
-              {categories.map((c) => (
-                <li key={c.id}>{c.name}</li>
-              ))}
-            </ul>
-          )}
-          {canWrite && (
-            <form onSubmit={addCategory} className="mt-4 space-y-2">
-              <Input name="name" placeholder="Category name" required />
-              <Button type="submit">Add category</Button>
-            </form>
-          )}
-        </Panel>
+        </div>
 
-        <Panel title="Skills">
-          <p className="mb-4 text-sm text-[var(--color-muted)]">
-            Skill tags candidates and jobs share (React, Product, Analytics…). Used for filtering and
-            matching.
-          </p>
-          {skills.length === 0 ? (
-            <p className="text-sm text-[var(--color-muted)]">No skills yet.</p>
-          ) : (
-            <ul className="space-y-1 text-sm">
-              {skills.map((s) => (
-                <li key={s.id}>{s.name}</li>
-              ))}
-            </ul>
-          )}
-          {canWrite && (
-            <form onSubmit={addSkill} className="mt-4 space-y-2">
-              <Input name="name" placeholder="Skill name" required />
-              <Button type="submit">Add skill</Button>
-            </form>
-          )}
-        </Panel>
-      </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Panel title="Categories">
+            <p className="mb-4 text-sm text-[var(--color-muted)]">
+              High-level job families (Technology, Marketing, Operations…).
+            </p>
+            {categories.length === 0 ? (
+              <EmptyState title="No categories yet" description="Add the first job family." />
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {categories.map((c) => (
+                  <li key={c.id}>{c.name}</li>
+                ))}
+              </ul>
+            )}
+            {canWrite && (
+              <form onSubmit={addCategory} className="mt-4 space-y-2 border-t border-[var(--color-border)] pt-4">
+                <Input name="name" placeholder="Category name" required />
+                <Button type="submit">Add category</Button>
+              </form>
+            )}
+          </Panel>
+
+          <Panel title="Skills">
+            <p className="mb-4 text-sm text-[var(--color-muted)]">
+              Skill tags candidates and jobs may share (React, Product, Analytics…).
+            </p>
+            {skills.length === 0 ? (
+              <EmptyState title="No skills yet" description="Add the first skill tag." />
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {skills.map((s) => (
+                  <li key={s.id}>{s.name}</li>
+                ))}
+              </ul>
+            )}
+            {canWrite && (
+              <form onSubmit={addSkill} className="mt-4 space-y-2 border-t border-[var(--color-border)] pt-4">
+                <Input name="name" placeholder="Skill name" required />
+                <Button type="submit">Add skill</Button>
+              </form>
+            )}
+          </Panel>
+        </div>
+      </section>
     </main>
   );
 }

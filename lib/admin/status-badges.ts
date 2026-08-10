@@ -1,27 +1,13 @@
 import type { ApplicationStatus } from "@/shared/types";
+import {
+  applicationStatusLabel,
+  applicationStatusTone,
+  type StatusTone,
+} from "@/lib/ui/status-labels";
 
-type BadgeVariant = "default" | "success" | "warning" | "neutral" | "danger";
-
-export function applicationStatusVariant(status: ApplicationStatus): BadgeVariant {
-  switch (status) {
-    case "selected":
-      return "success";
-    case "shortlisted":
-    case "interview":
-      return "warning";
-    case "rejected":
-    case "withdrawn":
-      return "danger";
-    case "applied":
-    case "under_review":
-      return "neutral";
-    default: {
-      const _exhaustive: never = status;
-      return _exhaustive;
-    }
-  }
+/** @deprecated Prefer applicationStatusTone from lib/ui/status-labels */
+export function applicationStatusVariant(status: ApplicationStatus): StatusTone {
+  return applicationStatusTone(status);
 }
 
-export function applicationStatusLabel(status: ApplicationStatus): string {
-  return status.replaceAll("_", " ");
-}
+export { applicationStatusLabel };

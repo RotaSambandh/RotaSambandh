@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { callPrivilegedAdmin } from "@/lib/admin/privileged-client";
 import { useAuth } from "@/components/auth/auth-provider";
 import { usePlatformAccess } from "@/hooks/use-platform-access";
@@ -11,6 +11,7 @@ import { isPlatformStaff, PLATFORM_STAFF_ROLES, isSuperAdmin as hasSuperAdminRol
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ListRow } from "@/components/ui/list-row";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -26,6 +27,7 @@ export default function AdminStaffPage() {
   const { isSuperAdmin } = usePlatformAccess();
   const [staff, setStaff] = useState<UserDoc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction>(null);
@@ -46,6 +48,19 @@ export default function AdminStaffPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  const filteredStaff = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return staff;
+    return staff.filter((person) => {
+      const roles = person.roles.filter((r) => PLATFORM_STAFF_ROLES.includes(r)).join(" ");
+      const haystack = [person.displayName, person.email, roles]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [staff, search]);
 
   async function onAssign(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -121,7 +136,7 @@ export default function AdminStaffPage() {
 
   if (!isSuperAdmin) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <main>
         <EmptyState
           title="Super admin only"
           description="Only a super admin can invite, promote, or demote platform staff."
@@ -133,7 +148,7 @@ export default function AdminStaffPage() {
   if (loading) return <LoadingBlock label="Loading staff…" />;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         title="Platform staff"
         description="Invite admins and coordinators by email. They must sign in with Google once first so a user record exists. Coordinators are view-only; admins can approve and moderate."
@@ -165,47 +180,72 @@ export default function AdminStaffPage() {
         </form>
       </Panel>
 
-      <Panel title="Current staff">
+      <Panel
+        title={`Current staff (${filteredStaff.length})`}
+        toolbar={
+          <div className="w-full min-w-[12rem] sm:w-56">
+            <Input
+              id="staff-search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or email…"
+              aria-label="Search staff"
+            />
+          </div>
+        }
+      >
         {staff.length === 0 ? (
           <EmptyState title="No staff yet" description="Assign the first admin or coordinator above." />
+        ) : filteredStaff.length === 0 ? (
+          <EmptyState title="No staff match" description="Try a different search." />
         ) : (
-          <ul className="divide-y divide-[var(--color-border)]">
-            {staff.map((person) => {
+          <ul className="-mx-4 -my-4 sm:-mx-5 sm:-my-5">
+            {filteredStaff.map((person) => {
               const isSelf = person.uid === user?.uid;
               const isTargetSuper = hasSuperAdminRole(person.roles);
               const canRemove = !isSelf && !isTargetSuper;
+              const staffRoles = person.roles.filter((r) => PLATFORM_STAFF_ROLES.includes(r));
               return (
-                <li
-                  key={person.uid}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {person.displayName || person.email}
-                      {isSelf ? (
-                        <span className="ml-2 text-xs font-normal text-[var(--color-muted)]">(you)</span>
-                      ) : null}
-                    </p>
-                    <p className="text-sm text-[var(--color-muted)]">{person.email}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {person.roles
-                        .filter((r) => PLATFORM_STAFF_ROLES.includes(r))
-                        .map((r) => (
+                <li key={person.uid}>
+                  <ListRow
+                    showChevron={false}
+                    title={
+                      <>
+                        {person.displayName || person.email}
+                        {isSelf ? (
+                          <span className="ml-2 text-xs font-normal text-[var(--color-muted)]">
+                            (you)
+                          </span>
+                        ) : null}
+                      </>
+                    }
+                    subtitle={person.email}
+                    meta={
+                      <>
+                        {staffRoles.map((r) => (
                           <Badge key={r} variant="neutral">
                             {r}
                           </Badge>
                         ))}
-                    </div>
-                  </div>
-                  {canRemove ? (
-                    <Button type="button" variant="danger" onClick={() => requestRemove(person)}>
-                      Remove staff access
-                    </Button>
-                  ) : (
-                    <p className="text-xs text-[var(--color-muted)]">
-                      {isSelf ? "Your account" : "Protected super admin"}
-                    </p>
-                  )}
+                      </>
+                    }
+                    trailing={
+                      canRemove ? (
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => requestRemove(person)}
+                        >
+                          Remove
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-[var(--color-muted)]">
+                          {isSelf ? "Your account" : "Protected"}
+                        </span>
+                      )
+                    }
+                  />
                 </li>
               );
             })}
@@ -229,7 +269,7 @@ export default function AdminStaffPage() {
               Assign <strong>{pending.role}</strong> to <strong>{pending.email}</strong>? They must
               sign out and back in for the new role to fully refresh on every device.
               {pending.role === "super_admin"
-                ? " Super admins can manage all platform staff — only grant this to trusted operators."
+                ? " Super admins can manage all platform staff. Only grant this to trusted operators."
                 : null}
             </p>
           ) : null

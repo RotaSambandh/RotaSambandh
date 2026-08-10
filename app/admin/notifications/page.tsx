@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { NotificationTray } from "@/components/notifications/notification-tray";
+import { PushDeniedSettingsHint } from "@/components/notifications/notification-permission-sheet";
 import { PageHeader } from "@/components/ui";
 
 export default function AdminNotificationsPage() {
@@ -9,18 +10,19 @@ export default function AdminNotificationsPage() {
 
   if (!user) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <main>
         <PageHeader title="Notifications" description="Sign in to view ops alerts." />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         title="Notifications"
-        description="Review-queue digests, deletion requests, and reports. Push is optional."
+        description="Review-queue digests and deletion requests. Push is optional."
       />
+      <PushDeniedSettingsHint />
       <NotificationTray
         userId={user.uid}
         emptyDescription="Pending queue updates and high-priority ops alerts will appear here."

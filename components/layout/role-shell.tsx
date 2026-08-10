@@ -10,7 +10,8 @@ import { EmployerOnboardingGate } from "@/components/auth/employer-onboarding-ga
 import { Suspense } from "react";
 import { isAdminAuthPath, isEmployerAuthPath } from "@/lib/auth/portal";
 import { usePushRegistration } from "@/lib/push/use-push-registration";
-import { NotificationPermissionBanner } from "@/components/notifications/notification-permission-banner";
+import { NotificationPermissionSheet } from "@/components/notifications/notification-permission-sheet";
+import { cn } from "@/lib/utils";
 
 function PushRegistrationHost() {
   usePushRegistration();
@@ -36,16 +37,20 @@ export function RoleShell({
     return <>{children}</>;
   }
 
+  const contentMax = role === "admin" ? "max-w-6xl" : "max-w-5xl";
+
   const body = (
-    <div className={`flex min-h-screen flex-col bg-[var(--color-surface)] ${dense ? "text-sm" : ""}`}>
+    <div
+      className={`flex min-h-screen flex-col bg-[var(--color-surface)] pt-[env(safe-area-inset-top)] ${dense ? "text-body" : ""}`}
+    >
       <PushRegistrationHost />
-      <NotificationPermissionBanner />
+      <NotificationPermissionSheet role={role} />
       <div className="flex min-h-0 flex-1">
         <DesktopSideNav role={role} />
-        <div className="min-w-0 flex-1 pb-36 md:pb-0">
-          <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">{children}</div>
+        <div className="min-w-0 flex-1 pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className={cn("mx-auto px-4 py-6 sm:px-6 lg:py-8", contentMax)}>{children}</div>
         </div>
-        <div className="fixed inset-x-0 bottom-0 z-30 md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] md:hidden">
           <SidebarAccount role={role} variant="mobile" />
           <MobileNav role={role} />
         </div>

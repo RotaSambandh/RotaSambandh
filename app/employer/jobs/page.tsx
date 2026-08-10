@@ -4,47 +4,46 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveBusiness } from "@/components/employer/active-business-provider";
+import {
+  ScreeningQuestionsEditor,
+  emptyScreeningDrafts,
+  type ScreeningDraft,
+} from "@/components/employer/screening-questions-editor";
 import { createJob } from "@/lib/dal/employer";
 import { listBusinessJobsRtdb } from "@/lib/dal/employer-rtdb";
 import { createChangeRequest, jobLiveSnapshot } from "@/lib/dal/change-requests";
+import { persistJobScreeningDrafts } from "@/lib/dal/questions";
 import { JOB_TYPE_LABELS, WORKPLACE_LABELS } from "@/lib/dal/job-meta";
-import type { Job, JobStatus, JobType, WorkplaceType } from "@/shared/types";
+import type { Job, JobType, WorkplaceType } from "@/shared/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { EmptyState, LoadingBlock, PageHeader, Panel } from "@/components/ui";
-import { assertNever } from "@/lib/utils";
+import { EmptyState, LoadingBlock, PageHeader, Panel, Banner } from "@/components/ui";
+import { ListRow } from "@/components/ui/list-row";
+import { StatusPill } from "@/components/ui/status-pill";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { isNonEmptyHtml, sanitizeCompanyHtml } from "@/lib/sanitize/html";
+import { jobStatusLabel, jobStatusTone } from "@/lib/ui/status-labels";
 
-function jobStatusBadge(status: JobStatus) {
-  switch (status) {
-    case "published":
-      return <Badge variant="success">Published</Badge>;
-    case "pending_review":
-      return <Badge variant="warning">Pending review</Badge>;
-    case "draft":
-      return <Badge variant="neutral">Draft</Badge>;
-    case "closed":
-    case "filled":
-    case "expired":
-      return <Badge variant="neutral">{status.replaceAll("_", " ")}</Badge>;
-    default:
-      return assertNever(status);
-  }
-}
-
-function parseJobForm(fd: FormData) {
+function parseJobForm(
+  fd: FormData,
+  rich: {
+    description: string;
+    responsibilities: string;
+    requirements: string;
+    benefits: string;
+  },
+) {
   const deadlineRaw = String(fd.get("deadline"));
   const deadline = deadlineRaw ? new Date(deadlineRaw).getTime() : undefined;
   return {
     title: String(fd.get("title")),
-    description: String(fd.get("description")),
-    responsibilities: String(fd.get("responsibilities")),
-    requirements: String(fd.get("requirements")),
-    benefits: String(fd.get("benefits")),
+    description: sanitizeCompanyHtml(rich.description),
+    responsibilities: sanitizeCompanyHtml(rich.responsibilities),
+    requirements: sanitizeCompanyHtml(rich.requirements),
+    benefits: sanitizeCompanyHtml(rich.benefits),
     skills: String(fd.get("skills"))
       .split(",")
       .map((s) => s.trim())
@@ -68,6 +67,12 @@ export default function EmployerJobsPage() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitMode, setSubmitMode] = useState<"draft" | "review">("draft");
+  const [description, setDescription] = useState("");
+  const [responsibilities, setResponsibilities] = useState("");
+  const [requirements, setRequirements] = useState("");
+  const [benefits, setBenefits] = useState("");
+  const [screeningDrafts, setScreeningDrafts] =
+    useState<ScreeningDraft[]>(emptyScreeningDrafts);
 
   useEffect(() => {
     if (!user || bizLoading) return;
@@ -87,11 +92,27 @@ export default function EmployerJobsPage() {
   async function onCreateJob(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!user || !business) return;
+    const form = e.currentTarget;
     setSubmitting(true);
     setError(null);
     try {
-      const fields = parseJobForm(new FormData(e.currentTarget));
-      const job = await createJob({ businessId: business.id, createdBy: user.uid, ...fields });
+      const fields = parseJobForm(new FormData(form), {
+        description,
+        responsibilities,
+        requirements,
+        benefits,
+      });
+      if (!isNonEmptyHtml(fields.description)) {
+        setError("A job description is required.");
+        setSubmitting(false);
+        return;
+      }
+      const job = await createJob({
+        businessId: business.id,
+        createdBy: user.uid,
+        ...fields,
+      });
+      await persistJobScreeningDrafts(job.id, business.id, screeningDrafts);
       if (submitMode === "review") {
         await createChangeRequest({
           targetType: "job",
@@ -110,7 +131,12 @@ export default function EmployerJobsPage() {
         setMessage("Draft saved");
       }
       setShowForm(false);
-      e.currentTarget.reset();
+      setDescription("");
+      setResponsibilities("");
+      setRequirements("");
+      setBenefits("");
+      setScreeningDrafts(emptyScreeningDrafts());
+      form.reset();
     } catch (err) {
       setError(
         err instanceof Error
@@ -134,7 +160,7 @@ export default function EmployerJobsPage() {
         title="Jobs"
         description={
           business
-            ? `Opportunities for ${business.name}. Open a job to review applicants.`
+            ? `Opportunities for ${business.name}. Open a job to review applicants and their answers.`
             : "Open a job to review its applicants and move candidates through your pipeline."
         }
         actions={
@@ -160,26 +186,45 @@ export default function EmployerJobsPage() {
         <>
           {showForm && (
             <Panel title="Post opportunity" className="mb-8">
-              <form onSubmit={onCreateJob} className="space-y-4">
+              <form onSubmit={onCreateJob} className="space-y-5">
                 <div>
                   <Label htmlFor="title">Title</Label>
-                  <Input id="title" name="title" required />
+                  <Input
+                    id="title"
+                    name="title"
+                    required
+                    placeholder="e.g. Product analyst"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" name="description" required rows={4} />
+                  <Label>Description</Label>
+                  <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                    What the role is. This is the main text candidates read.
+                  </p>
+                  <div className="mt-1">
+                    <RichTextEditor value={description} onChange={setDescription} />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="responsibilities">Responsibilities</Label>
-                  <Textarea id="responsibilities" name="responsibilities" rows={3} />
+                  <Label>Responsibilities (optional)</Label>
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={responsibilities}
+                      onChange={setResponsibilities}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="requirements">Requirements</Label>
-                  <Textarea id="requirements" name="requirements" rows={3} />
+                  <Label>Requirements (optional)</Label>
+                  <div className="mt-1">
+                    <RichTextEditor value={requirements} onChange={setRequirements} />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="benefits">Benefits</Label>
-                  <Textarea id="benefits" name="benefits" rows={2} />
+                  <Label>Benefits (optional)</Label>
+                  <div className="mt-1">
+                    <RichTextEditor value={benefits} onChange={setBenefits} />
+                  </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -209,27 +254,51 @@ export default function EmployerJobsPage() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input id="location" name="location" />
+                    <Label htmlFor="location">Location (optional)</Label>
+                    <Input
+                      id="location"
+                      name="location"
+                      placeholder="Bengaluru / Remote"
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="salary">Salary display</Label>
+                    <Label htmlFor="salary">Salary display (optional)</Label>
                     <Input id="salary" name="salary" placeholder="₹15-20L" />
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="industry">Industry</Label>
+                    <Label htmlFor="industry">Industry (optional)</Label>
                     <Input id="industry" name="industry" />
                   </div>
                   <div>
-                    <DatePicker id="deadline" name="deadline" label="Application deadline" />
+                    <DatePicker
+                      id="deadline"
+                      name="deadline"
+                      label="Application deadline (optional)"
+                    />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="skills">Skills (comma-separated)</Label>
-                  <Input id="skills" name="skills" placeholder="Product, Analytics" />
+                  <Label htmlFor="skills">Keywords (optional)</Label>
+                  <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                    Free tags for the listing (comma-separated). Not a fixed skill taxonomy.
+                  </p>
+                  <Input
+                    id="skills"
+                    name="skills"
+                    className="mt-1"
+                    placeholder="Analytics, Excel, Customer research"
+                  />
                 </div>
+
+                <div className="border-t border-[var(--color-border)] pt-5">
+                  <ScreeningQuestionsEditor
+                    value={screeningDrafts}
+                    onChange={setScreeningDrafts}
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="submit"
@@ -239,7 +308,11 @@ export default function EmployerJobsPage() {
                   >
                     Save draft
                   </Button>
-                  <Button type="submit" disabled={submitting} onClick={() => setSubmitMode("review")}>
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    onClick={() => setSubmitMode("review")}
+                  >
                     Submit for review
                   </Button>
                 </div>
@@ -258,22 +331,43 @@ export default function EmployerJobsPage() {
               }
             />
           ) : (
-            <ul className="divide-y divide-[var(--color-border)]">
+            <ul className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
               {jobs.map((job) => (
-                <li key={job.id} className="py-4">
-                  <Link
+                <li key={job.id}>
+                  <ListRow
                     href={`/employer/jobs/${job.id}`}
-                    className="flex flex-wrap items-center justify-between gap-3 hover:opacity-90"
-                  >
-                    <div>
-                      <p className="font-semibold text-[var(--color-ink)]">{job.title}</p>
-                      <p className="text-sm text-[var(--color-muted)]">
-                        {job.location ?? "Location flexible"} · {JOB_TYPE_LABELS[job.type]} · View
-                        applicants
-                      </p>
-                    </div>
-                    {jobStatusBadge(job.status)}
-                  </Link>
+                    emphasize={job.status === "pending_review"}
+                    title={job.title || "Untitled role"}
+                    subtitle={[
+                      JOB_TYPE_LABELS[job.type],
+                      WORKPLACE_LABELS[job.workplace],
+                      job.location?.trim() || null,
+                      job.salaryDisplay?.trim() || null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    meta={
+                      job.status === "pending_review" ? (
+                        <span className="text-caption text-[var(--color-warning-ink)]">
+                          Waiting for review
+                        </span>
+                      ) : job.status === "published" ? (
+                        <span className="text-caption text-[var(--color-muted)]">
+                          Manage applicants
+                        </span>
+                      ) : job.status === "draft" ? (
+                        <span className="text-caption text-[var(--color-muted)]">
+                          Finish or submit for review
+                        </span>
+                      ) : null
+                    }
+                    trailing={
+                      <StatusPill
+                        label={jobStatusLabel(job.status)}
+                        tone={jobStatusTone(job.status)}
+                      />
+                    }
+                  />
                 </li>
               ))}
             </ul>
@@ -281,8 +375,8 @@ export default function EmployerJobsPage() {
         </>
       )}
 
-      {message && <p className="mt-4 text-sm text-[var(--color-success)]">{message}</p>}
-      {error && <p className="mt-4 text-sm text-[var(--color-danger)]">{error}</p>}
+      {message && <Banner tone="success" title={message} className="mt-4" />}
+      {error && <Banner tone="danger" title={error} className="mt-4" />}
     </main>
   );
 }

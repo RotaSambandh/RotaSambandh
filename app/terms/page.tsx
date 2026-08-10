@@ -35,7 +35,7 @@ export default function TermsPage() {
           </h2>
           <p>
             You may draft jobs anytime. Public listings require staff verification of your business
-            and review of each job. Verification is performed by platform admins — not by
+            and review of each job. Verification is performed by platform admins, not by
             self-declaration.
           </p>
           <h2 className="font-display text-xl font-semibold text-[var(--color-ink)]">

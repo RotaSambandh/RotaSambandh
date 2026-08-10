@@ -71,23 +71,51 @@ export async function projectEmployerMember(member: {
   userId: string;
   role: string;
   status: string;
+  email?: string;
+  displayName?: string;
   invitedEmail?: string;
 }) {
   const db = getDatabase();
   const path = `employer/${member.businessId}/members/${member.userId}`;
   if (member.status === "active" || member.status === "invited") {
+    const email = member.email || member.invitedEmail || "";
     await db.ref(path).set({
       id: member.id,
       businessId: member.businessId,
       userId: member.userId,
       role: member.role,
       status: member.status,
-      invitedEmail: member.invitedEmail ?? "",
+      email,
+      displayName: member.displayName ?? "",
+      invitedEmail: member.invitedEmail ?? email,
       readModelVersion: READ_MODEL_VERSION,
     });
   } else {
     await db.ref(path).remove();
   }
+}
+
+/** Latest verification feedback mirror for the employer company page. */
+export async function projectEmployerVerification(
+  businessId: string,
+  data: Record<string, unknown> | null,
+) {
+  const ref = getDatabase().ref(`employer/${businessId}/verification`);
+  if (!data) {
+    await ref.remove();
+    return;
+  }
+  await ref.set({
+    id: data.id ?? "",
+    status: data.status ?? "pending",
+    affiliationType: data.affiliationType ?? "",
+    affiliationDetails: data.affiliationDetails ?? "",
+    supportingInfo: data.supportingInfo ?? "",
+    adminNote: data.adminNote ?? "",
+    reviewedAt: data.reviewedAt ?? null,
+    updatedAt: data.updatedAt ?? Date.now(),
+    readModelVersion: READ_MODEL_VERSION,
+  });
 }
 
 export async function projectChangeRequest(cr: {
@@ -96,9 +124,13 @@ export async function projectChangeRequest(cr: {
   targetType: string;
   targetId: string;
   status: string;
+  action?: string;
   submittedBy?: string;
   submittedAt?: number;
   adminNote?: string;
+  title?: string;
+  proposed?: Record<string, unknown>;
+  liveSnapshot?: Record<string, unknown>;
 }) {
   const db = getDatabase();
   const payload = {
@@ -107,9 +139,13 @@ export async function projectChangeRequest(cr: {
     targetType: cr.targetType,
     targetId: cr.targetId,
     status: cr.status,
+    action: cr.action ?? "update",
     submittedBy: cr.submittedBy ?? "",
     submittedAt: cr.submittedAt ?? Date.now(),
     adminNote: cr.adminNote ?? "",
+    title: cr.title ?? "",
+    proposed: cr.proposed ?? {},
+    liveSnapshot: cr.liveSnapshot ?? {},
     readModelVersion: READ_MODEL_VERSION,
   };
   const updates: Record<string, unknown> = {

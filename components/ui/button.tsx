@@ -15,9 +15,9 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "min-h-9 px-3 text-xs",
-  md: "min-h-11 px-4 text-sm",
-  lg: "min-h-12 px-6 text-base",
+  sm: "min-h-9 px-3 text-caption",
+  md: "min-h-11 px-4 text-body",
+  lg: "min-h-12 px-6 text-subtitle",
 };
 
 export const Button = forwardRef<
@@ -28,7 +28,7 @@ export const Button = forwardRef<
     <button
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50",
         variants[variant],
         sizes[size],
         className,

@@ -1,14 +1,21 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageHeader, Banner } from "@/components/ui";
-import { ReportJobButton } from "@/components/jobs/report-job-button";
-import { CompanyAvatar } from "@/components/brand/company-avatar";
+import {
+  PageHeader,
+  Banner,
+  Panel,
+  ReviewWorkbenchFrame,
+} from "@/components/ui";
+import { JobMetaRow } from "@/components/jobs/job-meta-row";
+import { JobPostingBody } from "@/components/jobs/job-posting-body";
+import { CompanySummaryCard } from "@/components/jobs/company-summary-card";
+import { JobCard } from "@/components/jobs/job-card";
+import { ShareJobButton } from "@/components/jobs/share-job-button";
 import { getJobDetail } from "@/lib/dal/jobs";
+import { getBusinessPublic, getBusinessOpenJobs } from "@/lib/dal/businesses";
 import { isJobOpenForApplications } from "@/lib/dal/job-meta";
-import { JOB_TYPE_LABELS, WORKPLACE_LABELS } from "@/lib/dal/job-meta";
 import { DISPLAY_NAME } from "@/shared/constants";
 import { htmlToPlainText } from "@/lib/sanitize/html";
 
@@ -22,7 +29,8 @@ export async function generateMetadata({
   const { jobId } = await params;
   const job = await getJobDetail(jobId);
   if (!job) return { title: "Job not found" };
-  const description = htmlToPlainText(job.description).slice(0, 160) || job.description.slice(0, 160);
+  const description =
+    htmlToPlainText(job.description).slice(0, 160) || job.description.slice(0, 160);
   return {
     title: `${job.title} at ${job.company}`,
     description,
@@ -42,7 +50,14 @@ export default async function JobDetailPage({
   const job = await getJobDetail(jobId);
   if (!job) notFound();
 
+  const [business, openJobs] = await Promise.all([
+    getBusinessPublic(job.businessId),
+    getBusinessOpenJobs(job.businessId),
+  ]);
+
   const open = isJobOpenForApplications(job);
+  const moreJobs = openJobs.filter((j) => j.id !== job.id).slice(0, 5);
+  const about = business?.description || job.companySummary;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -70,66 +85,96 @@ export default async function JobDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <article>
-        <PageHeader
-          breadcrumb={
-            <Link href="/jobs" className="text-sm font-medium uppercase tracking-[0.12em]">
-              {DISPLAY_NAME} · All jobs
+      <PageHeader
+        breadcrumb={
+          <>
+            <Link href="/jobs" className="font-medium text-[var(--color-accent-strong)] hover:underline">
+              Opportunities
             </Link>
-          }
-          title={job.title}
-          description={
-            <span className="inline-flex items-center gap-2">
-              <CompanyAvatar name={job.company} logoUrl={job.companyLogo} size={28} />
-              <Link href={`/companies/${job.businessId}`} className="hover:underline">
-                {job.company}
-              </Link>
-              {job.location ? ` · ${job.location}` : ""}
-            </span>
-          }
-        />
-        <div className="mb-8 flex flex-wrap gap-2">
-          <Badge>{JOB_TYPE_LABELS[job.type]}</Badge>
-          <Badge variant="neutral">{WORKPLACE_LABELS[job.workplace]}</Badge>
-          {job.salary && <Badge variant="neutral">{job.salary}</Badge>}
+            <span aria-hidden>/</span>
+            <span className="truncate">{job.title}</span>
+          </>
+        }
+        title={job.title}
+        description={`${DISPLAY_NAME} · ${job.company}${job.location ? ` · ${job.location}` : ""}`}
+        actions={<ShareJobButton title={job.title} />}
+      />
+
+      <ReviewWorkbenchFrame
+        primary={
+          <>
+            <JobMetaRow
+              type={job.type}
+              workplace={job.workplace}
+              location={job.location}
+              salary={job.salary}
+              postedAt={job.postedAt}
+              deadline={job.deadline}
+              featured={job.featured}
+            />
+            <Panel>
+              <JobPostingBody
+                description={job.description}
+                responsibilities={job.responsibilities}
+                requirements={job.requirements}
+                benefits={job.benefits}
+              />
+            </Panel>
+            {moreJobs.length > 0 ? (
+              <Panel title={`More jobs at ${job.company}`}>
+                <div className="-mx-4 -my-4 sm:-mx-5 sm:-my-5">
+                  {moreJobs.map((item) => (
+                    <JobCard key={item.id} job={item} />
+                  ))}
+                </div>
+              </Panel>
+            ) : null}
+          </>
+        }
+        rail={
+          <>
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
+              {open ? (
+                <Link href={`/candidate/apply/${job.id}`} className="block">
+                  <Button className="w-full">Apply now</Button>
+                </Link>
+              ) : (
+                <Banner tone="warning" title="Applications closed">
+                  The deadline for this opportunity has passed.
+                </Banner>
+              )}
+              <JobMetaRow
+                className="mt-3"
+                type={job.type}
+                workplace={job.workplace}
+                location={job.location}
+                salary={job.salary}
+                postedAt={job.postedAt}
+                deadline={job.deadline}
+              />
+            </div>
+            <CompanySummaryCard
+              businessId={job.businessId}
+              name={business?.name ?? job.company}
+              logoUrl={business?.logoUrl ?? job.companyLogo}
+              industry={business?.industry}
+              companySize={business?.companySize}
+              location={business?.location ?? job.location}
+              about={about}
+              verified={Boolean(business?.verified)}
+            />
+          </>
+        }
+      />
+
+      {/* Mobile sticky apply */}
+      {open ? (
+        <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 border-t border-[var(--color-border)] bg-[var(--color-surface-elevated)]/95 p-3 backdrop-blur md:hidden">
+          <Link href={`/candidate/apply/${job.id}`}>
+            <Button className="w-full">Apply now</Button>
+          </Link>
         </div>
-        <div className="prose mt-8 max-w-none space-y-6 text-[var(--color-ink)]">
-          <section>
-            <h2 className="font-display text-xl font-semibold">About the role</h2>
-            <p className="mt-2 leading-relaxed text-[var(--color-muted)]">{job.description}</p>
-          </section>
-          {job.responsibilities && (
-            <section>
-              <h2 className="font-display text-xl font-semibold">Responsibilities</h2>
-              <p className="mt-2 leading-relaxed text-[var(--color-muted)]">{job.responsibilities}</p>
-            </section>
-          )}
-          {job.requirements && (
-            <section>
-              <h2 className="font-display text-xl font-semibold">Requirements</h2>
-              <p className="mt-2 leading-relaxed text-[var(--color-muted)]">{job.requirements}</p>
-            </section>
-          )}
-          {job.benefits && (
-            <section>
-              <h2 className="font-display text-xl font-semibold">Benefits</h2>
-              <p className="mt-2 leading-relaxed text-[var(--color-muted)]">{job.benefits}</p>
-            </section>
-          )}
-        </div>
-        <div className="mt-10 flex flex-wrap items-center gap-3">
-          {open ? (
-            <Link href={`/candidate/apply/${job.id}`}>
-              <Button className="min-w-44">Apply now</Button>
-            </Link>
-          ) : (
-            <Banner tone="warning" title="Applications closed">
-              The deadline for this opportunity has passed.
-            </Banner>
-          )}
-          <ReportJobButton jobId={job.id} />
-        </div>
-      </article>
+      ) : null}
     </main>
   );
 }

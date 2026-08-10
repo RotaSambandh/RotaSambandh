@@ -16,7 +16,13 @@ import {
   listChangeRequestsForBusiness,
   proposedBusinessSlug,
 } from "@/lib/dal/change-requests";
-import type { Business, BusinessMember, ChangeRequest } from "@/shared/types";
+import { getEmployerVerificationRtdb } from "@/lib/dal/employer-rtdb";
+import type {
+  Business,
+  BusinessMember,
+  BusinessVerification,
+  ChangeRequest,
+} from "@/shared/types";
 import { isCompanyAdmin, normalizeBusinessMemberRole } from "@/shared/rbac";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +53,18 @@ const AFFILIATION_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
-function businessStatusBanner(business: Business, pendingCr: ChangeRequest | null) {
+function humanizeAffiliationType(
+  type: BusinessVerification["affiliationType"] | string,
+): string {
+  const match = AFFILIATION_OPTIONS.find((o) => o.value === type);
+  return match?.label ?? String(type).replaceAll("_", " ");
+}
+
+function businessStatusBanner(
+  business: Business,
+  pendingCr: ChangeRequest | null,
+  verification: BusinessVerification | null,
+) {
   if (business.status === "deletion_pending") {
     return (
       <Banner tone="danger" title="Deletion pending">
@@ -63,38 +80,72 @@ function businessStatusBanner(business: Business, pendingCr: ChangeRequest | nul
       </Banner>
     );
   }
+  if (verification?.status === "info_requested") {
+    return (
+      <Banner tone="warning" title="We need a bit more information">
+        <p className="whitespace-pre-wrap font-medium text-[var(--color-ink)]">
+          {verification.adminNote?.trim() ||
+            "Please add more detail about your Rotary or Rotaract connection."}
+        </p>
+        <p className="mt-2 text-sm">
+          Update your company profile and affiliation below, then resubmit for review.
+        </p>
+      </Banner>
+    );
+  }
+  if (verification?.status === "rejected") {
+    return (
+      <Banner tone="danger" title="Verification was not approved">
+        <p className="whitespace-pre-wrap font-medium text-[var(--color-ink)]">
+          {verification.adminNote?.trim() ||
+            "Update your details and submit verification again."}
+        </p>
+        <p className="mt-2 text-sm">
+          Make the changes below, then resubmit when you are ready.
+        </p>
+      </Banner>
+    );
+  }
   if (pendingCr?.status === "pending_review") {
     return (
-      <Banner tone="warning" title="Pending review">
-        Profile changes are with admin review. Live profile remains unchanged until approved.
+      <Banner tone="warning" title="Profile changes pending review">
+        Your edits are with the review team. The live profile stays unchanged until they are
+        approved.
       </Banner>
     );
   }
   if (pendingCr?.status === "info_requested") {
     return (
-      <Banner tone="warning" title="Changes requested">
-        {pendingCr.adminNote ?? "Admin requested more information. Update and resubmit your changes."}
+      <Banner tone="warning" title="More information needed on your profile edit">
+        <p className="whitespace-pre-wrap font-medium text-[var(--color-ink)]">
+          {pendingCr.adminNote?.trim() ||
+            "Please update your changes and submit them again."}
+        </p>
       </Banner>
     );
   }
   if (pendingCr?.status === "rejected") {
     return (
-      <Banner tone="danger" title="Rejected">
-        {pendingCr.adminNote ?? "Your last change request was rejected. Edit and submit again."}
+      <Banner tone="danger" title="Profile change was not approved">
+        <p className="whitespace-pre-wrap font-medium text-[var(--color-ink)]">
+          {pendingCr.adminNote?.trim() ||
+            "Your last change request was not approved. Edit and submit again."}
+        </p>
       </Banner>
     );
   }
   if (business.status === "verification_pending") {
     return (
-      <Banner tone="warning" title="Pending review">
-        Verification is under admin review. You can post jobs once your business is verified.
+      <Banner tone="warning" title="Verification under review">
+        Your company is with the review team. You can still update company details while you
+        wait. Any follow-up questions will show up here.
       </Banner>
     );
   }
   if (business.status === "verified") {
     return (
-      <Banner tone="success" title="Live">
-        Verified Rotary Ecosystem Business. Profile edits go through admin review before they go live.
+      <Banner tone="success" title="Verified and live">
+        Your company is verified. Profile edits go through review before they appear publicly.
       </Banner>
     );
   }
@@ -126,6 +177,7 @@ export default function EmployerCompanyPage() {
   } = useActiveBusiness();
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
   const [members, setMembers] = useState<BusinessMember[]>([]);
+  const [verification, setVerification] = useState<BusinessVerification | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -171,36 +223,42 @@ export default function EmployerCompanyPage() {
     void (async () => {
       setLoading(true);
       if (business) {
-        const [crs, team] = await Promise.all([
+        const [crs, team, ver] = await Promise.all([
           listChangeRequestsForBusiness(business.id),
           listBusinessMembers(business.id),
+          getEmployerVerificationRtdb(business.id),
         ]);
         setChangeRequests(crs);
         setMembers(team);
+        setVerification(ver);
       } else {
         setChangeRequests([]);
         setMembers([]);
+        setVerification(null);
       }
       setLoading(false);
     })();
   }, [user, business, bizLoading]);
 
   async function refresh(b: Business) {
-    const [crs, team] = await Promise.all([
+    const [crs, team, ver] = await Promise.all([
       listChangeRequestsForBusiness(b.id),
       listBusinessMembers(b.id),
+      getEmployerVerificationRtdb(b.id),
     ]);
     setChangeRequests(crs);
     setMembers(team);
+    setVerification(ver);
   }
 
   async function onInviteManager(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!user || !business || !canManageTeam) return;
+    const form = e.currentTarget;
     setTeamBusy(true);
     setError(null);
     setMessage(null);
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(form);
     try {
       await inviteBusinessManager({
         businessId: business.id,
@@ -211,7 +269,7 @@ export default function EmployerCompanyPage() {
       });
       await refresh(business);
       setMessage("Manager invited. They need an employer account with that email.");
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invite failed");
     } finally {
@@ -237,20 +295,26 @@ export default function EmployerCompanyPage() {
   async function onVerify(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!user || !business) return;
+    setError(null);
     const fd = new FormData(e.currentTarget);
-    await submitVerification({
-      businessId: business.id,
-      submittedBy: user.uid,
-      affiliationType: String(fd.get("affiliationType")) as
-        | "rotarian"
-        | "rotaractor"
-        | "rotary_club"
-        | "other",
-      affiliationDetails: String(fd.get("details")),
-      supportingInfo: String(fd.get("supporting")),
-    });
-    await refreshBusinesses();
-    setMessage("Verification submitted for admin review");
+    try {
+      await submitVerification({
+        businessId: business.id,
+        submittedBy: user.uid,
+        affiliationType: String(fd.get("affiliationType")) as
+          | "rotarian"
+          | "rotaractor"
+          | "rotary_club"
+          | "other",
+        affiliationDetails: String(fd.get("details")),
+        supportingInfo: String(fd.get("supporting")),
+      });
+      await refreshBusinesses();
+      await refresh(business);
+      setMessage("Verification submitted for admin review");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification submit failed");
+    }
   }
 
   async function onDraftUpdate(e: FormEvent<HTMLFormElement>) {
@@ -353,6 +417,14 @@ export default function EmployerCompanyPage() {
     business?.status === "verified" || business?.status === "suspended";
   const deletionPending = isBusinessDeletionPending(business);
   const formLocked = Boolean(pendingBusinessCr) || deletionPending;
+  const showVerificationForm =
+    !!business &&
+    !deletionPending &&
+    (business.status === "draft" || verification?.status === "info_requested");
+  const showSubmittedVerification =
+    !!verification &&
+    verification.status === "pending" &&
+    business?.status === "verification_pending";
 
   if (!business) {
     return (
@@ -384,7 +456,7 @@ export default function EmployerCompanyPage() {
       />
 
       <div className="space-y-6">
-          {businessStatusBanner(business, bannerCr)}
+          {businessStatusBanner(business, bannerCr, verification)}
 
           <div className="flex flex-wrap items-center gap-2">
             <CompanyAvatar name={business.name} logoUrl={business.logoUrl} size={40} />
@@ -654,30 +726,85 @@ export default function EmployerCompanyPage() {
                   </form>
                 </Panel>
               )}
-              {business.status === "draft" && (
-                <Panel title="Submit verification">
+              {showSubmittedVerification ? (
+                <Panel title="Submitted affiliation">
+                  <p className="mb-3 text-sm text-[var(--color-muted)]">
+                    This is what the review team is looking at. Follow-up questions will appear at
+                    the top of this page.
+                  </p>
+                  <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-[var(--color-muted)]">Affiliation</dt>
+                      <dd className="font-medium">
+                        {humanizeAffiliationType(verification.affiliationType)}
+                      </dd>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <dt className="text-[var(--color-muted)]">Details</dt>
+                      <dd className="mt-0.5 whitespace-pre-wrap">
+                        {verification.affiliationDetails || "Not set"}
+                      </dd>
+                    </div>
+                    {verification.supportingInfo ? (
+                      <div className="sm:col-span-2">
+                        <dt className="text-[var(--color-muted)]">Supporting info</dt>
+                        <dd className="mt-0.5 whitespace-pre-wrap">
+                          {verification.supportingInfo}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </Panel>
+              ) : null}
+              {showVerificationForm ? (
+                <Panel
+                  title={
+                    verification?.status === "info_requested" ||
+                    verification?.status === "rejected"
+                      ? "Update and resubmit verification"
+                      : "Submit verification"
+                  }
+                >
                   <form onSubmit={onVerify} className="space-y-4">
                     <div>
                       <MenuSelect
                         id="affiliationType"
                         name="affiliationType"
                         label="Affiliation"
-                        defaultValue="rotaractor"
+                        defaultValue={verification?.affiliationType ?? "rotaractor"}
                         options={AFFILIATION_OPTIONS}
                       />
                     </div>
                     <div>
                       <Label htmlFor="details">Affiliation details</Label>
-                      <Textarea id="details" name="details" required rows={3} />
+                      <Textarea
+                        id="details"
+                        name="details"
+                        required
+                        rows={3}
+                        defaultValue={verification?.affiliationDetails ?? ""}
+                        placeholder="Club name, membership, or how your business connects to Rotary"
+                      />
                     </div>
                     <div>
                       <Label htmlFor="supporting">Supporting information</Label>
-                      <Textarea id="supporting" name="supporting" rows={3} />
+                      <Textarea
+                        id="supporting"
+                        name="supporting"
+                        rows={3}
+                        defaultValue={verification?.supportingInfo ?? ""}
+                        placeholder="Optional: anything that helps confirm your connection"
+                      />
                     </div>
-                    <Button type="submit">Submit for review</Button>
+                    <Button type="submit">
+                      {verification?.status === "info_requested" ||
+                      verification?.status === "rejected"
+                        ? "Resubmit for review"
+                        : "Submit for review"}
+                    </Button>
                   </form>
                 </Panel>
-              )}
+              ) : null}
             </>
           )}
 
@@ -700,13 +827,34 @@ export default function EmployerCompanyPage() {
                   >
                     <div>
                       <p className="font-medium">
-                        {member.displayName || member.email || member.userId}
+                        {member.displayName ||
+                          member.email ||
+                          member.invitedEmail ||
+                          "Team member"}
                       </p>
-                      <p className="text-sm text-[var(--color-muted)]">{member.email}</p>
+                      {(member.email || member.invitedEmail) && (
+                        <p className="text-sm text-[var(--color-muted)]">
+                          {member.email || member.invitedEmail}
+                        </p>
+                      )}
                       <div className="mt-1 flex flex-wrap gap-1">
                         <Badge variant="neutral">{roleLabel}</Badge>
-                        <Badge variant={member.status === "active" ? "success" : "warning"}>
-                          {member.status}
+                        <Badge
+                          variant={
+                            member.status === "active"
+                              ? "success"
+                              : member.status === "invited"
+                                ? "warning"
+                                : "neutral"
+                          }
+                        >
+                          {member.status === "active"
+                            ? "Active"
+                            : member.status === "invited"
+                              ? "Invited"
+                              : member.status === "revoked"
+                                ? "Revoked"
+                                : "Unknown"}
                         </Badge>
                       </div>
                     </div>

@@ -35,7 +35,7 @@ export async function projectJob(job: JobDoc, business?: BusinessDoc | null) {
   await projectEmployerJob(job, business);
 
   if (job.status !== "published") {
-    await removePublicJobProjections(job.id, job.type, job.workplace);
+    await removePublicJobProjections(job.id, job.type, job.workplace, job.businessId);
     return;
   }
 
@@ -74,6 +74,7 @@ export async function projectJob(job: JobDoc, business?: BusinessDoc | null) {
     [`feeds/latest/${job.id}`]: feedItem,
     [`feeds/${job.type}/${job.id}`]: feedItem,
     [`feeds/${job.workplace}/${job.id}`]: feedItem,
+    [`businesses/${job.businessId}/openJobs/${job.id}`]: feedItem,
   };
 
   await db.ref().update(updates);
@@ -83,6 +84,7 @@ async function removePublicJobProjections(
   jobId: string,
   type?: string,
   workplace?: string,
+  businessId?: string,
 ) {
   const db = getDatabase();
   const updates: Record<string, null> = {
@@ -91,6 +93,7 @@ async function removePublicJobProjections(
   };
   if (type) updates[`feeds/${type}/${jobId}`] = null;
   if (workplace) updates[`feeds/${workplace}/${jobId}`] = null;
+  if (businessId) updates[`businesses/${businessId}/openJobs/${jobId}`] = null;
   await db.ref().update(updates);
 }
 
@@ -100,7 +103,7 @@ export async function removeJobProjections(
   workplace?: string,
   businessId?: string,
 ) {
-  await removePublicJobProjections(jobId, type, workplace);
+  await removePublicJobProjections(jobId, type, workplace, businessId);
   if (businessId) await removeEmployerJob(businessId, jobId);
 }
 

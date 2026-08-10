@@ -3,6 +3,7 @@ import type {
   Business,
   BusinessMember,
   BusinessStatus,
+  BusinessVerification,
   ChangeRequest,
   Job,
   JobStatus,
@@ -157,18 +158,77 @@ export async function listEmployerMembersRtdb(
     );
     if (!snap.exists()) return [];
     const val = snap.val() as Record<string, Record<string, unknown>>;
-    return Object.values(val).map((m) => ({
+    const members: BusinessMember[] = Object.values(val).map((m) => ({
       id: String(m.id ?? `${businessId}_${m.userId}`),
       businessId,
       userId: String(m.userId ?? ""),
       role: m.role as BusinessMember["role"],
       status: m.status as BusinessMember["status"],
+      email: m.email
+        ? String(m.email)
+        : m.invitedEmail
+          ? String(m.invitedEmail)
+          : undefined,
+      displayName: m.displayName ? String(m.displayName) : undefined,
       invitedEmail: m.invitedEmail ? String(m.invitedEmail) : undefined,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     }));
+
+    // Backfill name/email from users/{uid} when member projection is sparse.
+    await Promise.all(
+      members.map(async (member) => {
+        if ((member.displayName && member.email) || !member.userId) return;
+        try {
+          const userSnap = await get(
+            ref(getClientRtdb(), `users/${member.userId}`),
+          );
+          if (!userSnap.exists()) return;
+          const u = userSnap.val() as Record<string, unknown>;
+          if (!member.displayName && u.displayName) {
+            member.displayName = String(u.displayName);
+          }
+          if (!member.email && u.email) {
+            member.email = String(u.email);
+          }
+        } catch {
+          /* ignore */
+        }
+      }),
+    );
+
+    return members;
   } catch {
     return [];
+  }
+}
+
+export async function getEmployerVerificationRtdb(
+  businessId: string,
+): Promise<BusinessVerification | null> {
+  if (!isFirebaseConfigured()) return null;
+  try {
+    const snap = await get(
+      ref(getClientRtdb(), `employer/${businessId}/verification`),
+    );
+    if (!snap.exists()) return null;
+    const v = snap.val() as Record<string, unknown>;
+    return {
+      id: String(v.id ?? ""),
+      businessId,
+      submittedBy: "",
+      affiliationType: (v.affiliationType as BusinessVerification["affiliationType"]) ||
+        "other",
+      affiliationDetails: String(v.affiliationDetails ?? ""),
+      supportingInfo: v.supportingInfo ? String(v.supportingInfo) : undefined,
+      status: (v.status as BusinessVerification["status"]) || "pending",
+      adminNote: v.adminNote ? String(v.adminNote) : undefined,
+      reviewedAt: v.reviewedAt ? Number(v.reviewedAt) : undefined,
+      createdAt: Number(v.updatedAt ?? 0),
+      updatedAt: Number(v.updatedAt ?? 0),
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -194,6 +254,7 @@ export async function listChangeRequestsForBusinessRtdb(
             proposed: {},
             status: c.status as ChangeRequest["status"],
             submittedBy: String(c.submittedBy ?? ""),
+            title: c.title ? String(c.title) : undefined,
             adminNote: c.adminNote ? String(c.adminNote) : undefined,
             createdAt: Number(c.submittedAt ?? 0),
             updatedAt: Number(c.submittedAt ?? 0),

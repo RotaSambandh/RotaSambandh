@@ -6,13 +6,13 @@ import type {
   Job,
   JobStatus,
   Question,
-  Report,
   Skill,
   UserDoc,
   UserRole,
 } from "@/shared/types";
 import { getClientRtdb, isFirebaseConfigured } from "@/lib/firebase/client";
 import type { ChangeRequest } from "@/shared/types";
+import { getEmployerMetaRtdb } from "@/lib/dal/employer-rtdb";
 
 function jobStub(partial: Partial<Job> & Pick<Job, "id" | "businessId" | "title" | "status">): Job {
   return {
@@ -44,20 +44,83 @@ async function listQueue<T>(
   }
 }
 
-export async function listPendingVerificationsRtdb(): Promise<
-  BusinessVerification[]
-> {
-  const all = await listQueue("admin/queues/verifications", (id, v) => ({
+function mapVerificationQueueRow(
+  id: string,
+  v: Record<string, unknown>,
+): BusinessVerification {
+  return {
     id,
     businessId: String(v.businessId ?? ""),
     submittedBy: String(v.submittedBy ?? ""),
     affiliationType: v.affiliationType as BusinessVerification["affiliationType"],
-    affiliationDetails: "",
+    affiliationDetails: String(v.affiliationDetails ?? ""),
+    supportingInfo: v.supportingInfo ? String(v.supportingInfo) : undefined,
     status: v.status as BusinessVerification["status"],
+    adminNote: v.adminNote ? String(v.adminNote) : undefined,
+    reviewedAt: v.reviewedAt ? Number(v.reviewedAt) : undefined,
+    businessName: v.businessName ? String(v.businessName) : undefined,
+    rotaryContactName: v.rotaryContactName
+      ? String(v.rotaryContactName)
+      : undefined,
+    rotaryContactClub: v.rotaryContactClub
+      ? String(v.rotaryContactClub)
+      : undefined,
+    rotaryContactEmail: v.rotaryContactEmail
+      ? String(v.rotaryContactEmail)
+      : undefined,
+    rotaryContactPhone: v.rotaryContactPhone
+      ? String(v.rotaryContactPhone)
+      : undefined,
     createdAt: Number(v.updatedAt ?? 0),
     updatedAt: Number(v.updatedAt ?? 0),
-  }));
-  return all.filter((v) => v.status === "pending");
+  };
+}
+
+async function hydrateVerification(
+  v: BusinessVerification,
+): Promise<BusinessVerification> {
+  if (
+    v.businessName &&
+    v.affiliationDetails &&
+    (v.rotaryContactName || v.rotaryContactEmail)
+  ) {
+    return v;
+  }
+  try {
+    const meta = await getEmployerMetaRtdb(v.businessId);
+    if (!meta) return v;
+    return {
+      ...v,
+      businessName: v.businessName || meta.name || undefined,
+      rotaryContactName: v.rotaryContactName || meta.rotaryContactName,
+      rotaryContactClub: v.rotaryContactClub || meta.rotaryContactClub,
+      rotaryContactEmail: v.rotaryContactEmail || meta.rotaryContactEmail,
+      rotaryContactPhone: v.rotaryContactPhone || meta.rotaryContactPhone,
+    };
+  } catch {
+    return v;
+  }
+}
+
+export async function listPendingVerificationsRtdb(): Promise<
+  BusinessVerification[]
+> {
+  const all = await listQueue("admin/queues/verifications", mapVerificationQueueRow);
+  const pending = all.filter((v) => v.status === "pending");
+  return Promise.all(pending.map(hydrateVerification));
+}
+
+/** Latest verification packet for a business (any status), for admin detail. */
+export async function getLatestVerificationForBusinessRtdb(
+  businessId: string,
+): Promise<BusinessVerification | null> {
+  const all = await listQueue("admin/queues/verifications", mapVerificationQueueRow);
+  const forBiz = all
+    .filter((v) => v.businessId === businessId)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+  const latest = forBiz[0];
+  if (!latest) return null;
+  return hydrateVerification(latest);
 }
 
 export async function listPendingJobsRtdb(): Promise<Job[]> {
@@ -103,29 +166,24 @@ export async function listAdminQueueBusinessesRtdb(): Promise<Business[]> {
   }));
 }
 
-export async function listReportsRtdb(): Promise<Report[]> {
-  return listQueue("admin/queues/reports", (id, r) => ({
-    id,
-    targetType: r.targetType as Report["targetType"],
-    targetId: String(r.targetId ?? ""),
-    reason: r.reason as Report["reason"],
-    status: (r.status as Report["status"]) ?? "open",
-    reporterId: "",
-    createdAt: Number(r.createdAt ?? 0),
-    updatedAt: Number(r.createdAt ?? 0),
-  }));
-}
-
 export async function listPendingChangeRequestsRtdb(): Promise<ChangeRequest[]> {
   const all = await listQueue("admin/queues/changeRequests", (id, c) => ({
     id,
     businessId: String(c.businessId ?? ""),
     targetType: c.targetType as ChangeRequest["targetType"],
     targetId: String(c.targetId ?? ""),
-    action: "update" as ChangeRequest["action"],
-    proposed: {},
+    action: (c.action as ChangeRequest["action"]) || "update",
+    proposed:
+      c.proposed && typeof c.proposed === "object"
+        ? (c.proposed as Record<string, unknown>)
+        : {},
+    liveSnapshot:
+      c.liveSnapshot && typeof c.liveSnapshot === "object"
+        ? (c.liveSnapshot as Record<string, unknown>)
+        : undefined,
     status: c.status as ChangeRequest["status"],
     submittedBy: String(c.submittedBy ?? ""),
+    title: c.title ? String(c.title) : undefined,
     adminNote: c.adminNote ? String(c.adminNote) : undefined,
     createdAt: Number(c.submittedAt ?? 0),
     updatedAt: Number(c.submittedAt ?? 0),

@@ -3,199 +3,297 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getAdminBusiness } from "@/lib/dal/admin";
+import { callPrivilegedAdmin } from "@/lib/admin/privileged-client";
+import { CompanyVerificationReview } from "@/components/admin/company-verification-review";
+import { getAdminBusiness, getLatestVerificationForBusiness } from "@/lib/dal/admin";
 import {
   listBusinessJobsRtdb,
   listEmployerMembersRtdb,
 } from "@/lib/dal/employer-rtdb";
 import { JOB_TYPE_LABELS } from "@/lib/dal/job-meta";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState, LoadingBlock, PageHeader, Panel } from "@/components/ui";
-import { RichTextView } from "@/components/editor/rich-text-view";
+import { usePlatformAccess } from "@/hooks/use-platform-access";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { ListRow } from "@/components/ui/list-row";
+import { StatusPill } from "@/components/ui/status-pill";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Banner,
+  EmptyState,
+  LoadingBlock,
+  PageHeader,
+  Panel,
+} from "@/components/ui";
+import {
+  businessStatusLabel,
+  businessStatusTone,
+  jobStatusLabel,
+  jobStatusTone,
+} from "@/lib/ui/status-labels";
 import { normalizeBusinessMemberRole } from "@/shared/rbac";
-import type { Business, BusinessMember, BusinessStatus, Job } from "@/shared/types";
+import type {
+  Business,
+  BusinessMember,
+  BusinessVerification,
+  Job,
+} from "@/shared/types";
 
-function statusBadge(status: BusinessStatus) {
-  switch (status) {
-    case "verified":
-      return <Badge variant="success">Verified</Badge>;
-    case "verification_pending":
-      return <Badge variant="warning">Verification pending</Badge>;
-    case "deletion_pending":
-      return <Badge variant="danger">Deletion pending</Badge>;
-    case "draft":
-      return <Badge variant="neutral">Draft</Badge>;
-    case "suspended":
-      return <Badge variant="danger">Suspended</Badge>;
-    default: {
-      const _exhaustive: never = status;
-      return _exhaustive;
-    }
-  }
-}
+type ReviewDecision = "approved" | "rejected" | "info_requested";
 
 export default function AdminBusinessDetailPage() {
   const params = useParams<{ businessId: string }>();
   const businessId = params.businessId;
+  const { canWrite } = usePlatformAccess();
   const [business, setBusiness] = useState<Business | null>(null);
   const [members, setMembers] = useState<BusinessMember[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [verification, setVerification] = useState<BusinessVerification | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<ReviewDecision | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function reload() {
+    setLoading(true);
+    const [biz, team, roles, latestVerification] = await Promise.all([
+      getAdminBusiness(businessId),
+      listEmployerMembersRtdb(businessId),
+      listBusinessJobsRtdb(businessId),
+      getLatestVerificationForBusiness(businessId),
+    ]);
+    setBusiness(biz);
+    setMembers(team);
+    setJobs(roles);
+    setVerification(latestVerification);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setLoading(true);
-      const [biz, team, roles] = await Promise.all([
-        getAdminBusiness(businessId),
-        listEmployerMembersRtdb(businessId),
-        listBusinessJobsRtdb(businessId),
-      ]);
-      if (!cancelled) {
-        setBusiness(biz);
-        setMembers(team);
-        setJobs(roles);
-        setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    void reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId]);
+
+  async function decide(decision: ReviewDecision) {
+    if (!verification) return;
+    if (decision !== "approved" && !note.trim()) {
+      setError("Admin note is required to reject or request info.");
+      return;
+    }
+    setError(null);
+    setMessage(null);
+    setBusy(decision);
+    try {
+      await callPrivilegedAdmin({
+        action: "review_verification",
+        payload: {
+          verificationId: verification.id,
+          businessId,
+          decision,
+          adminNote: note.trim() || undefined,
+        },
+      });
+      setMessage(
+        decision === "approved"
+          ? "Company verified."
+          : decision === "rejected"
+            ? "Verification rejected."
+            : "Requested more information from the employer.",
+      );
+      try {
+        await reload();
+      } catch {
+        // Mutation already succeeded; a refresh glitch should not look like a failed review.
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Review failed");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   if (loading) return <LoadingBlock label="Loading business…" />;
   if (!business) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <main>
         <EmptyState title="Business not found" description="This company may have been removed." />
         <Link
           href="/admin/businesses"
           className="mt-4 inline-block text-sm text-[var(--color-accent-strong)]"
         >
-          ← Back to businesses
+          Back to businesses
         </Link>
       </main>
     );
   }
 
+  const owner =
+    members.find(
+      (m) => normalizeBusinessMemberRole(m.role) === "company_admin",
+    ) ?? members.find((m) => m.userId === business.ownerId);
+
+  const canDecideVerification =
+    !!verification && verification.status === "pending" && canWrite;
+  const showVerificationPanel =
+    !!verification || business.status === "verification_pending";
+
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main>
       <Link
         href="/admin/businesses"
         className="text-sm text-[var(--color-accent-strong)] hover:underline"
       >
-        ← All businesses
+        All businesses
       </Link>
       <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
         <PageHeader
-          title={business.name}
-          description={business.industry || business.location || "Employer profile"}
+          title={business.name || "Company"}
+          description={
+            [business.industry, business.location].filter(Boolean).join(" · ") ||
+            "Employer profile"
+          }
         />
-        {statusBadge(business.status)}
+        <StatusPill
+          label={businessStatusLabel(business.status)}
+          tone={businessStatusTone(business.status)}
+        />
       </div>
 
-      <Panel className="mt-6 space-y-4">
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-[var(--color-muted)]">Website</dt>
-            <dd>
-              {business.website ? (
-                <a
-                  href={business.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[var(--color-accent-strong)] hover:underline"
+      {showVerificationPanel ? (
+        <Panel
+          className="mt-6 space-y-4"
+          title="Verification review"
+          tone={
+            verification?.status === "pending" || business.status === "verification_pending"
+              ? "attention"
+              : "default"
+          }
+        >
+          <CompanyVerificationReview
+            businessId={businessId}
+            verification={verification}
+            linkToDetail={false}
+            showId={false}
+            hideIdentityHeader
+          />
+          {canDecideVerification ? (
+            <>
+              <div>
+                <Label htmlFor="detail-ver-note">Admin note</Label>
+                <Textarea
+                  id="detail-ver-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Required when rejecting or asking for more info"
+                  rows={3}
+                  className="mt-1"
+                />
+              </div>
+              {error ? (
+                <Banner tone="danger" title="Could not submit review">
+                  {error}
+                </Banner>
+              ) : null}
+              {message ? (
+                <Banner tone="success" title="Updated">
+                  {message}
+                </Banner>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={!!busy} onClick={() => void decide("approved")}>
+                  {busy === "approved" ? "Approving…" : "Approve"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={!!busy}
+                  onClick={() => void decide("info_requested")}
                 >
-                  {business.website}
-                </a>
-              ) : (
-                "—"
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Company size</dt>
-            <dd>{business.companySize || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Location</dt>
-            <dd>{business.location || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Owner uid</dt>
-            <dd className="font-mono text-xs">{business.ownerId}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Rotary / Rotaract contact</dt>
-            <dd>{business.rotaryContactName || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Contact club</dt>
-            <dd>{business.rotaryContactClub || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Contact email</dt>
-            <dd>{business.rotaryContactEmail || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--color-muted)]">Contact phone</dt>
-            <dd>{business.rotaryContactPhone || "—"}</dd>
-          </div>
-        </dl>
-        {business.description ? (
-          <div className="text-sm text-[var(--color-muted)]">
-            <RichTextView html={business.description} />
-          </div>
-        ) : null}
-      </Panel>
+                  {busy === "info_requested" ? "Sending…" : "Request info"}
+                </Button>
+                <Button
+                  variant="danger"
+                  disabled={!!busy}
+                  onClick={() => void decide("rejected")}
+                >
+                  {busy === "rejected" ? "Rejecting…" : "Reject"}
+                </Button>
+              </div>
+            </>
+          ) : verification?.status === "pending" ? (
+            <Banner tone="info" title="Coordinator view">
+              Admins approve verification from this page or the businesses queue.
+            </Banner>
+          ) : verification ? (
+            <Banner
+              tone={
+                verification.status === "approved"
+                  ? "success"
+                  : verification.status === "rejected"
+                    ? "danger"
+                    : "warning"
+              }
+              title={
+                verification.status === "approved"
+                  ? "Already approved"
+                  : verification.status === "rejected"
+                    ? "Rejected. Waiting for the employer to resubmit"
+                    : "More info requested. Waiting on the employer"
+              }
+            >
+              {verification.adminNote
+                ? verification.adminNote
+                : "The employer can see this status and any note on their Company page."}
+            </Banner>
+          ) : (
+            <Banner tone="warning" title="Verification details missing">
+              This company is marked as pending verification, but the review packet did not load.
+              Ask the employer to resubmit, or refresh after a few minutes.
+            </Banner>
+          )}
+        </Panel>
+      ) : (
+        <Panel className="mt-6 space-y-4" title="Company profile">
+          <CompanyVerificationReview
+            businessId={businessId}
+            linkToDetail={false}
+            showId={false}
+            hideIdentityHeader
+          />
+          {owner ? (
+            <p className="text-sm text-[var(--color-muted)]">
+              Primary admin:{" "}
+              <span className="font-medium text-[var(--color-ink)]">
+                {owner.displayName || owner.email || "Team member"}
+              </span>
+              {owner.email ? ` · ${owner.email}` : ""}
+            </p>
+          ) : null}
+        </Panel>
+      )}
 
       <section className="mt-10">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-          Company team
-        </h2>
-        {members.length === 0 ? (
-          <EmptyState title="No team members" description="Managers appear here after invite or signup." />
-        ) : (
-          <ul className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)] bg-white">
-            {members.map((member) => (
-              <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                <div>
-                  <p className="font-medium">{member.displayName || member.email || member.userId}</p>
-                  {member.email ? (
-                    <p className="text-sm text-[var(--color-muted)]">{member.email}</p>
-                  ) : null}
-                </div>
-                <Badge variant="neutral">
-                  {normalizeBusinessMemberRole(member.role) === "company_admin"
-                    ? "Company admin"
-                    : "Manager"}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="mt-10">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+        <h2 className="mb-3 text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
           Jobs from this company
         </h2>
         {jobs.length === 0 ? (
           <EmptyState title="No jobs" description="Roles posted by this employer will list here." />
         ) : (
-          <ul className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)] bg-white">
+          <ul className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
             {jobs.map((job) => (
               <li key={job.id}>
-                <Link
+                <ListRow
                   href={`/admin/jobs/${job.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[var(--color-surface)]"
-                >
-                  <div>
-                    <p className="font-medium">{job.title}</p>
-                    <p className="text-sm text-[var(--color-muted)]">{JOB_TYPE_LABELS[job.type]}</p>
-                  </div>
-                  <Badge variant="neutral">{job.status.replaceAll("_", " ")}</Badge>
-                </Link>
+                  title={job.title || "Untitled role"}
+                  subtitle={JOB_TYPE_LABELS[job.type]}
+                  trailing={
+                    <StatusPill
+                      label={jobStatusLabel(job.status)}
+                      tone={jobStatusTone(job.status)}
+                    />
+                  }
+                />
               </li>
             ))}
           </ul>

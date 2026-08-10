@@ -19,7 +19,7 @@ export function MenuSelect({
   disabled = false,
   placeholder = "Select",
   searchable = false,
-  searchPlaceholder = "Search…",
+  searchPlaceholder = "Search...",
   emptyMessage,
 }: {
   name?: string;

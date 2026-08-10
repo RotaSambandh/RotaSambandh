@@ -3,6 +3,8 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getCandidateDashboard } from "@/lib/dal/dashboards";
 import { getJobFeed } from "@/lib/dal/jobs";
 import { JobCard } from "@/components/jobs/job-card";
+import { Banner, EmptyState, PageHeader, Panel } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -41,53 +43,81 @@ export default async function CandidateHomePage() {
     // Keep empty home if session/dashboard reads fail — never 500 the shell.
   }
 
+  const recent = jobs.slice(0, 5);
+
   return (
     <main>
-      <h1 className="font-display text-3xl font-semibold">Home</h1>
-      <p className="mt-2 text-[var(--color-muted)]">Your career activity at a glance.</p>
-      <dl className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <PageHeader
+        title="Home"
+        description="Your career activity at a glance."
+        actions={
+          <Link href="/jobs">
+            <Button variant="secondary" size="sm">
+              Browse jobs
+            </Button>
+          </Link>
+        }
+      />
+
+      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {[
           ["Applications", dashboard.applications],
           ["Under review", dashboard.underReview],
           ["Interviews", dashboard.interviews],
         ].map(([label, value]) => (
           <div key={String(label)} className="border-b border-[var(--color-border)] pb-3">
-            <dt className="text-xs uppercase tracking-wide text-[var(--color-muted)]">{label}</dt>
-            <dd className="mt-1 font-display text-3xl font-semibold">{value}</dd>
+            <dt className="text-overline text-[var(--color-muted)]">{label}</dt>
+            <dd className="mt-1 text-title tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
-      <div className="mt-4 text-sm text-[var(--color-muted)]">
-        {dashboard.profileCompletion >= 100 ? (
-          <>
-            Profile completion: {dashboard.profileCompletion}% ·{" "}
-            <Link
-              href="/candidate/profile"
-              className="font-semibold text-[var(--color-accent-strong)]"
-            >
-              View profile
+
+      {dashboard.profileCompletion < 100 ? (
+        <Banner
+          tone="info"
+          title={`Profile ${dashboard.profileCompletion}% complete`}
+          className="mt-6"
+          action={
+            <Link href="/candidate/profile">
+              <Button size="sm" variant="secondary">
+                Complete profile
+              </Button>
             </Link>
-          </>
+          }
+        >
+          A fuller profile helps employers recognize you.
+        </Banner>
+      ) : (
+        <p className="mt-6 text-caption text-[var(--color-muted)]">
+          Profile complete ·{" "}
+          <Link
+            href="/candidate/profile"
+            className="font-semibold text-[var(--color-accent-strong)] hover:underline"
+          >
+            View profile
+          </Link>
+        </p>
+      )}
+
+      <Panel title="Latest opportunities" className="mt-8">
+        {recent.length === 0 ? (
+          <EmptyState
+            title="No open opportunities yet"
+            description="Published roles from verified companies will appear here."
+            action={
+              <Link href="/jobs">
+                <Button variant="secondary">Browse jobs</Button>
+              </Link>
+            }
+          />
         ) : (
-          <>
-            Profile completion: {dashboard.profileCompletion}% ·{" "}
-            <Link
-              href="/candidate/profile"
-              className="font-semibold text-[var(--color-accent-strong)]"
-            >
-              Complete profile
-            </Link>
-          </>
+          <div className="-mx-4 -my-4 sm:-mx-5 sm:-my-5">
+            {recent.map((job) => (
+              <JobCard key={job.id} job={job} />
+            ))}
+          </div>
         )}
-      </div>
-      <section className="mt-10">
-        <h2 className="font-display text-2xl font-semibold">Latest opportunities</h2>
-        <div className="mt-4">
-          {jobs.slice(0, 5).map((job) => (
-            <JobCard key={job.id} job={job} />
-          ))}
-        </div>
-      </section>
+      </Panel>
     </main>
   );
 }

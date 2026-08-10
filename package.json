@@ -12,19 +12,11 @@
     "test:rules": "firebase emulators:exec --only firestore \"FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 tsx --test tests/firestore-rules.test.ts\"",
     "seed:super-admin": "node --env-file=.env.local scripts/seed-super-admin.mjs",
     "functions:install": "npm install --prefix functions",
-    "functions:build": "npm run build --prefix functions",
-    "cap:sync": "npx cap sync android",
-    "cap:open": "npx cap open android"
+    "functions:build": "npm run build --prefix functions"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",
     "@aws-sdk/s3-request-presigner": "^3.1106.0",
-    "@capacitor-firebase/authentication": "^8.3.0",
-    "@capacitor/app": "^8.1.1",
-    "@capacitor/core": "^8.5.0",
-    "@capacitor/push-notifications": "^8.1.2",
-    "@capacitor/splash-screen": "^8.0.2",
-    "@capacitor/status-bar": "^8.0.3",
     "@tiptap/extension-link": "^3.29.2",
     "@tiptap/react": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
@@ -40,8 +32,6 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.5.0",
-    "@capacitor/cli": "^8.5.0",
     "@firebase/rules-unit-testing": "^5.0.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

@@ -11,7 +11,6 @@ import { slugify } from "@/lib/utils";
 import {
   mergeChangeRequestAdmin,
   moderateJobAdmin,
-  resolveReportAdmin,
   reviewVerificationAdmin,
   setUserSuspendedAdmin,
 } from "@/lib/dal/admin-server";
@@ -98,13 +97,6 @@ export async function POST(request: Request) {
           userId: String(body.payload.userId ?? ""),
           adminId,
           suspended: body.payload.suspended === "true",
-        });
-        break;
-      case "resolve_report":
-        await resolveReportAdmin({
-          reportId: String(body.payload.reportId ?? ""),
-          adminId,
-          status: body.payload.status as "resolved" | "dismissed",
         });
         break;
       case "restore_business_deletion":

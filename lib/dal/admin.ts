@@ -4,9 +4,6 @@ import type {
   Business,
   BusinessVerification,
   Job,
-  Report,
-  ReportReason,
-  ReportStatus,
   UserDoc,
 } from "@/shared/types";
 import { getClientFirestore, isFirebaseConfigured } from "@/lib/firebase/client";
@@ -15,11 +12,11 @@ import {
   listAdminQueueBusinessesRtdb,
   listAdminQueueJobsRtdb,
   listPendingJobsRtdb,
+  getLatestVerificationForBusinessRtdb,
   listPendingVerificationsRtdb,
-  listReportsRtdb,
   listStaffUsersRtdb,
 } from "@/lib/dal/admin-rtdb";
-import { getEmployerMetaRtdb } from "@/lib/dal/employer-rtdb";
+import { getEmployerJobRtdb, getEmployerMetaRtdb } from "@/lib/dal/employer-rtdb";
 import { get, ref } from "firebase/database";
 import { getClientRtdb } from "@/lib/firebase/client";
 
@@ -32,6 +29,12 @@ async function logAdminAction(input: Omit<AdminAction, "id" | "createdAt" | "upd
 
 export async function listPendingVerifications(): Promise<BusinessVerification[]> {
   return listPendingVerificationsRtdb();
+}
+
+export async function getLatestVerificationForBusiness(
+  businessId: string,
+): Promise<BusinessVerification | null> {
+  return getLatestVerificationForBusinessRtdb(businessId);
 }
 
 /** @deprecated Use reviewVerificationAdmin from admin-server via privileged API. */
@@ -59,25 +62,37 @@ export async function listAllJobs(pageSize = 100): Promise<Job[]> {
 export async function getAdminJob(jobId: string): Promise<Job | null> {
   if (!isFirebaseConfigured()) return null;
   try {
-    const snap = await get(
-      ref(getClientRtdb(), `admin/queues/jobs/${jobId}`),
-    );
-    if (!snap.exists()) return null;
-    const j = snap.val() as Record<string, unknown>;
+    const queueSnap = await get(ref(getClientRtdb(), `admin/queues/jobs/${jobId}`));
+    if (!queueSnap.exists()) return null;
+    const j = queueSnap.val() as Record<string, unknown>;
+    const businessId = String(j.businessId ?? "");
+    let hydrated: Job | null = null;
+    if (businessId) {
+      hydrated = await getEmployerJobRtdb(businessId, jobId);
+    }
     return {
       id: jobId,
-      businessId: String(j.businessId ?? ""),
-      title: String(j.title ?? ""),
-      description: "",
-      skills: [],
+      businessId,
+      title: hydrated?.title || String(j.title ?? ""),
+      description: hydrated?.description ?? "",
+      responsibilities: hydrated?.responsibilities,
+      requirements: hydrated?.requirements,
+      benefits: hydrated?.benefits,
+      skills: hydrated?.skills ?? [],
       categoryIds: [],
       createdBy: "",
-      status: j.status as Job["status"],
-      type: (j.type as Job["type"]) ?? "full_time",
-      workplace: (j.workplace as Job["workplace"]) ?? "remote",
+      status: (hydrated?.status || j.status) as Job["status"],
+      type: hydrated?.type || (j.type as Job["type"]) || "full_time",
+      workplace:
+        hydrated?.workplace || (j.workplace as Job["workplace"]) || "remote",
+      location: hydrated?.location,
+      salaryDisplay: hydrated?.salaryDisplay,
+      industry: hydrated?.industry,
+      deadline: hydrated?.deadline,
+      postedAt: hydrated?.postedAt,
       slug: "",
-      createdAt: Number(j.updatedAt ?? 0),
-      updatedAt: Number(j.updatedAt ?? 0),
+      createdAt: Number(j.updatedAt ?? hydrated?.createdAt ?? 0),
+      updatedAt: Number(j.updatedAt ?? hydrated?.updatedAt ?? 0),
     };
   } catch {
     return null;
@@ -86,7 +101,21 @@ export async function getAdminJob(jobId: string): Promise<Job | null> {
 
 export async function listAllBusinesses(pageSize = 100): Promise<Business[]> {
   const list = await listAdminQueueBusinessesRtdb();
-  return list.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, pageSize);
+  const hydrated = await Promise.all(
+    list.map(async (stub) => {
+      const meta = await getEmployerMetaRtdb(stub.id);
+      if (!meta) return stub;
+      return {
+        ...stub,
+        ...meta,
+        // Prefer live meta status/name; keep stub timestamps if meta lacks them.
+        status: meta.status ?? stub.status,
+        name: meta.name || stub.name,
+        updatedAt: Math.max(meta.updatedAt ?? 0, stub.updatedAt ?? 0),
+      };
+    }),
+  );
+  return hydrated.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, pageSize);
 }
 
 export async function getAdminBusiness(businessId: string): Promise<Business | null> {
@@ -125,46 +154,6 @@ export async function suspendBusiness(input: { businessId: string; adminId: stri
     targetType: "business",
     targetId: input.businessId,
   });
-}
-
-export async function createReport(input: {
-  reporterId: string;
-  reason: ReportReason;
-  targetType: Report["targetType"];
-  targetId: string;
-  details?: string;
-}): Promise<Report> {
-  const ts = now();
-  const id = isFirebaseConfigured()
-    ? doc(collection(getClientFirestore(), "reports")).id
-    : `rep_${ts}`;
-  const report: Report = {
-    id,
-    ...input,
-    status: "open",
-    createdAt: ts,
-    updatedAt: ts,
-  };
-  if (!isFirebaseConfigured()) return report;
-  await setDoc(
-    doc(getClientFirestore(), "reports", id),
-    omitUndefined(report as unknown as Record<string, unknown>),
-  );
-  return report;
-}
-
-export async function listOpenReports(): Promise<Report[]> {
-  const reports = await listReportsRtdb();
-  return reports.filter((r) => r.status === "open");
-}
-
-/** @deprecated Use resolveReportAdmin from admin-server via privileged API. */
-export async function resolveReport(_input: {
-  reportId: string;
-  adminId: string;
-  status: Extract<ReportStatus, "resolved" | "dismissed">;
-}) {
-  throw new Error("Use privileged Admin SDK path (resolveReportAdmin)");
 }
 
 export async function listBusinessesByStatus(

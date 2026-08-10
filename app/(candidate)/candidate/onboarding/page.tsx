@@ -167,7 +167,7 @@ function CandidateOnboardingForm() {
             : step === "professional"
               ? "Employers see this when you apply."
               : step === "contact"
-                ? "Phone is saved on each application for that employer. LinkedIn and portfolio links are optional — recommended, not required."
+                ? "Phone is saved on each application for that employer. LinkedIn and portfolio links are optional (recommended, not required)."
                 : "You can refine details anytime from Profile. Resume upload happens when you apply to a role."
       }
       steps={[...STEPS]}
@@ -269,7 +269,7 @@ function CandidateOnboardingForm() {
               placeholder="https://…"
             />
             <p className="mt-1 text-xs text-[var(--color-muted)]">
-              Share work samples via a link — do not upload large portfolios as your resume.
+              Share work samples via a link. Do not upload large portfolios as your resume.
             </p>
           </div>
         </div>

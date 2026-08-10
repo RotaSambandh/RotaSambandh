@@ -13,11 +13,13 @@ export function RichTextEditor({
   onChange,
   placeholder,
   className,
+  disabled = false,
 }: {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   const editor = useEditor({
     extensions: [
@@ -27,6 +29,8 @@ export function RichTextEditor({
         code: false,
         blockquote: false,
         horizontalRule: false,
+        // StarterKit ships Link; we configure our own below.
+        link: false,
       }),
       Link.configure({
         openOnClick: false,
@@ -34,6 +38,7 @@ export function RichTextEditor({
       }),
     ],
     content: value || "",
+    editable: !disabled,
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -56,12 +61,17 @@ export function RichTextEditor({
     }
   }, [value, editor]);
 
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!disabled);
+  }, [disabled, editor]);
+
   if (!editor) return null;
 
   function setLink() {
     if (!editor) return;
     const prev = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL (https://…)", prev ?? "https://");
+    const url = window.prompt("Link URL (https://...)", prev ?? "https://");
     if (url === null) return;
     if (!url.trim()) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -76,7 +86,13 @@ export function RichTextEditor({
   }
 
   return (
-    <div className={cn("rounded-lg border border-[var(--color-border)] bg-white shadow-sm", className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-[var(--color-border)] bg-white shadow-sm",
+        disabled && "pointer-events-none opacity-60",
+        className,
+      )}
+    >
       <div className="flex flex-wrap gap-1 border-b border-[var(--color-border)] px-2 py-1.5">
         <ToolbarButton
           active={editor.isActive("bold")}

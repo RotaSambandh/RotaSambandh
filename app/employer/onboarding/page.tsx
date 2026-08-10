@@ -146,6 +146,8 @@ function EmployerOnboardingForm() {
         } else {
           const created = await createBusiness({
             ownerId: user.uid,
+            ownerEmail: user.email ?? undefined,
+            ownerDisplayName: user.displayName ?? user.email ?? undefined,
             name: name.trim(),
             industry: industry.trim(),
             location: location.trim(),
@@ -255,7 +257,7 @@ function EmployerOnboardingForm() {
         step === "basics"
           ? "Tell candidates who you are. You can add another company later from Company settings."
           : step === "brand"
-            ? "A clear description builds trust. Logo is optional — we will use initials until you upload one."
+            ? "A clear description builds trust. Logo is optional. We will use initials until you upload one."
             : step === "affiliation"
               ? "The person registering may be a recruiter. Enter the Rotary / Rotaract Contact separately for admin verification."
               : "An admin will review your affiliation. You can manage the company from the employer dashboard while you wait."
@@ -328,7 +330,7 @@ function EmployerOnboardingForm() {
             <CompanyAvatar name={name || "Company"} logoUrl={logoUrl} size={56} />
             <div className="min-w-0 flex-1">
               <p className="text-xs text-[var(--color-muted)]">
-                Logo optional — you can add or change it later from Company settings.
+                Logo optional. You can add or change it later from Company settings.
               </p>
               <div className="mt-2">
                 <FileUpload

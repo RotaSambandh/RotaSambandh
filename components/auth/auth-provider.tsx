@@ -12,14 +12,12 @@ import {
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithCredential,
   signInWithPopup,
   signOut,
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
 import { ensureUserDoc, getUser } from "@/lib/dal/users";
-import { isNativeApp } from "@/lib/native/platform";
 import type { UserRole } from "@/shared/types";
 
 interface AuthContextValue {
@@ -77,28 +75,6 @@ async function rolesForUser(user: User): Promise<UserRole[]> {
   }
 }
 
-async function signInGoogleNative(): Promise<User> {
-  const { FirebaseAuthentication } = await import(
-    "@capacitor-firebase/authentication"
-  );
-  // Native account picker (Credential Manager). Do not use browser popup/redirect.
-  const result = await FirebaseAuthentication.signInWithGoogle({
-    useCredentialManager: true,
-  });
-  const idToken = result.credential?.idToken;
-  if (!idToken) {
-    throw new Error(
-      "Google did not return an ID token. Confirm the Android SHA-1 is in Firebase and google-services.json is up to date.",
-    );
-  }
-  const credential = GoogleAuthProvider.credential(
-    idToken,
-    result.credential?.accessToken,
-  );
-  const signedIn = await signInWithCredential(getClientAuth(), credential);
-  return signedIn.user;
-}
-
 async function signInGoogleWeb(): Promise<User> {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
@@ -146,10 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (opts?: { onProgress?: (stage: "google" | "session") => void }) => {
       try {
         opts?.onProgress?.("google");
-        // Never use popup inside the Android WebView — it opens Chrome and cannot return.
-        const nextUser = isNativeApp()
-          ? await signInGoogleNative()
-          : await signInGoogleWeb();
+        const nextUser = await signInGoogleWeb();
         opts?.onProgress?.("session");
         const nextRoles = await rolesForUser(nextUser);
         setUser(nextUser);
@@ -162,16 +135,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    if (isNativeApp()) {
-      try {
-        const { FirebaseAuthentication } = await import(
-          "@capacitor-firebase/authentication"
-        );
-        await FirebaseAuthentication.signOut();
-      } catch {
-        // Web session still cleared below.
-      }
-    }
     await signOut(getClientAuth());
     await fetch("/api/auth/session", { method: "DELETE" });
   }, []);

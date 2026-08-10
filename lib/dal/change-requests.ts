@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
@@ -77,6 +78,19 @@ export async function createChangeRequest(input: {
     doc(getClientFirestore(), "changeRequests", id),
     omitUndefined(cr as unknown as Record<string, unknown>),
   );
+
+  // Draft jobs submitted for review must leave draft so queues and employer UI stay accurate.
+  if (input.submit && input.targetType === "job") {
+    const jobRef = doc(getClientFirestore(), "jobs", input.targetId);
+    const jobSnap = await getDoc(jobRef);
+    if (jobSnap.exists() && (jobSnap.data() as Job).status === "draft") {
+      await updateDoc(jobRef, {
+        status: "pending_review" satisfies Job["status"],
+        updatedAt: ts,
+      });
+    }
+  }
+
   return cr;
 }
 

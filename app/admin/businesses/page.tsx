@@ -6,11 +6,14 @@ import { callPrivilegedAdmin } from "@/lib/admin/privileged-client";
 import { changeRequestDiffRows } from "@/lib/admin/change-request-diff";
 import { listPendingChangeRequests } from "@/lib/dal/change-requests";
 import { listAllBusinesses, listPendingVerifications } from "@/lib/dal/admin";
-import { Badge } from "@/components/ui/badge";
+import { getEmployerMetaRtdb } from "@/lib/dal/employer-rtdb";
+import { CompanyVerificationReview } from "@/components/admin/company-verification-review";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ListRow } from "@/components/ui/list-row";
 import { MenuSelect } from "@/components/ui/menu-select";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Banner,
@@ -20,15 +23,18 @@ import {
   PageHeader,
   Panel,
 } from "@/components/ui";
+import {
+  businessStatusLabel,
+  businessStatusTone,
+  changeRequestStatusLabel,
+  changeRequestStatusTone,
+} from "@/lib/ui/status-labels";
 import type {
   Business,
-  BusinessMember,
   BusinessStatus,
   BusinessVerification,
   ChangeRequest,
 } from "@/shared/types";
-import { normalizeBusinessMemberRole } from "@/shared/rbac";
-import { listBusinessMembers } from "@/lib/dal/employer";
 import { usePlatformAccess } from "@/hooks/use-platform-access";
 
 type ReviewDecision = "approved" | "rejected" | "info_requested";
@@ -42,76 +48,28 @@ const STATUS_FILTERS: Array<{ value: "all" | BusinessStatus; label: string }> = 
   { value: "suspended", label: "Suspended" },
 ];
 
-function statusBadge(status: BusinessStatus) {
-  switch (status) {
-    case "verified":
-      return <Badge variant="success">Verified</Badge>;
-    case "verification_pending":
-      return <Badge variant="warning">Verification pending</Badge>;
-    case "deletion_pending":
-      return <Badge variant="danger">Deletion pending</Badge>;
-    case "draft":
-      return <Badge variant="neutral">Draft</Badge>;
-    case "suspended":
-      return <Badge variant="danger">Suspended</Badge>;
+function actionLabel(action: ChangeRequest["action"]): string {
+  switch (action) {
+    case "create":
+      return "New company";
+    case "update":
+      return "Profile update";
+    case "close":
+      return "Close";
     default: {
-      const _exhaustive: never = status;
+      const _exhaustive: never = action;
       return _exhaustive;
     }
   }
 }
 
-function BusinessTeamContext({ businessId }: { businessId: string }) {
-  const [members, setMembers] = useState<BusinessMember[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setLoading(true);
-      const list = await listBusinessMembers(businessId);
-      if (!cancelled) {
-        setMembers(list);
-        setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [businessId]);
-
-  if (loading) {
-    return <p className="text-sm text-[var(--color-muted)]">Loading company team…</p>;
-  }
-  if (members.length === 0) {
-    return <p className="text-sm text-[var(--color-muted)]">No company team on file yet.</p>;
-  }
-
+function DeletionTeamContext({ businessId }: { businessId: string }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-        Company team
-      </p>
-      <ul className="mt-2 space-y-2">
-        {members.map((member) => (
-          <li key={member.id} className="text-sm">
-            <span className="font-medium">
-              {member.displayName || member.email || member.userId}
-            </span>
-            {member.email && (
-              <span className="text-[var(--color-muted)]"> · {member.email}</span>
-            )}
-            <span className="ml-2">
-              <Badge variant="neutral">
-                {normalizeBusinessMemberRole(member.role) === "company_admin"
-                  ? "Company admin"
-                  : "Manager"}
-              </Badge>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <CompanyVerificationReview
+      businessId={businessId}
+      showId={false}
+      linkToDetail
+    />
   );
 }
 
@@ -161,12 +119,14 @@ function DeletionReviewCard({
   }
 
   return (
-    <Panel className="space-y-4">
+    <Panel className="space-y-4" tone="attention" title={displayName || "Company deletion"}>
       <div className="flex flex-wrap items-center gap-2">
-        <p className="font-semibold">{displayName}</p>
-        {statusBadge(business.status)}
+        <StatusPill
+          label={businessStatusLabel(business.status)}
+          tone={businessStatusTone(business.status)}
+        />
         {business.purgeStatus === "failed" ? (
-          <Badge variant="danger">Purge failed</Badge>
+          <StatusPill label="Purge failed" tone="danger" />
         ) : null}
       </div>
       <dl className="grid gap-1 text-sm sm:grid-cols-2">
@@ -175,15 +135,19 @@ function DeletionReviewCard({
           <dd>
             {business.deletionRequestedAt
               ? new Date(business.deletionRequestedAt).toLocaleString()
-              : "—"}
+              : "Not set"}
           </dd>
         </div>
         <div>
           <dt className="text-[var(--color-muted)]">Prior status</dt>
-          <dd>{business.statusBeforeDeletion?.replaceAll("_", " ") ?? "—"}</dd>
+          <dd>
+            {business.statusBeforeDeletion
+              ? businessStatusLabel(business.statusBeforeDeletion)
+              : "Not set"}
+          </dd>
         </div>
         <div>
-          <dt className="text-[var(--color-muted)]">Business</dt>
+          <dt className="text-[var(--color-muted)]">Company</dt>
           <dd>
             <Link
               href={`/admin/businesses/${business.id}`}
@@ -199,7 +163,7 @@ function DeletionReviewCard({
           {business.purgeError}
         </Banner>
       ) : null}
-      <BusinessTeamContext businessId={business.id} />
+      <DeletionTeamContext businessId={business.id} />
       {canWrite ? (
         <>
           <div className="flex flex-wrap gap-2">
@@ -238,7 +202,11 @@ function DeletionReviewCard({
               Removes company data and employer access. Candidates keep application stubs.
             </p>
           </div>
-          {error ? <p className="text-sm text-[var(--color-danger)]">{error}</p> : null}
+          {error ? (
+            <Banner tone="danger" title="Could not update deletion">
+              {error}
+            </Banner>
+          ) : null}
         </>
       ) : (
         <Banner tone="info" title="Coordinator view">
@@ -260,6 +228,13 @@ function ChangeRequestReviewCard({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<ReviewDecision | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string>("");
+
+  useEffect(() => {
+    void getEmployerMetaRtdb(item.businessId).then((meta) => {
+      setBusinessName(meta?.name?.trim() || "");
+    });
+  }, [item.businessId]);
 
   async function decide(decision: ReviewDecision) {
     if (decision !== "approved" && !note.trim()) {
@@ -286,31 +261,28 @@ function ChangeRequestReviewCard({
   }
 
   return (
-    <Panel className="space-y-4">
+    <Panel
+      className="space-y-4"
+      tone="attention"
+      title={item.title?.trim() || businessName || "Company change request"}
+    >
       <div className="flex flex-wrap items-center gap-2">
-        <p className="font-semibold">{item.title ?? item.targetId}</p>
-        <Badge variant="neutral">{item.action}</Badge>
-        <Badge>{item.status.replaceAll("_", " ")}</Badge>
+        <StatusPill label={actionLabel(item.action)} tone="neutral" />
+        <StatusPill
+          label={changeRequestStatusLabel(item.status)}
+          tone={changeRequestStatusTone(item.status)}
+        />
       </div>
-      <dl className="grid gap-1 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-[var(--color-muted)]">Business</dt>
-          <dd>
-            <Link
-              href={`/admin/businesses/${item.businessId}`}
-              className="font-medium text-[var(--color-accent-strong)] hover:underline"
-            >
-              Open business →
-            </Link>
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[var(--color-muted)]">Target ID</dt>
-          <dd className="font-mono text-xs">{item.targetId}</dd>
-        </div>
-      </dl>
+      <p className="text-sm text-[var(--color-muted)]">
+        <Link
+          href={`/admin/businesses/${item.businessId}`}
+          className="font-medium text-[var(--color-accent-strong)] hover:underline"
+        >
+          {businessName || "Open company"}
+        </Link>
+      </p>
+      <CompanyVerificationReview businessId={item.businessId} showId={false} />
       <DiffView rows={changeRequestDiffRows(item)} />
-      <BusinessTeamContext businessId={item.businessId} />
       {canWrite ? (
         <>
           <div>
@@ -319,7 +291,7 @@ function ChangeRequestReviewCard({
               id={`note-${item.id}`}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Required for reject or request info"
+              placeholder="Required when rejecting or asking for more info"
               rows={3}
               className="mt-1"
             />
@@ -393,19 +365,9 @@ function VerificationReviewCard({
   }
 
   return (
-    <Panel className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href={`/admin/businesses/${item.businessId}`}
-          className="font-semibold text-[var(--color-accent-strong)] hover:underline"
-        >
-          {item.businessId}
-        </Link>
-        <Badge>{item.status}</Badge>
-        <Badge variant="neutral">{item.affiliationType}</Badge>
-      </div>
-      <p className="text-sm text-[var(--color-muted)]">{item.affiliationDetails}</p>
-      <BusinessTeamContext businessId={item.businessId} />
+    <Panel className="space-y-4" title="Verification review" tone="attention">
+      <StatusPill label="Pending verification" tone="warning" />
+      <CompanyVerificationReview businessId={item.businessId} verification={item} />
       {canWrite ? (
         <>
           <div>
@@ -414,7 +376,7 @@ function VerificationReviewCard({
               id={`ver-note-${item.id}`}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Required for reject or request info"
+              placeholder="Required when rejecting or asking for more info"
               rows={3}
               className="mt-1"
             />
@@ -454,6 +416,7 @@ export default function AdminBusinessesPage() {
   const [verifications, setVerifications] = useState<BusinessVerification[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [statusFilter, setStatusFilter] = useState<"all" | BusinessStatus>("all");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -474,9 +437,23 @@ export default function AdminBusinessesPage() {
   }, [load]);
 
   const filtered = useMemo(() => {
-    if (statusFilter === "all") return businesses;
-    return businesses.filter((b) => b.status === statusFilter);
-  }, [businesses, statusFilter]);
+    const q = search.trim().toLowerCase();
+    return businesses.filter((b) => {
+      if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      if (!q) return true;
+      const haystack = [
+        b.name,
+        b.industry,
+        b.location,
+        b.companySize,
+        businessStatusLabel(b.status),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [businesses, statusFilter, search]);
 
   const pendingDeletions = useMemo(
     () =>
@@ -489,28 +466,28 @@ export default function AdminBusinessesPage() {
   if (loading) return <LoadingBlock label="Loading businesses…" />;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         title="Businesses"
-        description="Browse every employer on the network, open a company for detail, and clear verification, profile change, or deletion queues."
+        description="Review verification first, then profile changes and deletions. Open any company for the full profile and team."
       />
 
       <section className="mb-12 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-          Pending deletions ({pendingDeletions.length})
+        <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+          Verification queue ({verifications.length})
         </h2>
-        {pendingDeletions.length === 0 ? (
+        {verifications.length === 0 ? (
           <EmptyState
-            title="No deletion requests"
-            description="When a company admin requests removal, restore or permanent delete appears here."
+            title="No pending verifications"
+            description="When an employer submits Rotary affiliation for review, the full company packet appears here."
           />
         ) : (
           <ul className="space-y-4">
-            {pendingDeletions.map((biz) => (
-              <li key={biz.id}>
-                <DeletionReviewCard
-                  business={biz}
-                  onDone={() => void load()}
+            {verifications.map((item) => (
+              <li key={item.id}>
+                <VerificationReviewCard
+                  item={item}
+                  onDone={(id) => setVerifications((prev) => prev.filter((v) => v.id !== id))}
                 />
               </li>
             ))}
@@ -519,54 +496,7 @@ export default function AdminBusinessesPage() {
       </section>
 
       <section className="mb-12 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-            All businesses ({filtered.length})
-          </h2>
-          <div className="w-full max-w-xs">
-            <MenuSelect
-              id="biz-status-filter"
-              label="Filter by status"
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as "all" | BusinessStatus)}
-              options={STATUS_FILTERS}
-            />
-          </div>
-        </div>
-
-        {filtered.length === 0 ? (
-          <EmptyState
-            title="No businesses yet"
-            description="Employer sign-ups create company records here for review and oversight."
-          />
-        ) : (
-          <ul className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)] bg-white">
-            {filtered.map((biz) => (
-              <li key={biz.id}>
-                <Link
-                  href={`/admin/businesses/${biz.id}`}
-                  className="flex flex-wrap items-start justify-between gap-3 px-4 py-4 transition hover:bg-[var(--color-surface)]"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-[var(--color-ink)]">{biz.name}</p>
-                    <p className="mt-1 text-sm text-[var(--color-muted)]">
-                      {[biz.industry, biz.location, biz.companySize].filter(Boolean).join(" · ") ||
-                        "No profile details yet"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {statusBadge(biz.status)}
-                    <span className="text-xs text-[var(--color-accent-strong)]">Open →</span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+        <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
           Pending profile changes ({changeRequests.length})
         </h2>
         {changeRequests.length === 0 ? (
@@ -588,22 +518,87 @@ export default function AdminBusinessesPage() {
         )}
       </section>
 
-      <section className="mt-12 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-          Verification queue ({verifications.length})
+      <section className="mb-12 space-y-4">
+        <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+          Pending deletions ({pendingDeletions.length})
         </h2>
-        {verifications.length === 0 ? (
+        {pendingDeletions.length === 0 ? (
           <EmptyState
-            title="No pending verifications"
-            description="Rotary affiliation proofs waiting for admin review will show up here."
+            title="No deletion requests"
+            description="When a company admin requests removal, restore or permanent delete appears here."
           />
         ) : (
           <ul className="space-y-4">
-            {verifications.map((item) => (
-              <li key={item.id}>
-                <VerificationReviewCard
-                  item={item}
-                  onDone={(id) => setVerifications((prev) => prev.filter((v) => v.id !== id))}
+            {pendingDeletions.map((biz) => (
+              <li key={biz.id}>
+                <DeletionReviewCard
+                  business={biz}
+                  onDone={() => void load()}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mb-4 space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            All businesses ({filtered.length})
+          </h2>
+          <div className="flex w-full flex-col gap-3 sm:max-w-xl sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="biz-search">Search</Label>
+              <Input
+                id="biz-search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Name, industry, location…"
+                className="mt-1"
+              />
+            </div>
+            <div className="w-full sm:w-48">
+              <MenuSelect
+                id="biz-status-filter"
+                label="Status"
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as "all" | BusinessStatus)}
+                options={STATUS_FILTERS}
+              />
+            </div>
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <EmptyState
+            title={businesses.length === 0 ? "No businesses yet" : "No businesses match"}
+            description={
+              businesses.length === 0
+                ? "Employer sign-ups create company records here for review and oversight."
+                : "Try a different search or clear the status filter."
+            }
+          />
+        ) : (
+          <ul className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+            {filtered.map((biz) => (
+              <li key={biz.id}>
+                <ListRow
+                  href={`/admin/businesses/${biz.id}`}
+                  title={biz.name || "Unnamed company"}
+                  subtitle={
+                    [biz.industry, biz.location, biz.companySize].filter(Boolean).join(" · ") ||
+                    "Open for website, team, and affiliation details"
+                  }
+                  trailing={
+                    <StatusPill
+                      label={businessStatusLabel(biz.status)}
+                      tone={businessStatusTone(biz.status)}
+                    />
+                  }
+                  emphasize={
+                    biz.status === "verification_pending" ||
+                    biz.status === "deletion_pending"
+                  }
                 />
               </li>
             ))}

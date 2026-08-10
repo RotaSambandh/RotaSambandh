@@ -50,9 +50,10 @@ export default function AdminAnnouncementsPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canWrite) return;
+    const form = e.currentTarget;
     setBusy(true);
     setMessage(null);
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(form);
     try {
       await callPrivilegedAdmin({
         action: "send_announcement",
@@ -67,7 +68,7 @@ export default function AdminAnnouncementsPage() {
         tone: "success",
         text: "Announcement sent. Recipients will see it in their notification tray (and push if enabled).",
       });
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) {
       setMessage({
         tone: "danger",
@@ -79,7 +80,7 @@ export default function AdminAnnouncementsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         title="Announcements"
         description="Broadcast to candidates, employers, or everyone. Messages always land in the in-app tray; push is optional for each user."
@@ -90,7 +91,7 @@ export default function AdminAnnouncementsPage() {
           Coordinators can review queues. Sending announcements requires admin access.
         </Banner>
       ) : (
-        <Panel title="Compose">
+        <Panel title="Compose announcement">
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <MenuSelect
@@ -101,7 +102,7 @@ export default function AdminAnnouncementsPage() {
                 options={AUDIENCE_OPTIONS}
               />
               {recipientCount !== null ? (
-                <p className="mt-2 text-sm text-[var(--color-muted)]">
+                <p className="mt-2 text-caption text-[var(--color-muted)]">
                   About <strong>{recipientCount}</strong> recipient
                   {recipientCount === 1 ? "" : "s"} in this audience
                   {recipientCount >= 2000 ? " (capped at 2,000)" : ""}. Confirm before sending.

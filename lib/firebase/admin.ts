@@ -40,6 +40,8 @@ function initAdmin(): App {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
   const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
 
+  // Prefer explicit service-account env vars. Do not fall through to ADC when a
+  // stale GOOGLE_APPLICATION_CREDENTIALS path is set (common in local shells).
   if (clientEmail && privateKey && projectId) {
     return initializeApp({
       credential: cert({ projectId, clientEmail, privateKey }),

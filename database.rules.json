@@ -3,7 +3,10 @@
     ".read": false,
     ".write": false,
     "feeds": {
-      ".read": true
+      ".read": true,
+      "$channel": {
+        ".indexOn": ["postedAt"]
+      }
     },
     "jobs": {
       "$jobId": {

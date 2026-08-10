@@ -21,6 +21,7 @@ import {
   projectChangeRequest,
   projectEmployerMember,
   projectEmployerMeta,
+  projectEmployerVerification,
 } from "../projections/employer";
 import {
   projectAdminQueueItem,
@@ -160,13 +161,26 @@ async function main() {
   const members = await fs.collection("businessMembers").get();
   for (const doc of members.docs) {
     const m = doc.data();
+    let email = (m.email as string | undefined) || undefined;
+    let displayName = (m.displayName as string | undefined) || undefined;
+    const invitedEmail =
+      (m.invitedEmail as string | undefined) ?? email;
+    const userId = String(m.userId ?? "");
+    if (userId && (!email || !displayName)) {
+      const userSnap = await fs.doc(`users/${userId}`).get();
+      const u = userSnap.data() ?? {};
+      if (!email && u.email) email = String(u.email);
+      if (!displayName && u.displayName) displayName = String(u.displayName);
+    }
     await projectEmployerMember({
       id: doc.id,
       businessId: String(m.businessId),
-      userId: String(m.userId),
+      userId,
       role: String(m.role ?? "viewer"),
       status: String(m.status ?? "active"),
-      invitedEmail: m.invitedEmail as string | undefined,
+      email,
+      displayName,
+      invitedEmail: invitedEmail ?? email,
     });
     const status = String(m.status ?? "active");
     if (status === "active") {
@@ -185,9 +199,15 @@ async function main() {
       targetType: String(cr.targetType),
       targetId: String(cr.targetId),
       status: String(cr.status),
+      action: cr.action ? String(cr.action) : undefined,
       submittedBy: cr.submittedBy as string | undefined,
-      submittedAt: cr.submittedAt as number | undefined,
+      submittedAt: (cr.updatedAt ?? cr.createdAt ?? cr.submittedAt) as
+        | number
+        | undefined,
       adminNote: cr.adminNote as string | undefined,
+      title: cr.title as string | undefined,
+      proposed: (cr.proposed as Record<string, unknown> | undefined) ?? {},
+      liveSnapshot: (cr.liveSnapshot as Record<string, unknown> | undefined) ?? {},
     });
   }
 
@@ -200,28 +220,65 @@ async function main() {
   }
 
   const verifications = await fs.collection("businessVerifications").get();
+  const latestByBusiness = new Map<
+    string,
+    { id: string; data: Record<string, unknown>; updatedAt: number }
+  >();
   for (const doc of verifications.docs) {
-    const v = doc.data();
+    const v = doc.data() as Record<string, unknown>;
+    const businessId = String(v.businessId ?? "");
+    let businessName = "";
+    let rotaryContactName = "";
+    let rotaryContactClub = "";
+    let rotaryContactEmail = "";
+    let rotaryContactPhone = "";
+    if (businessId) {
+      const bizSnap = await fs.doc(`businesses/${businessId}`).get();
+      const biz = bizSnap.data() ?? {};
+      businessName = String(biz.name ?? "");
+      rotaryContactName = String(biz.rotaryContactName ?? "");
+      rotaryContactClub = String(biz.rotaryContactClub ?? "");
+      rotaryContactEmail = String(biz.rotaryContactEmail ?? "");
+      rotaryContactPhone = String(biz.rotaryContactPhone ?? "");
+    }
     await projectAdminQueueItem("verifications", doc.id, {
-      businessId: v.businessId,
+      businessId,
+      businessName,
       status: v.status,
       affiliationType: v.affiliationType,
+      affiliationDetails: v.affiliationDetails ?? "",
+      supportingInfo: v.supportingInfo ?? "",
+      adminNote: v.adminNote ?? "",
       submittedBy: v.submittedBy,
+      rotaryContactName,
+      rotaryContactClub,
+      rotaryContactEmail,
+      rotaryContactPhone,
+      reviewedAt: v.reviewedAt ?? null,
       updatedAt: v.updatedAt ?? Date.now(),
     });
+    if (businessId) {
+      const updatedAt = Number(v.updatedAt ?? 0);
+      const prev = latestByBusiness.get(businessId);
+      if (!prev || updatedAt >= prev.updatedAt) {
+        latestByBusiness.set(businessId, { id: doc.id, data: v, updatedAt });
+      }
+    }
   }
-
-  const reports = await fs.collection("reports").get();
-  for (const doc of reports.docs) {
-    const r = doc.data();
-    await projectAdminQueueItem("reports", doc.id, {
-      targetType: r.targetType,
-      targetId: r.targetId,
-      reason: r.reason,
-      status: r.status ?? "open",
-      createdAt: r.createdAt ?? Date.now(),
+  for (const [businessId, latest] of latestByBusiness) {
+    const v = latest.data;
+    await projectEmployerVerification(businessId, {
+      id: latest.id,
+      status: v.status,
+      affiliationType: v.affiliationType,
+      affiliationDetails: v.affiliationDetails ?? "",
+      supportingInfo: v.supportingInfo ?? "",
+      adminNote: v.adminNote ?? "",
+      reviewedAt: v.reviewedAt ?? null,
+      updatedAt: latest.updatedAt || Date.now(),
     });
   }
+  console.log(`Projected ${verifications.size} verifications`);
 
   const documents = await fs.collection("documents").get();
   for (const doc of documents.docs) {

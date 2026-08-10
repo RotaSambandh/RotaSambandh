@@ -59,15 +59,6 @@ export type QuestionType =
 
 export type QuestionScope = "platform" | "employer" | "job";
 
-export type ReportReason =
-  | "fake_job"
-  | "spam"
-  | "misrepresentation"
-  | "employer_misconduct"
-  | "other";
-
-export type ReportStatus = "open" | "reviewing" | "resolved" | "dismissed";
-
 export type NotificationType =
   | "application_submitted"
   | "application_status_changed"
@@ -181,6 +172,7 @@ export interface BusinessMember extends Timestamps {
   role: BusinessMemberRole | "owner" | "recruiter" | "viewer";
   email?: string;
   displayName?: string;
+  invitedEmail?: string;
   invitedBy?: string;
   status?: "active" | "invited" | "revoked";
 }
@@ -196,6 +188,12 @@ export interface BusinessVerification extends Timestamps {
   adminNote?: string;
   reviewedBy?: string;
   reviewedAt?: number;
+  /** Denormalized for admin queue cards (RTDB projection). */
+  businessName?: string;
+  rotaryContactName?: string;
+  rotaryContactClub?: string;
+  rotaryContactEmail?: string;
+  rotaryContactPhone?: string;
 }
 
 export interface Job extends Timestamps {
@@ -343,18 +341,6 @@ export interface Skill extends Timestamps {
   name: string;
   slug: string;
   active: boolean;
-}
-
-export interface Report extends Timestamps {
-  id: string;
-  reporterId: string;
-  reason: ReportReason;
-  targetType: "job" | "business" | "user";
-  targetId: string;
-  details?: string;
-  status: ReportStatus;
-  resolvedBy?: string;
-  resolvedAt?: number;
 }
 
 export interface AdminAction extends Timestamps {

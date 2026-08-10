@@ -70,3 +70,39 @@ One family for the whole product: regular Open Sans width (not Condensed). We sk
 - No cards in the hero; list dividers for jobs instead of card grids
 - Touch-friendly controls; bottom nav on mobile for role shells
 - WCAG 2.1 AA: contrast, labels, focus rings, semantic headings
+
+## UI system (product shells)
+
+Type scale utilities in `app/globals.css`: `text-display`, `text-title`, `text-subtitle`, `text-body`, `text-caption`, `text-overline`. Spacing tokens `--space-1`…`--space-8`. Radius `--radius-sm` / `--radius-md`.
+
+Shared primitives in `components/ui/`:
+
+| Primitive | Use |
+|-----------|-----|
+| `PageHeader` | Title + breadcrumb + actions |
+| `Panel` | Elevated section; `tone="attention"` for pending queues |
+| `ListRow` | Directory / queue rows (name-first; IDs secondary) |
+| `StatusPill` | Human status labels via `lib/ui/status-labels` |
+| `Banner` | Sole feedback channel (no `alert()`) |
+| `ReviewWorkbenchFrame` | Detail + sticky action rail |
+| `EmptyState` / `LoadingBlock` | Empty and loading |
+
+Job presentation: `JobMetaRow`, `CompanySummaryCard`, `JobPostingBody` in `components/jobs/`.
+
+Shell: candidate / employer use `max-w-5xl`; admin uses `max-w-6xl`. Side nav shows role section label (Member / Employer / Staff).
+
+## Product UX charter
+
+**UI baseline**
+- Type, spacing, and status primitives used on every role shell.
+- No raw status strings or primary mono IDs in product UI.
+- Lists use `ListRow` or shared job cards; details use packet + sticky actions where decisions matter.
+
+**UX baseline**
+- Published jobs are discoverable and fully readable with company context.
+- Employers always see submitted packets (including `pending_review`).
+- Admins act from a readable packet without hunting IDs.
+- PWA install works without a store APK; Web Push remains available.
+
+**Growth**
+- Saved jobs, richer filters, company brand pages, apply-funnel analytics, taxonomy if productized.

@@ -8,7 +8,55 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingBlock, PageHeader, Panel } from "@/components/ui";
 import { getEmployerDashboard } from "@/lib/dal/dashboards-client";
 import { listChangeRequestsForBusiness } from "@/lib/dal/change-requests";
-import type { ChangeRequest, EmployerDashboardProjection } from "@/shared/types";
+import type {
+  BusinessStatus,
+  ChangeRequest,
+  ChangeRequestAction,
+  ChangeRequestTarget,
+  EmployerDashboardProjection,
+} from "@/shared/types";
+import { assertNever } from "@/lib/utils";
+
+function humanizeBusinessStatus(status: BusinessStatus): string {
+  switch (status) {
+    case "draft":
+      return "Draft";
+    case "verification_pending":
+      return "Verification pending";
+    case "verified":
+      return "Verified";
+    case "suspended":
+      return "Suspended";
+    case "deletion_pending":
+      return "Deletion pending";
+    default:
+      return assertNever(status);
+  }
+}
+
+function humanizeCrTarget(type: ChangeRequestTarget): string {
+  switch (type) {
+    case "business":
+      return "Company";
+    case "job":
+      return "Job";
+    default:
+      return assertNever(type);
+  }
+}
+
+function humanizeCrAction(action: ChangeRequestAction): string {
+  switch (action) {
+    case "create":
+      return "Create";
+    case "update":
+      return "Update";
+    case "close":
+      return "Close";
+    default:
+      return assertNever(action);
+  }
+}
 
 export default function EmployerDashboardPage() {
   const { user } = useAuth();
@@ -74,7 +122,7 @@ export default function EmployerDashboardPage() {
     <main>
       <PageHeader
         title="Dashboard"
-        description={`Hiring snapshot for ${business.name}. Draft jobs anytime; public listings need verification and job review. Open a job to review its applicants.`}
+        description={`Hiring snapshot for ${business.name} (${humanizeBusinessStatus(business.status)}). Draft jobs anytime; public listings need verification and job review. Open a job to review its applicants.`}
         actions={
           <Link href="/employer/jobs">
             <Button>Go to jobs</Button>
@@ -100,8 +148,12 @@ export default function EmployerDashboardPage() {
             {pendingCrs.map((cr) => (
               <li key={cr.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
                 <span>
-                  {cr.title ?? `${cr.action} ${cr.targetType}`} ·{" "}
-                  <span className="text-[var(--color-muted)]">{cr.targetType}</span>
+                  {cr.title?.trim() ||
+                    `${humanizeCrAction(cr.action)} ${humanizeCrTarget(cr.targetType).toLowerCase()}`}
+                  <span className="text-[var(--color-muted)]">
+                    {" · "}
+                    {humanizeCrTarget(cr.targetType)} · {humanizeCrAction(cr.action)}
+                  </span>
                 </span>
                 <Link
                   href="/employer/company"

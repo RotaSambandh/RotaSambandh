@@ -1,16 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { callPrivilegedAdmin } from "@/lib/admin/privileged-client";
 import { changeRequestDiffRows } from "@/lib/admin/change-request-diff";
+import {
+  JobReviewPacket,
+  jobFromSnapshot,
+} from "@/components/admin/job-review-packet";
 import { listPendingChangeRequests } from "@/lib/dal/change-requests";
 import { listAllJobs } from "@/lib/dal/admin";
+import { getEmployerJobRtdb, getEmployerMetaRtdb } from "@/lib/dal/employer-rtdb";
 import { JOB_TYPE_LABELS, WORKPLACE_LABELS } from "@/lib/dal/job-meta";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ListRow } from "@/components/ui/list-row";
 import { MenuSelect } from "@/components/ui/menu-select";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Banner,
@@ -20,6 +26,7 @@ import {
   PageHeader,
   Panel,
 } from "@/components/ui";
+import { jobStatusLabel, jobStatusTone } from "@/lib/ui/status-labels";
 import type { ChangeRequest, Job, JobStatus } from "@/shared/types";
 import { usePlatformAccess } from "@/hooks/use-platform-access";
 
@@ -35,40 +42,50 @@ const STATUS_FILTERS: Array<{ value: "all" | JobStatus; label: string }> = [
   { value: "expired", label: "Expired" },
 ];
 
-function statusBadge(status: JobStatus) {
-  switch (status) {
-    case "published":
-      return <Badge variant="success">Published</Badge>;
-    case "pending_review":
-      return <Badge variant="warning">Pending review</Badge>;
-    case "draft":
-      return <Badge variant="neutral">Draft</Badge>;
-    case "closed":
-    case "filled":
-    case "expired":
-      return <Badge variant="neutral">{status.replaceAll("_", " ")}</Badge>;
+function actionLabel(action: ChangeRequest["action"]): string {
+  switch (action) {
+    case "create":
+      return "New job";
+    case "update":
+      return "Job update";
+    case "close":
+      return "Close job";
     default: {
-      const _exhaustive: never = status;
+      const _exhaustive: never = action;
       return _exhaustive;
     }
   }
 }
 
-function ChangeRequestReviewCard({
+function JobChangeRequestReviewCard({
   item,
+  businessName,
   onDone,
 }: {
   item: ChangeRequest;
+  businessName?: string;
   onDone: (id: string) => void;
 }) {
   const { canWrite } = usePlatformAccess();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<ReviewDecision | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [liveJob, setLiveJob] = useState<Job | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const job = await getEmployerJobRtdb(item.businessId, item.targetId);
+      if (!cancelled) setLiveJob(job);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [item.businessId, item.targetId]);
 
   async function decide(decision: ReviewDecision) {
     if (decision !== "approved" && !note.trim()) {
-      setError("Admin note is required to reject or request info.");
+      setError("A note is required to reject or ask for more information.");
       return;
     }
     setError(null);
@@ -90,75 +107,84 @@ function ChangeRequestReviewCard({
     }
   }
 
+  const proposedJob = jobFromSnapshot(item.proposed, {
+    id: item.targetId,
+    businessId: item.businessId,
+    ...(liveJob ?? {}),
+  });
+  const packetJob =
+    item.action === "create" || Object.keys(item.proposed ?? {}).length > 0
+      ? proposedJob
+      : liveJob ?? proposedJob;
+  const diffRows =
+    item.action === "update" || item.action === "close"
+      ? changeRequestDiffRows(item)
+      : [];
+
   return (
-    <Panel className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="font-semibold">{item.title ?? item.targetId}</p>
-        <Badge variant="neutral">{item.action}</Badge>
-        <Badge>{item.status.replaceAll("_", " ")}</Badge>
+    <Panel className="space-y-4" title="Job review" tone="attention">
+      <div className="flex flex-wrap gap-2">
+        <StatusPill label="Pending review" tone="warning" />
+        <StatusPill label={actionLabel(item.action)} tone="neutral" />
       </div>
-      <dl className="grid gap-1 text-sm sm:grid-cols-2">
+
+      <JobReviewPacket
+        job={packetJob}
+        businessName={businessName}
+        businessId={item.businessId}
+        showIds={false}
+      />
+
+      {diffRows.length > 0 ? (
         <div>
-          <dt className="text-[var(--color-muted)]">Business</dt>
-          <dd>
-            <Link
-              href={`/admin/businesses/${item.businessId}`}
-              className="font-medium text-[var(--color-accent-strong)] hover:underline"
-            >
-              {item.businessId}
-            </Link>
-          </dd>
+          <h3 className="mb-2 text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            What changed
+          </h3>
+          <DiffView rows={diffRows} />
         </div>
-        <div>
-          <dt className="text-[var(--color-muted)]">Job</dt>
-          <dd>
-            <Link
-              href={`/admin/jobs/${item.targetId}`}
-              className="font-medium text-[var(--color-accent-strong)] hover:underline"
-            >
-              {item.targetId}
-            </Link>
-          </dd>
-        </div>
-      </dl>
-      <DiffView rows={changeRequestDiffRows(item)} />
+      ) : null}
+
       {canWrite ? (
         <>
           <div>
-            <Label htmlFor={`note-${item.id}`}>Admin note</Label>
+            <Label htmlFor={`note-${item.id}`}>Review note</Label>
             <Textarea
               id={`note-${item.id}`}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Required for reject or request info"
+              placeholder="Required when rejecting or asking for more info"
               rows={3}
               className="mt-1"
             />
           </div>
-          {error && (
+          {error ? (
             <Banner tone="danger" title="Could not submit review">
               {error}
             </Banner>
-          )}
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button disabled={!!busy} onClick={() => void decide("approved")}>
-              {busy === "approved" ? "Approving…" : "Approve"}
+              {busy === "approved" ? "Approving..." : "Approve"}
             </Button>
             <Button
               variant="secondary"
               disabled={!!busy}
               onClick={() => void decide("info_requested")}
             >
-              {busy === "info_requested" ? "Sending…" : "Request info"}
+              {busy === "info_requested" ? "Sending..." : "Request info"}
             </Button>
-            <Button variant="danger" disabled={!!busy} onClick={() => void decide("rejected")}>
-              {busy === "rejected" ? "Rejecting…" : "Reject"}
+            <Button
+              variant="danger"
+              disabled={!!busy}
+              onClick={() => void decide("rejected")}
+            >
+              {busy === "rejected" ? "Rejecting..." : "Reject"}
             </Button>
           </div>
         </>
       ) : (
         <Banner tone="info" title="Coordinator view">
-          Review the proposed job changes and follow up with the employer. Admins publish.
+          Review the role details and coordinate with the employer. Admins publish.
         </Banner>
       )}
     </Panel>
@@ -168,14 +194,37 @@ function ChangeRequestReviewCard({
 export default function AdminJobsPage() {
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [businessNames, setBusinessNames] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState<"all" | JobStatus>("all");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [crs, allJobs] = await Promise.all([listPendingChangeRequests(), listAllJobs()]);
-    setChangeRequests(crs.filter((c) => c.targetType === "job"));
+    const [crs, allJobs] = await Promise.all([
+      listPendingChangeRequests(),
+      listAllJobs(),
+    ]);
+    const jobCrs = crs.filter((c) => c.targetType === "job");
+    setChangeRequests(jobCrs);
     setJobs(allJobs);
+    const ids = Array.from(
+      new Set([
+        ...jobCrs.map((c) => c.businessId),
+        ...allJobs.map((j) => j.businessId),
+      ]),
+    );
+    const entries = await Promise.all(
+      ids.map(async (id) => {
+        const meta = await getEmployerMetaRtdb(id);
+        return [id, meta?.name?.trim() || ""] as const;
+      }),
+    );
+    const map: Record<string, string> = {};
+    for (const [id, name] of entries) {
+      if (name) map[id] = name;
+    }
+    setBusinessNames(map);
     setLoading(false);
   }, []);
 
@@ -184,63 +233,56 @@ export default function AdminJobsPage() {
   }, [load]);
 
   const filteredJobs = useMemo(() => {
-    if (statusFilter === "all") return jobs;
-    return jobs.filter((j) => j.status === statusFilter);
-  }, [jobs, statusFilter]);
+    const q = search.trim().toLowerCase();
+    return jobs.filter((j) => {
+      if (statusFilter !== "all" && j.status !== statusFilter) return false;
+      if (!q) return true;
+      const company = businessNames[j.businessId] ?? "";
+      const haystack = [
+        j.title,
+        company,
+        j.location,
+        j.industry,
+        JOB_TYPE_LABELS[j.type],
+        WORKPLACE_LABELS[j.workplace],
+        jobStatusLabel(j.status),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [jobs, statusFilter, search, businessNames]);
 
-  if (loading) return <LoadingBlock label="Loading jobs…" />;
+  if (loading) return <LoadingBlock label="Loading jobs..." />;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         title="Jobs"
-        description="Browse every job on the network, then review employer change proposals waiting for approval."
+        description="Review new roles and edits waiting for approval, then browse the full job directory."
       />
 
       <section className="mb-12 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-            All jobs ({filteredJobs.length})
-          </h2>
-          <div className="w-full max-w-xs">
-            <MenuSelect
-              id="job-status-filter"
-              label="Filter by status"
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as "all" | JobStatus)}
-              options={STATUS_FILTERS}
-            />
-          </div>
-        </div>
-
-        {filteredJobs.length === 0 ? (
+        <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+          Pending review ({changeRequests.length})
+        </h2>
+        {changeRequests.length === 0 ? (
           <EmptyState
-            title="No jobs yet"
-            description="When employers publish or submit roles, they will appear in this directory."
+            title="No jobs waiting for review"
+            description="When employers submit a new role or an edit, the full listing appears here."
           />
         ) : (
-          <ul className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)] bg-white">
-            {filteredJobs.map((job) => (
-              <li key={job.id}>
-                <Link
-                  href={`/admin/jobs/${job.id}`}
-                  className="flex flex-wrap items-start justify-between gap-3 px-4 py-4 transition hover:bg-[var(--color-surface)]"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-[var(--color-ink)]">{job.title}</p>
-                    <p className="mt-1 text-sm text-[var(--color-muted)]">
-                      {JOB_TYPE_LABELS[job.type]} · {WORKPLACE_LABELS[job.workplace]}
-                      {job.location ? ` · ${job.location}` : ""}
-                    </p>
-                    <p className="mt-1 font-mono text-xs text-[var(--color-muted)]">
-                      {job.businessId}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {statusBadge(job.status)}
-                    <span className="text-xs text-[var(--color-accent-strong)]">View details →</span>
-                  </div>
-                </Link>
+          <ul className="space-y-4">
+            {changeRequests.map((item) => (
+              <li key={item.id}>
+                <JobChangeRequestReviewCard
+                  item={item}
+                  businessName={businessNames[item.businessId]}
+                  onDone={(id) =>
+                    setChangeRequests((prev) => prev.filter((c) => c.id !== id))
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -248,21 +290,64 @@ export default function AdminJobsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-          Pending change proposals ({changeRequests.length})
-        </h2>
-        {changeRequests.length === 0 ? (
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="text-overline font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            All jobs ({filteredJobs.length})
+          </h2>
+          <div className="flex w-full flex-col gap-3 sm:max-w-xl sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="job-search">Search</Label>
+              <Input
+                id="job-search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Title, company, location…"
+                className="mt-1"
+              />
+            </div>
+            <div className="w-full sm:w-48">
+              <MenuSelect
+                id="job-status-filter"
+                label="Status"
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as "all" | JobStatus)}
+                options={STATUS_FILTERS}
+              />
+            </div>
+          </div>
+        </div>
+
+        {filteredJobs.length === 0 ? (
           <EmptyState
-            title="No pending job changes"
-            description="New roles, edits, and close requests from employers appear here."
+            title={jobs.length === 0 ? "No jobs yet" : "No jobs match"}
+            description={
+              jobs.length === 0
+                ? "When employers publish or submit roles, they will appear in this directory."
+                : "Try a different search or clear the status filter."
+            }
           />
         ) : (
-          <ul className="space-y-4">
-            {changeRequests.map((item) => (
-              <li key={item.id}>
-                <ChangeRequestReviewCard
-                  item={item}
-                  onDone={(id) => setChangeRequests((prev) => prev.filter((c) => c.id !== id))}
+          <ul className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+            {filteredJobs.map((job) => (
+              <li key={job.id}>
+                <ListRow
+                  href={`/admin/jobs/${job.id}`}
+                  title={job.title || "Untitled role"}
+                  subtitle={[
+                    businessNames[job.businessId] || "Company",
+                    JOB_TYPE_LABELS[job.type],
+                    WORKPLACE_LABELS[job.workplace],
+                    job.location,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  trailing={
+                    <StatusPill
+                      label={jobStatusLabel(job.status)}
+                      tone={jobStatusTone(job.status)}
+                    />
+                  }
+                  emphasize={job.status === "pending_review"}
                 />
               </li>
             ))}

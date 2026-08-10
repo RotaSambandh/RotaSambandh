@@ -35,12 +35,16 @@ export function Banner({
   return (
     <div
       role="status"
-      className={cn("flex gap-3 rounded border px-4 py-3 text-sm", tones[tone], className)}
+      className={cn(
+        "flex gap-3 rounded-[var(--radius-md)] border px-4 py-3.5 text-body",
+        tones[tone],
+        className,
+      )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{title}</p>
-        {children && <div className="mt-1 opacity-90">{children}</div>}
+        {children && <div className="mt-1 text-caption opacity-90">{children}</div>}
       </div>
       {action}
     </div>
@@ -59,9 +63,16 @@ export function EmptyState({
   className?: string;
 } & HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("border border-dashed border-[var(--color-border)] px-6 py-12 text-center", className)}>
-      <p className="font-semibold text-[var(--color-ink)]">{title}</p>
-      {description && <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-muted)]">{description}</p>}
+    <div
+      className={cn(
+        "rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-6 py-14 text-center",
+        className,
+      )}
+    >
+      <p className="text-subtitle text-[var(--color-ink)]">{title}</p>
+      {description && (
+        <p className="mx-auto mt-2 max-w-md text-caption text-[var(--color-muted)]">{description}</p>
+      )}
       {action && <div className="mt-5 flex justify-center">{action}</div>}
     </div>
   );
@@ -79,13 +90,19 @@ export function PageHeader({
   breadcrumb?: ReactNode;
 }) {
   return (
-    <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        {breadcrumb && <div className="mb-2 text-sm text-[var(--color-muted)]">{breadcrumb}</div>}
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--color-ink)]">
-          {title}
-        </h1>
-        {description && <div className="mt-2 max-w-2xl text-sm text-[var(--color-muted)]">{description}</div>}
+    <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        {breadcrumb && (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5 text-caption text-[var(--color-muted)]">
+            {breadcrumb}
+          </div>
+        )}
+        <h1 className="font-display text-title text-[var(--color-ink)] sm:text-display">{title}</h1>
+        {description && (
+          <div className="mt-2 max-w-2xl text-caption text-[var(--color-muted)] sm:text-body">
+            {description}
+          </div>
+        )}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </header>
@@ -96,16 +113,27 @@ export function Panel({
   children,
   className,
   title,
+  toolbar,
+  tone,
 }: {
   children: ReactNode;
   className?: string;
   title?: string;
+  toolbar?: ReactNode;
+  tone?: "default" | "attention";
 }) {
   return (
-    <section className={cn("border border-[var(--color-border)] bg-white", className)}>
-      {title && (
-        <div className="border-b border-[var(--color-border)] px-4 py-3">
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{title}</h2>
+    <section
+      className={cn(
+        "overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)]",
+        tone === "attention" && "border-[var(--color-warning)]/50 ring-1 ring-[var(--color-warning)]/20",
+        className,
+      )}
+    >
+      {(title || toolbar) && (
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 sm:px-5">
+          {title ? <h2 className="text-body font-semibold text-[var(--color-ink)]">{title}</h2> : <span />}
+          {toolbar ? <div className="flex flex-wrap items-center gap-2">{toolbar}</div> : null}
         </div>
       )}
       <div className="p-4 sm:p-5">{children}</div>
@@ -130,7 +158,7 @@ export function Stepper({
           <li
             key={step.id}
             className={cn(
-              "flex-1 rounded-sm px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wide",
+              "flex-1 rounded-[var(--radius-sm)] px-2 py-2 text-center text-overline",
               active && "bg-[var(--color-accent-soft)] text-[var(--color-accent-strong)]",
               done && "bg-[var(--color-success-soft)] text-[var(--color-success)]",
               !active && !done && "bg-[var(--color-surface)] text-[var(--color-muted)]",
@@ -161,7 +189,7 @@ export function FileUpload({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-[var(--color-ink)]">
+      <label htmlFor={id} className="mb-1.5 block text-body font-medium text-[var(--color-ink)]">
         {label}
       </label>
       <input
@@ -169,13 +197,13 @@ export function FileUpload({
         type="file"
         accept={accept}
         disabled={disabled}
-        className="w-full rounded border border-[var(--color-border)] bg-white px-3 py-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-[var(--color-accent-soft)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--color-accent-strong)]"
+        className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-3 py-2.5 text-caption file:mr-3 file:rounded file:border-0 file:bg-[var(--color-accent-soft)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--color-accent-strong)]"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) onFile(file);
         }}
       />
-      {hint && <p className="mt-1.5 text-xs text-[var(--color-muted)]">{hint}</p>}
+      {hint && <p className="mt-1.5 text-caption text-[var(--color-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -186,13 +214,13 @@ export function DiffView({
   rows: Array<{ field: string; before?: string; after?: string }>;
 }) {
   return (
-    <div className="overflow-x-auto border border-[var(--color-border)]">
-      <table className="w-full min-w-[28rem] text-left text-sm">
-        <thead className="bg-[var(--color-surface)] text-xs uppercase tracking-wide text-[var(--color-muted)]">
+    <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)]">
+      <table className="w-full min-w-[28rem] text-left text-caption">
+        <thead className="bg-[var(--color-surface)] text-overline text-[var(--color-muted)]">
           <tr>
-            <th className="px-3 py-2 font-semibold">Field</th>
-            <th className="px-3 py-2 font-semibold">Live</th>
-            <th className="px-3 py-2 font-semibold">Proposed</th>
+            <th className="px-3 py-2.5 font-semibold">Field</th>
+            <th className="px-3 py-2.5 font-semibold">Live</th>
+            <th className="px-3 py-2.5 font-semibold">Proposed</th>
           </tr>
         </thead>
         <tbody>
@@ -200,11 +228,11 @@ export function DiffView({
             const changed = (row.before ?? "") !== (row.after ?? "");
             return (
               <tr key={row.field} className="border-t border-[var(--color-border)]">
-                <td className="px-3 py-2 font-medium">{row.field}</td>
-                <td className="px-3 py-2 text-[var(--color-muted)]">{row.before || "Not set"}</td>
+                <td className="px-3 py-2.5 font-medium text-body">{row.field}</td>
+                <td className="px-3 py-2.5 text-[var(--color-muted)]">{row.before || "Not set"}</td>
                 <td
                   className={cn(
-                    "px-3 py-2",
+                    "px-3 py-2.5",
                     changed && "bg-[var(--color-warning-soft)] text-[var(--color-warning-ink)]",
                   )}
                 >
@@ -221,8 +249,32 @@ export function DiffView({
 
 export function LoadingBlock({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--color-muted)]">
+    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-caption text-[var(--color-muted)]">
+      <div
+        className="h-8 w-8 animate-pulse rounded-full bg-[var(--color-accent-soft)]"
+        aria-hidden
+      />
       {label}
+    </div>
+  );
+}
+
+/** Two-zone review / detail frame: primary content + sticky action rail. */
+export function ReviewWorkbenchFrame({
+  primary,
+  rail,
+  className,
+}: {
+  primary: ReactNode;
+  rail?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]", className)}>
+      <div className="min-w-0 space-y-5">{primary}</div>
+      {rail ? (
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">{rail}</aside>
+      ) : null}
     </div>
   );
 }

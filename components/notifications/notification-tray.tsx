@@ -1,11 +1,19 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { listNotifications, markNotificationRead } from "@/lib/dal/notifications";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingBlock } from "@/components/ui";
 import type { NotificationDoc } from "@/shared/types";
+
+const UNREAD_EVENT = "rs:notifications-changed";
+
+function notifyUnreadChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(UNREAD_EVENT));
+  }
+}
 
 export function NotificationTray({
   userId,
@@ -14,6 +22,7 @@ export function NotificationTray({
   userId: string;
   emptyDescription?: string;
 }) {
+  const router = useRouter();
   const [items, setItems] = useState<NotificationDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +36,19 @@ export function NotificationTray({
     setLoading(true);
     void refresh();
   }, [refresh]);
+
+  async function openNotification(n: NotificationDoc) {
+    if (!n.read) {
+      await markNotificationRead(n.id);
+      setItems((prev) =>
+        prev.map((item) => (item.id === n.id ? { ...item, read: true } : item)),
+      );
+      notifyUnreadChanged();
+    }
+    if (n.href) {
+      router.push(n.href);
+    }
+  }
 
   if (loading) return <LoadingBlock label="Loading notifications…" />;
 
@@ -43,12 +65,7 @@ export function NotificationTray({
           <button
             type="button"
             className="w-full px-4 py-4 text-left transition-colors hover:bg-[var(--color-surface)]"
-            onClick={() => {
-              void markNotificationRead(n.id);
-              setItems((prev) =>
-                prev.map((item) => (item.id === n.id ? { ...item, read: true } : item)),
-              );
-            }}
+            onClick={() => void openNotification(n)}
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="font-semibold">{n.title}</p>
@@ -59,13 +76,9 @@ export function NotificationTray({
               {new Date(n.createdAt).toLocaleString()}
             </p>
             {n.href ? (
-              <Link
-                href={n.href}
-                className="mt-2 inline-block text-sm font-medium text-[var(--color-accent-strong)]"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <span className="mt-2 inline-block text-sm font-medium text-[var(--color-accent-strong)]">
                 Open
-              </Link>
+              </span>
             ) : null}
           </button>
         </li>
@@ -77,19 +90,23 @@ export function NotificationTray({
 export function useUnreadNotificationCount(userId: string | undefined): number {
   const [count, setCount] = useState(0);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!userId) {
       setCount(0);
       return;
     }
-    let cancelled = false;
     void listNotifications(userId).then((list) => {
-      if (!cancelled) setCount(list.filter((n) => !n.read).length);
+      setCount(list.filter((n) => !n.read).length);
     });
-    return () => {
-      cancelled = true;
-    };
   }, [userId]);
+
+  useEffect(() => {
+    refresh();
+    if (typeof window === "undefined") return;
+    const onChange = () => refresh();
+    window.addEventListener(UNREAD_EVENT, onChange);
+    return () => window.removeEventListener(UNREAD_EVENT, onChange);
+  }, [refresh]);
 
   return count;
 }

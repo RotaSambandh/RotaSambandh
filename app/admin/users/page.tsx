@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ListRow } from "@/components/ui/list-row";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Banner, EmptyState, LoadingBlock, PageHeader, Panel } from "@/components/ui";
 import type { UserDoc } from "@/shared/types";
 import { isPlatformStaff } from "@/shared/rbac";
@@ -74,7 +76,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         title="Users"
         description="Search by email prefix, preview account details, then suspend or restore access."
@@ -117,27 +119,28 @@ export default function AdminUsersPage() {
       {results.length > 0 && (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <Panel title={`Results (${results.length})`}>
-            <ul className="divide-y divide-[var(--color-border)]">
+            <ul className="-mx-4 -my-4 sm:-mx-5 sm:-my-5">
               {results.map((user) => (
                 <li key={user.uid}>
-                  <button
-                    type="button"
+                  <ListRow
                     onClick={() => setSelected(user)}
-                    className={`w-full px-1 py-3 text-left transition-colors hover:bg-[var(--color-surface)] ${
-                      selected?.uid === user.uid ? "bg-[var(--color-accent-soft)]/40" : ""
-                    }`}
-                  >
-                    <p className="font-medium">{user.displayName || "Unnamed user"}</p>
-                    <p className="text-sm text-[var(--color-muted)]">{user.email}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {user.roles.map((role) => (
-                        <Badge key={role} variant="neutral">
-                          {role}
-                        </Badge>
-                      ))}
-                      {user.suspended && <Badge variant="danger">suspended</Badge>}
-                    </div>
-                  </button>
+                    showChevron={false}
+                    emphasize={selected?.uid === user.uid}
+                    title={user.displayName || "Unnamed user"}
+                    subtitle={user.email}
+                    meta={
+                      <>
+                        {user.roles.map((role) => (
+                          <Badge key={role} variant="neutral">
+                            {role}
+                          </Badge>
+                        ))}
+                        {user.suspended ? (
+                          <StatusPill label="Suspended" tone="danger" />
+                        ) : null}
+                      </>
+                    }
+                  />
                 </li>
               ))}
             </ul>
@@ -153,23 +156,19 @@ export default function AdminUsersPage() {
               <div className="space-y-4">
                 <dl className="space-y-2 text-sm">
                   <div>
-                    <dt className="text-[var(--color-muted)]">UID</dt>
-                    <dd className="font-mono text-xs">{selected.uid}</dd>
+                    <dt className="text-overline text-[var(--color-muted)]">Email</dt>
+                    <dd className="font-medium">{selected.email}</dd>
                   </div>
                   <div>
-                    <dt className="text-[var(--color-muted)]">Email</dt>
-                    <dd>{selected.email}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-[var(--color-muted)]">Phone</dt>
+                    <dt className="text-overline text-[var(--color-muted)]">Phone</dt>
                     <dd>{selected.phone?.trim() || "Not set"}</dd>
                   </div>
                   <div>
-                    <dt className="text-[var(--color-muted)]">Display name</dt>
+                    <dt className="text-overline text-[var(--color-muted)]">Display name</dt>
                     <dd>{selected.displayName || "Not set"}</dd>
                   </div>
                   <div>
-                    <dt className="text-[var(--color-muted)]">Roles</dt>
+                    <dt className="text-overline text-[var(--color-muted)]">Roles</dt>
                     <dd className="mt-1 flex flex-wrap gap-1">
                       {selected.roles.map((role) => (
                         <Badge key={role} variant="neutral">
@@ -179,11 +178,12 @@ export default function AdminUsersPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[var(--color-muted)]">Status</dt>
+                    <dt className="text-overline text-[var(--color-muted)]">Status</dt>
                     <dd className="mt-1">
-                      <Badge variant={selected.suspended ? "danger" : "success"}>
-                        {selected.suspended ? "Suspended" : "Active"}
-                      </Badge>
+                      <StatusPill
+                        label={selected.suspended ? "Suspended" : "Active"}
+                        tone={selected.suspended ? "danger" : "success"}
+                      />
                     </dd>
                   </div>
                 </dl>

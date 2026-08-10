@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState, PageHeader, Panel } from "@/components/ui";
 import { JobCard } from "@/components/jobs/job-card";
 import { CompanyAvatar } from "@/components/brand/company-avatar";
 import { RichTextView } from "@/components/editor/rich-text-view";
@@ -40,35 +43,77 @@ export default async function CompanyPage({
 
   return (
     <main>
-      <article>
-        <div className="flex flex-wrap items-center gap-3">
-          <CompanyAvatar name={business.name} logoUrl={business.logoUrl} size={56} />
-          <h1 className="font-display text-4xl font-semibold">{business.name}</h1>
-          {business.verified && (
-            <Badge variant="success">Verified Rotary Ecosystem Business</Badge>
+      {business.coverUrl ? (
+        <div
+          className="mb-6 h-36 w-full overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-surface)] bg-cover bg-center sm:h-44"
+          style={{ backgroundImage: `url(${business.coverUrl})` }}
+          aria-hidden
+        />
+      ) : null}
+
+      <PageHeader
+        breadcrumb={
+          <>
+            <Link href="/jobs" className="font-medium text-[var(--color-accent-strong)] hover:underline">
+              Opportunities
+            </Link>
+            <span aria-hidden>/</span>
+            <span className="truncate">{business.name}</span>
+          </>
+        }
+        title={business.name}
+        description={[business.industry, business.location, business.companySize]
+          .filter(Boolean)
+          .join(" · ")}
+        actions={
+          business.verified ? (
+            <Badge variant="success">Verified</Badge>
+          ) : undefined
+        }
+      />
+
+      <div className="mb-8 flex flex-wrap items-start gap-4">
+        <CompanyAvatar name={business.name} logoUrl={business.logoUrl} size={64} />
+        <div className="min-w-0 flex-1 space-y-3">
+          {business.description ? (
+            <RichTextView html={business.description} className="text-[var(--color-muted)]" />
+          ) : null}
+          {business.website ? (
+            <a
+              href={business.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-caption font-semibold text-[var(--color-accent-strong)] hover:underline"
+            >
+              Visit website
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          ) : null}
+          {(business.rotaryContactName || business.rotaryContactClub) && (
+            <p className="text-caption text-[var(--color-ink)]">
+              <span className="text-[var(--color-muted)]">Rotary / Rotaract contact: </span>
+              {[business.rotaryContactName, business.rotaryContactClub]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           )}
         </div>
-        <div className="mt-3 max-w-2xl">
-          <RichTextView html={business.description} className="text-[var(--color-muted)]" />
-        </div>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">
-          {[business.industry, business.location, business.companySize].filter(Boolean).join(" · ")}
-        </p>
-        {(business.rotaryContactName || business.rotaryContactClub) && (
-          <p className="mt-3 text-sm text-[var(--color-ink)]">
-            <span className="text-[var(--color-muted)]">Rotary / Rotaract contact: </span>
-            {[business.rotaryContactName, business.rotaryContactClub].filter(Boolean).join(" · ")}
-          </p>
-        )}
-        <section className="mt-10">
-          <h2 className="font-display text-2xl font-semibold">Open opportunities</h2>
-          <div className="mt-4">
+      </div>
+
+      <Panel title="Open opportunities">
+        {jobs.length === 0 ? (
+          <EmptyState
+            title="No open roles right now"
+            description="Check back later for new opportunities from this company."
+          />
+        ) : (
+          <div className="-mx-4 -my-4 sm:-mx-5 sm:-my-5">
             {jobs.map((job) => (
               <JobCard key={job.id} job={job} />
             ))}
           </div>
-        </section>
-      </article>
+        )}
+      </Panel>
     </main>
   );
 }

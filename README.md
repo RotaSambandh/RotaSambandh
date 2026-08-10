@@ -11,13 +11,13 @@
 - Next.js + TypeScript + Tailwind (**Netlify**)
 - Firebase Auth, Firestore (write / SoT), Realtime Database (UI read models), Cloud Functions (**Firebase CLI**)
 - Cloudflare R2 for resumes/documents
-- PWA + Capacitor Android (same codebase)
+- PWA (installable web app; Web Push)
 
 ## Data architecture
 
 ```
-UI (browser / APK) ──read──► Realtime Database
-UI (browser / APK) ──write─► Firestore (+ R2 blobs)
+UI (browser / PWA) ──read──► Realtime Database
+UI (browser / PWA) ──write─► Firestore (+ R2 blobs)
 Next Admin APIs   ──write─► Firestore (mutations / session only)
 Cloud Functions   ◄─FS triggers─ Firestore ──project──► RTDB
 ```
@@ -100,7 +100,6 @@ Auth is **Google sign-in only** on every portal. Enable the Google provider in F
 | `npm run functions:install` | Install Functions deps |
 | `npm run functions:build` | Compile Cloud Functions |
 | `cd functions && npm run rebuild:readmodels` | Backfill RTDB from Firestore (needs Admin env) |
-| `npm run cap:sync` | Sync Capacitor config |
 
 ### Firebase project
 

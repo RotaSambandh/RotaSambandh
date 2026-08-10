@@ -2,9 +2,9 @@ import "server-only";
 import type {
   AdminAction,
   Job,
-  ReportStatus,
 } from "@/shared/types";
 import { getAdminFirestore } from "@/lib/firebase/admin";
+import { omitUndefined } from "@/lib/utils";
 
 function tsNow() {
   return Date.now();
@@ -13,7 +13,13 @@ function tsNow() {
 async function logAdminAction(input: Omit<AdminAction, "id" | "createdAt" | "updatedAt">) {
   const ts = tsNow();
   const ref = getAdminFirestore().collection("adminActions").doc();
-  await ref.set({ ...input, id: ref.id, createdAt: ts, updatedAt: ts });
+  // Firestore rejects `undefined` field values (e.g. approve with no note).
+  await ref.set(
+    omitUndefined({ ...input, id: ref.id, createdAt: ts, updatedAt: ts }) as Record<
+      string,
+      unknown
+    >,
+  );
 }
 
 export async function reviewVerificationAdmin(input: {
@@ -64,13 +70,13 @@ export async function moderateJobAdmin(input: {
 }) {
   const db = getAdminFirestore();
   const ts = tsNow();
-  const patch: Partial<Job> & { updatedAt: number } = {
-    status: input.decision === "rejected" ? "draft" : input.decision,
+  const patch = omitUndefined({
+    status: (input.decision === "rejected" ? "draft" : input.decision) as Job["status"],
     updatedAt: ts,
     featured: input.featured,
-  };
-  if (input.decision === "published") patch.postedAt = ts;
-  if (input.decision === "closed") patch.closedAt = ts;
+    postedAt: input.decision === "published" ? ts : undefined,
+    closedAt: input.decision === "closed" ? ts : undefined,
+  }) as Record<string, unknown>;
 
   await db.collection("jobs").doc(input.jobId).update(patch);
   await logAdminAction({
@@ -97,21 +103,6 @@ export async function setUserSuspendedAdmin(input: {
     action: input.suspended ? "user_suspend" : "user_restore",
     targetType: "user",
     targetId: input.userId,
-  });
-}
-
-export async function resolveReportAdmin(input: {
-  reportId: string;
-  adminId: string;
-  status: Extract<ReportStatus, "resolved" | "dismissed">;
-}) {
-  const db = getAdminFirestore();
-  const ts = tsNow();
-  await db.collection("reports").doc(input.reportId).update({
-    status: input.status,
-    resolvedBy: input.adminId,
-    resolvedAt: ts,
-    updatedAt: ts,
   });
 }
 
@@ -195,15 +186,17 @@ export async function mergeChangeRequestAdmin(input: {
       reviewedAt: ts,
       updatedAt: ts,
     });
-    await db.collection("adminActions").add({
-      adminId: input.adminId,
-      action: `change_request_${input.decision}`,
-      targetType: "changeRequest",
-      targetId: cr.id,
-      note: input.adminNote,
-      createdAt: ts,
-      updatedAt: ts,
-    });
+    await db.collection("adminActions").add(
+      omitUndefined({
+        adminId: input.adminId,
+        action: `change_request_${input.decision}`,
+        targetType: "changeRequest",
+        targetId: cr.id,
+        note: input.adminNote,
+        createdAt: ts,
+        updatedAt: ts,
+      }) as Record<string, unknown>,
+    );
     return { ok: true };
   }
 
@@ -245,15 +238,17 @@ export async function mergeChangeRequestAdmin(input: {
     updatedAt: ts,
   });
 
-  await db.collection("adminActions").add({
-    adminId: input.adminId,
-    action: "change_request_approved",
-    targetType: cr.targetType,
-    targetId: cr.targetId,
-    note: input.adminNote,
-    createdAt: ts,
-    updatedAt: ts,
-  });
+  await db.collection("adminActions").add(
+    omitUndefined({
+      adminId: input.adminId,
+      action: "change_request_approved",
+      targetType: cr.targetType,
+      targetId: cr.targetId,
+      note: input.adminNote,
+      createdAt: ts,
+      updatedAt: ts,
+    }) as Record<string, unknown>,
+  );
 
   return { ok: true };
 }

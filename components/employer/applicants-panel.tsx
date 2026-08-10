@@ -12,7 +12,7 @@ import { updateApplicationStatus } from "@/lib/dal/applications";
 import type { Application, ApplicationAnswer, ApplicationStatus } from "@/shared/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState, Panel } from "@/components/ui";
+import { EmptyState, Panel, Banner } from "@/components/ui";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { assertNever } from "@/lib/utils";
@@ -71,6 +71,7 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
   const [items, setItems] = useState<EnrichedApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!business) {
@@ -125,6 +126,7 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
   }
 
   async function openResume(app: Application) {
+    setResumeError(null);
     const res = await fetch("/api/uploads/resume/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -134,7 +136,7 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
       }),
     });
     if (!res.ok) {
-      alert("Resume download requires configured storage and authorization");
+      setResumeError("Resume download requires configured storage and authorization.");
       return;
     }
     const { url } = (await res.json()) as { url: string };
@@ -151,9 +153,12 @@ export function ApplicantsPanel({ jobId }: { jobId: string }) {
 
   return (
     <Panel title="Applicants">
-      <p className="mb-4 text-sm text-[var(--color-muted)]">
+      <p className="mb-4 text-caption text-[var(--color-muted)]">
         Manage this opportunity&apos;s pipeline.
       </p>
+      {resumeError ? (
+        <Banner tone="danger" title={resumeError} className="mb-4" />
+      ) : null}
 
       {items.length === 0 ? (
         <EmptyState

@@ -97,6 +97,10 @@ function CandidateSignInForm() {
           <Link href="/employer/sign-in" className="font-semibold text-[var(--color-accent-strong)]">
             Employer portal
           </Link>
+          {" · "}
+          <Link href="/admin/sign-in" className="font-semibold text-[var(--color-accent-strong)]">
+            Admin
+          </Link>
         </p>
       </div>
     </main>

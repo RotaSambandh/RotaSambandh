@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ import { ALLOWED_RESUME_MIME, MAX_RESUME_BYTES } from "@/shared/constants";
 import type { JobDetailReadModel, Question } from "@/shared/types";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
 
-type Step = "confirm" | "resume" | "questions" | "review" | "submit";
+type Step = "confirm" | "resume" | "questions" | "submit";
 
 interface ResumeForApplication {
   documentId: string;
@@ -34,14 +34,6 @@ interface ResumeForApplication {
   fileName: string;
   fileSize: number;
 }
-
-const STEPS = [
-  { id: "confirm", label: "Confirm" },
-  { id: "resume", label: "Resume" },
-  { id: "questions", label: "Questions" },
-  { id: "review", label: "Review" },
-  { id: "submit", label: "Submit" },
-] as const;
 
 export default function ApplyWizardPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -66,6 +58,23 @@ export default function ApplyWizardPage() {
     if (!user) return;
     void getUser(user.uid).then((doc) => setPhone(doc?.phone ?? ""));
   }, [user]);
+
+  const steps = useMemo(() => {
+    const base: Array<{ id: Step; label: string }> = [
+      { id: "confirm", label: "Contact" },
+      { id: "resume", label: "Resume" },
+    ];
+    if (questions.length > 0) {
+      base.push({ id: "questions", label: "Questions" });
+    }
+    base.push({ id: "submit", label: "Submit" });
+    return base;
+  }, [questions.length]);
+
+  function afterResume() {
+    setError(null);
+    setStep(questions.length > 0 ? "questions" : "submit");
+  }
 
   async function attachResume(file: File) {
     setError(null);
@@ -161,6 +170,13 @@ export default function ApplyWizardPage() {
       setError("Phone number is required");
       return;
     }
+    for (const q of questions) {
+      if (q.required && !answers[q.id]?.trim()) {
+        setError(`Please answer: ${q.prompt}`);
+        setStep("questions");
+        return;
+      }
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -199,11 +215,20 @@ export default function ApplyWizardPage() {
   const open = isJobOpenForApplications(job);
 
   if (!open) {
+    const deadlineLabel = job.deadline
+      ? new Date(job.deadline).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+      <main>
         <PageHeader title="Applications closed" description={job.title} />
         <Banner tone="warning" title="Deadline passed">
-          This opportunity is no longer accepting applications.
+          {deadlineLabel
+            ? `Applications closed on ${deadlineLabel}.`
+            : "This opportunity is no longer accepting applications."}
         </Banner>
         <Link href="/jobs" className="mt-6 inline-block">
           <Button variant="secondary">Browse open roles</Button>
@@ -213,25 +238,26 @@ export default function ApplyWizardPage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+    <main>
       <PageHeader
         breadcrumb={
           <Link href={`/jobs/${job.id}`} className="hover:text-[var(--color-accent-strong)]">
-            ← {job.title}
+            {job.title}
           </Link>
         }
         title="Apply"
-        description="Complete a few steps and attach the resume for this role."
+        description={`${job.company} · Contact, resume${
+          questions.length ? ", a few questions" : ""
+        }, then submit.`}
       />
 
-      <Stepper steps={[...STEPS]} current={step} />
+      <Stepper steps={steps} current={step} />
 
       <form onSubmit={onSubmit} className="mt-8 space-y-6">
         {step === "confirm" && (
           <Panel title="Confirm contact">
             <p className="mb-4 text-sm text-[var(--color-muted)]">
-              Employers for this job will see the name, email, and phone you confirm here.
-              These details are saved on your application.
+              This employer will see your name, email, and phone on the application.
             </p>
             <dl className="space-y-2 text-sm">
               <div>
@@ -273,10 +299,9 @@ export default function ApplyWizardPage() {
         )}
 
         {step === "resume" && (
-          <Panel title="Resume for this application">
+          <Panel title="Resume">
             <p className="mb-4 text-sm text-[var(--color-muted)]">
-              Upload a short CV (PDF or DOCX, max 2 MB). For portfolios or work samples, use your
-              portfolio link or answer the screening questions — do not upload a large portfolio PDF.
+              PDF or DOCX, max 2 MB. Keep portfolios as a link in your profile, not a giant PDF.
             </p>
             <FileUpload
               id="resume-file"
@@ -303,10 +328,7 @@ export default function ApplyWizardPage() {
               <Button
                 type="button"
                 disabled={!resume || uploading}
-                onClick={() => {
-                  setError(null);
-                  setStep("questions");
-                }}
+                onClick={afterResume}
               >
                 {uploading ? "Uploading…" : "Continue"}
               </Button>
@@ -314,49 +336,48 @@ export default function ApplyWizardPage() {
           </Panel>
         )}
 
-        {step === "questions" && (
-          <Panel title="Questions">
-            {questions.length === 0 ? (
-              <p className="text-sm text-[var(--color-muted)]">No additional questions for this role.</p>
-            ) : (
-              questions.map((q) => (
-                <div key={q.id} className="mb-4">
-                  <Label htmlFor={q.id}>
-                    {q.prompt}
-                    {q.required ? " *" : ""}
-                  </Label>
-                  {q.type === "long_text" ? (
-                    <Textarea
-                      id={q.id}
-                      required={q.required}
-                      value={answers[q.id] ?? ""}
-                      onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                    />
-                  ) : (
-                    <Input
-                      id={q.id}
-                      type={q.type === "number" ? "number" : q.type === "url" ? "url" : "text"}
-                      required={q.required}
-                      value={answers[q.id] ?? ""}
-                      onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                    />
-                  )}
-                </div>
-              ))
-            )}
+        {step === "questions" && questions.length > 0 && (
+          <Panel title="Employer questions">
+            <p className="mb-4 text-sm text-[var(--color-muted)]">
+              These were set by the employer for this role.
+            </p>
+            {questions.map((q) => (
+              <div key={q.id} className="mb-4">
+                <Label htmlFor={q.id}>
+                  {q.prompt}
+                  {q.required ? " *" : ""}
+                </Label>
+                {q.type === "long_text" ? (
+                  <Textarea
+                    id={q.id}
+                    required={q.required}
+                    value={answers[q.id] ?? ""}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                  />
+                ) : (
+                  <Input
+                    id={q.id}
+                    type={q.type === "number" ? "number" : q.type === "url" ? "url" : "text"}
+                    required={q.required}
+                    value={answers[q.id] ?? ""}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                  />
+                )}
+              </div>
+            ))}
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="secondary" onClick={() => setStep("resume")}>
                 Back
               </Button>
-              <Button type="button" onClick={() => setStep("review")}>
-                Review
+              <Button type="button" onClick={() => setStep("submit")}>
+                Continue
               </Button>
             </div>
           </Panel>
         )}
 
-        {step === "review" && (
-          <Panel title="Review">
+        {step === "submit" && (
+          <Panel title="Submit application">
             <ul className="space-y-2 text-sm">
               <li>
                 <span className="text-[var(--color-muted)]">Role:</span> {job.title}
@@ -365,37 +386,27 @@ export default function ApplyWizardPage() {
                 <span className="text-[var(--color-muted)]">Company:</span> {job.company}
               </li>
               <li>
-                <span className="text-[var(--color-muted)]">Resume:</span> {resume?.fileName ?? "Not attached"}
+                <span className="text-[var(--color-muted)]">Resume:</span>{" "}
+                {resume?.fileName ?? "Not attached"}
               </li>
               <li>
-                <span className="text-[var(--color-muted)]">Answers:</span>{" "}
-                {questions.length === 0 ? "None" : Object.keys(answers).length}
+                <span className="text-[var(--color-muted)]">Questions:</span>{" "}
+                {questions.length === 0
+                  ? "None for this role"
+                  : `${Object.values(answers).filter((v) => v.trim()).length} of ${questions.length} answered`}
               </li>
             </ul>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" onClick={() => setStep("questions")}>
-                Back
-              </Button>
-              <Button type="button" onClick={() => setStep("submit")}>
-                Continue to submit
-              </Button>
-            </div>
-          </Panel>
-        )}
-
-        {step === "submit" && (
-          <Panel title="Submit application">
-            <p className="text-sm text-[var(--color-muted)]">
-              By submitting, you confirm the details above are accurate for{" "}
-              <strong>{job.title}</strong> at <strong>{job.company}</strong>.
-            </p>
             {error && (
               <Banner tone="danger" title="Submission failed" className="mt-4">
                 {error}
               </Banner>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" onClick={() => setStep("review")}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setStep(questions.length > 0 ? "questions" : "resume")}
+              >
                 Back
               </Button>
               <Button type="submit" disabled={submitting || !resume}>

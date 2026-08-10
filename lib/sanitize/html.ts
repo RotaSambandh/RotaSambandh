@@ -17,7 +17,8 @@ export function sanitizeCompanyHtml(html: string): string {
     : cleaned;
 }
 
-export function isNonEmptyHtml(html: string): boolean {
+export function isNonEmptyHtml(html?: string | null): boolean {
+  if (!html) return false;
   const text = sanitizeCompanyHtml(html)
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")

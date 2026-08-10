@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
+import { Banner } from "@/components/ui";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
   SignInProgress,
@@ -57,40 +58,43 @@ function AdminSignInForm() {
       {stage && <SignInProgress stage={stage} portalLabel="Admin portal" />}
       <div className={`w-full max-w-md ${stage ? "pointer-events-none opacity-40" : ""}`}>
         <Logo />
-        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
-          Admin portal
+        <p className="mt-8 text-overline font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+          Staff only
         </p>
-        <h1 className="mt-2 font-display text-3xl font-semibold">Sign in</h1>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">
-          Invite-only. Use the Google account that was seeded or invited as platform staff. There is
-          no public admin signup.
+        <h1 className="mt-2 font-display text-title font-semibold text-[var(--color-ink)] sm:text-display">
+          RotaSambandh admin
+        </h1>
+        <p className="mt-3 text-body text-[var(--color-muted)]">
+          Invite-only workspace for platform staff. Sign in with the Google account that was
+          granted admin or coordinator access—there is no public signup.
         </p>
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-[var(--color-danger)]">
+        {error ? (
+          <Banner tone="danger" title="Sign-in failed" className="mt-6">
             {error}
-          </p>
-        )}
-        {user && !staff && !authLoading && (
-          <p role="alert" className="mt-4 text-sm text-[var(--color-danger)]">
-            Signed in as {user.email}, but this account is not on the platform staff list. Ask a
-            super admin for access, or run the seed script for your Google email.
-          </p>
-        )}
+          </Banner>
+        ) : null}
+        {user && !staff && !authLoading ? (
+          <Banner tone="warning" title="Not on the staff list" className="mt-6">
+            Signed in as {user.email}. Ask a super admin for access, or run the seed script for
+            your Google email.
+          </Banner>
+        ) : null}
         <Button
           type="button"
-          className="mt-6 w-full"
+          className="mt-8 w-full"
           disabled={Boolean(stage)}
           onClick={() => void onGoogle()}
         >
           Continue with Google
         </Button>
-        <p className="mt-6 text-sm text-[var(--color-muted)]">
+        <p className="mt-8 text-caption text-[var(--color-muted)]">
+          Looking for another portal?{" "}
           <Link href="/auth/sign-in" className="font-semibold text-[var(--color-accent-strong)]">
-            Candidate sign in
+            Candidate
           </Link>
           {" · "}
           <Link href="/employer/sign-in" className="font-semibold text-[var(--color-accent-strong)]">
-            Employer sign in
+            Employer
           </Link>
         </p>
       </div>

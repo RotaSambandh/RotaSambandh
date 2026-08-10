@@ -31,6 +31,7 @@ import {
   projectChangeRequest,
   projectEmployerMember,
   projectEmployerMeta,
+  projectEmployerVerification,
 } from "./projections/employer";
 import { projectCandidateProfile, projectUserSlice, syncCandidateDashboardCompletion } from "./projections/users";
 import {
@@ -343,6 +344,10 @@ export const onBusinessWritten = onDocumentWritten(
       name: after.name,
       status: after.status,
       ownerId: after.ownerId,
+      industry: after.industry ?? "",
+      location: after.location ?? "",
+      companySize: after.companySize ?? "",
+      website: after.website ?? "",
       updatedAt: after.updatedAt ?? Date.now(),
     });
 
@@ -476,13 +481,29 @@ export const onBusinessMemberWritten = onDocumentWritten(
         await db.ref(path).remove();
         await db.ref(reverse).remove();
       }
+      let email = (after.email as string | undefined) ?? undefined;
+      let displayName = (after.displayName as string | undefined) ?? undefined;
+      const userId = String(after.userId ?? "");
+      if (userId && (!email || !displayName)) {
+        try {
+          const userSnap = await getFirestore().doc(`users/${userId}`).get();
+          const u = userSnap.data() ?? {};
+          if (!email && u.email) email = String(u.email);
+          if (!displayName && u.displayName) displayName = String(u.displayName);
+        } catch {
+          /* ignore */
+        }
+      }
       await projectEmployerMember({
         id: (after.id as string) ?? event.params.memberId,
         businessId: String(after.businessId),
-        userId: String(after.userId),
+        userId,
         role: String(after.role ?? "viewer"),
         status,
-        invitedEmail: after.invitedEmail as string | undefined,
+        email,
+        displayName,
+        invitedEmail:
+          (after.invitedEmail as string | undefined) ?? email ?? undefined,
       });
       return;
     }
@@ -510,9 +531,16 @@ export const onChangeRequestWritten = onDocumentWritten(
         targetType: String(after.targetType),
         targetId: String(after.targetId),
         status: String(after.status),
+        action: after.action ? String(after.action) : undefined,
         submittedBy: after.submittedBy as string | undefined,
-        submittedAt: after.submittedAt as number | undefined,
+        submittedAt: (after.updatedAt ?? after.createdAt ?? after.submittedAt) as
+          | number
+          | undefined,
         adminNote: after.adminNote as string | undefined,
+        title: after.title as string | undefined,
+        proposed: (after.proposed as Record<string, unknown> | undefined) ?? {},
+        liveSnapshot:
+          (after.liveSnapshot as Record<string, unknown> | undefined) ?? {},
       });
     } else {
       await getDatabase().ref(`admin/queues/changeRequests/${id}`).remove();
@@ -588,13 +616,55 @@ export const onBusinessVerificationWritten = onDocumentWritten(
       return;
     }
 
+    const businessId = String(after.businessId ?? "");
+    let businessName = "";
+    let rotaryContactName = "";
+    let rotaryContactClub = "";
+    let rotaryContactEmail = "";
+    let rotaryContactPhone = "";
+    if (businessId) {
+      try {
+        const bizSnap = await getFirestore().doc(`businesses/${businessId}`).get();
+        const biz = bizSnap.data() ?? {};
+        businessName = String(biz.name ?? "");
+        rotaryContactName = String(biz.rotaryContactName ?? "");
+        rotaryContactClub = String(biz.rotaryContactClub ?? "");
+        rotaryContactEmail = String(biz.rotaryContactEmail ?? "");
+        rotaryContactPhone = String(biz.rotaryContactPhone ?? "");
+      } catch {
+        /* ignore */
+      }
+    }
+
     await projectAdminQueueItem("verifications", id, {
-      businessId: after.businessId,
+      businessId,
+      businessName,
       status: after.status,
       affiliationType: after.affiliationType,
+      affiliationDetails: after.affiliationDetails ?? "",
+      supportingInfo: after.supportingInfo ?? "",
+      adminNote: after.adminNote ?? "",
       submittedBy: after.submittedBy,
+      rotaryContactName,
+      rotaryContactClub,
+      rotaryContactEmail,
+      rotaryContactPhone,
+      reviewedAt: after.reviewedAt ?? null,
       updatedAt: after.updatedAt ?? Date.now(),
     });
+
+    if (businessId) {
+      await projectEmployerVerification(businessId, {
+        id,
+        status: after.status,
+        affiliationType: after.affiliationType,
+        affiliationDetails: after.affiliationDetails ?? "",
+        supportingInfo: after.supportingInfo ?? "",
+        adminNote: after.adminNote ?? "",
+        reviewedAt: after.reviewedAt ?? null,
+        updatedAt: after.updatedAt ?? Date.now(),
+      });
+    }
 
     if (before?.status !== "pending" && after.status === "pending") {
       await notifyPlatformStaff({
@@ -637,42 +707,6 @@ export const onBusinessVerificationWritten = onDocumentWritten(
     }
   },
 );
-
-export const onReportCreated = onDocumentCreated("reports/{id}", async (event) => {
-  const report = event.data?.data();
-  if (!report) return;
-  await projectAdminQueueItem("reports", event.params.id, {
-    targetType: report.targetType,
-    targetId: report.targetId,
-    reason: report.reason,
-    status: report.status ?? "open",
-    createdAt: report.createdAt ?? Date.now(),
-  });
-  await refreshAdminQueueDigest();
-  await notifyPlatformStaff({
-    type: "admin_queue_digest",
-    title: "New report",
-    body: `A ${String(report.targetType)} was reported (${String(report.reason).replaceAll("_", " ")}).`,
-    href: "/admin/reports",
-    dedupeKeyPrefix: `report:${event.params.id}`,
-  });
-});
-
-export const onReportWritten = onDocumentWritten("reports/{id}", async (event) => {
-  const after = event.data?.after?.data();
-  const id = event.params.id;
-  if (!after) {
-    await projectAdminQueueItem("reports", id, null);
-    return;
-  }
-  await projectAdminQueueItem("reports", id, {
-    targetType: after.targetType,
-    targetId: after.targetId,
-    reason: after.reason,
-    status: after.status ?? "open",
-    createdAt: after.createdAt ?? Date.now(),
-  });
-});
 
 async function refreshAdminQueueDigest() {
   const countersSnap = await getDatabase().ref("admin/dashboard").get();
